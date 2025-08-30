@@ -42,7 +42,7 @@ export const Footer = () => {
           </div>
           
           <div className="text-gray-400 text-sm">
-            Copyright © 2025 Vinicius
+            Copyright © 2025 Vinicius olicar
           </div>
         </div>
 
@@ -51,9 +51,9 @@ export const Footer = () => {
           <div className="mt-6 p-4 bg-gray-800 rounded-lg border border-gray-700 animate-fade-in">
             <h3 className="text-white font-semibold mb-2">Entre em Contato</h3>
             <p className="text-gray-300 text-sm">
-              📧 contato@rescisao2025.com.br<br/>
-              📱 WhatsApp: (11) 99999-9999<br/>
-              🌐 Desenvolvido por Vinicius
+              {/*📧 contato@rescisao2025.com.br<br/>
+              📱 WhatsApp: (11) 99999-9999<br/>*/}
+              🌐 Desenvolvido por Vinicius Olicar
             </p>
           </div>
         )}

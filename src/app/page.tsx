@@ -38,7 +38,7 @@ export default function HomePage() {
         <div className="text-center mb-8">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
             Calculadora de Rescisão
-            <span className="block text-primary-400">Trabalhista 2025</span>
+            <span className="block text-primary-400">Trabalhista</span>
           </h1>
           <p className="text-gray-300 text-lg max-w-2xl mx-auto">
             Calcule de forma rápida e precisa todos os valores da sua rescisão trabalhista. 

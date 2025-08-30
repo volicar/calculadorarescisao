@@ -59,7 +59,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
   };
 
   return (
-    <Card title="Calculadora de Rescisão Trabalhista 2025" className="animate-fade-in">
+    <Card title="Calculadora de Rescisão Trabalhista" className="animate-fade-in">
       <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
         {/* Salário Mensal */}
         <div>

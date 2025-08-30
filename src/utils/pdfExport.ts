@@ -58,7 +58,7 @@ export const generatePDF = async ({ formData, result }: PDFExportData): Promise<
     pdf.rect(0, 0, pageWidth, 25, 'F');
     
     yPosition = 15;
-    addText('CALCULADORA DE RESCISÃO TRABALHISTA 2025', margin, yPosition, {
+    addText('CALCULADORA DE RESCISÃO TRABALHISTA', margin, yPosition, {
       fontSize: 16,
       fontStyle: 'bold',
       align: 'center'
@@ -173,7 +173,7 @@ export const generatePDF = async ({ formData, result }: PDFExportData): Promise<
       align: 'left'
     });
     
-    addText('Rescisão 2025 - www.rescisao2025.com.br', margin, yPosition, {
+    addText('Rescisão - www.rescisao.com.br', margin, yPosition, {
       fontSize: 8,
       align: 'right'
     });
@@ -191,7 +191,7 @@ export const generatePDF = async ({ formData, result }: PDFExportData): Promise<
 // Função alternativa para dispositivos móveis que podem ter problemas com jsPDF
 export const generateTextFile = ({ formData, result }: PDFExportData): void => {
   const content = `
-CALCULADORA DE RESCISÃO TRABALHISTA 2025
+ CALCULADORA DE RESCISÃO TRABALHISTA 
 =====================================
 
 DADOS DO FUNCIONÁRIO:
@@ -211,7 +211,7 @@ Aviso Prévio Indenizado: ${formatCurrency(result.avisoPrevioIndenizado || 0)}
 VALOR TOTAL: ${formatCurrency(result.total)}
 
 Calculado em: ${new Date().toLocaleString('pt-BR')}
-Rescisão 2025 - Calculadora Trabalhista
+Rescisão - Calculadora Trabalhista
   `.trim();
 
   const element = document.createElement('a');

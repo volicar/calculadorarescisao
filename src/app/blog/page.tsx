@@ -35,8 +35,8 @@ export default function BlogPage() {
           </Link>
           
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
-            Blog Rescisão
-            <span className="block text-primary-400">2025</span>
+            Blog 
+            <span className="block text-primary-400">Rescisão</span>
           </h1>
           <p className="text-gray-300 text-lg max-w-3xl mx-auto">
             Artigos atualizados sobre direitos trabalhistas, cálculos de rescisão e mudanças na legislação brasileira.

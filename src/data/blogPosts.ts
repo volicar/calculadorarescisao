@@ -44,15 +44,15 @@ A legislação agora contempla:
 
 ### Cálculo Atualizado
 As mudanças impactam diretamente no cálculo da rescisão:
-- **Saldo de Salário**: Mantém a proporção por dias trabalhados
-- **Férias Proporcionais**: Novo critério para período aquisitivo
-- **13º Salário**: Cálculo proporcional sem alterações
-- **FGTS**: Mantém 8% + 40% de multa rescisória
+- Saldo de Salário: Mantém a proporção por dias trabalhados
+- Férias Proporcionais: Novo critério para período aquisitivo
+- 13º Salário: Cálculo proporcional sem alterações
+- FGTS: Mantém 8% + 40% de multa rescisória
 
 ### Prazos para Pagamento
 Os prazos para pagamento da rescisão foram mantidos:
-- **Aviso prévio trabalhado**: Até o primeiro dia útil após o término
-- **Aviso prévio indenizado**: Até o 10º dia após a demissão
+- Aviso prévio trabalhado: Até o primeiro dia útil após o término
+- Aviso prévio indenizado: Até o 10º dia após a demissão
 
 ## Documentação Necessária
 
@@ -64,10 +64,10 @@ Para garantir todos os direitos, é fundamental manter:
 
 ## Recomendações
 
-1. **Mantenha-se atualizado** sobre as mudanças na legislação
-2. **Consulte um advogado** trabalhista quando necessário
-3. **Use nossa calculadora** para estimar os valores de rescisão
-4. **Guarde toda documentação** trabalhista organizada
+1. Mantenha-se atualizado sobre as mudanças na legislação
+2. Consulte um advogado trabalhista quando necessário
+3. Use nossa calculadora para estimar os valores de rescisão
+4. Guarde toda documentação trabalhista organizada
 
 ## Conclusão
 
@@ -79,7 +79,7 @@ Para calcular sua rescisão com base nas novas regras, utilize nossa calculadora
     readTime: '5 min',
     category: 'Legislação',
     tags: ['CLT', 'Rescisão', '2025', 'Direitos Trabalhistas'],
-    author: 'Equipe Rescisão 2025'
+    author: 'Equipe Rescisão'
   },
   {
     id: 'calcular-ferias-proporcionais',
@@ -113,26 +113,26 @@ Total = Férias Proporcionais + Adicional de 1/3
 
 ## Exemplo Prático
 
-**Dados:**
+Dados:
 - Salário: R$ 3.000,00
 - Período trabalhado: 8 meses
 
-**Cálculo:**
+Cálculo:
 1. Férias proporcionais: (3.000 ÷ 12) × 8 = R$ 2.000,00
 2. Adicional 1/3: 2.000 ÷ 3 = R$ 666,67
-3. **Total: R$ 2.666,67**
+3. Total: R$ 2.666,67
 
 ## Regras Importantes
 
 ### Período Aquisitivo
-- Direito às férias: **12 meses de trabalho**
-- Cálculo proporcional: **A partir do primeiro mês**
-- Frações de 15 dias ou mais: **Conta como mês completo**
+- Direito às férias: 12 meses de trabalho
+- Cálculo proporcional: A partir do primeiro mês
+- Frações de 15 dias ou mais: Conta como mês completo
 
 ### Casos Especiais
-- **Demissão por justa causa**: Perde direito se período < 12 meses
-- **Pedido de demissão**: Mantém direito às proporcionais
-- **Acordo mútuo**: Férias proporcionais + 1/3
+- Demissão por justa causa: Perde direito se período < 12 meses
+- Pedido de demissão: Mantém direito às proporcionais
+- Acordo mútuo: Férias proporcionais + 1/3
 
 ## Documentação
 
@@ -144,10 +144,10 @@ Para comprovar o direito às férias proporcionais:
 
 ## Dicas Importantes
 
-1. **Sempre calcule** o período exato trabalhado
-2. **Considere faltas** não justificadas (podem reduzir o direito)
-3. **Verifique convenção coletiva** da categoria
-4. **Use nossa calculadora** para verificar os valores
+1. Sempre calcule o período exato trabalhado
+2. Considere faltas não justificadas (podem reduzir o direito)
+3. Verifique convenção coletiva da categoria
+4. Use nossa calculadora para verificar os valores
 
 ## Quando Não Há Direito
 
@@ -165,7 +165,7 @@ Utilize nossa calculadora online para fazer uma estimativa rápida e precisa dos
     readTime: '7 min',
     category: 'Cálculos',
     tags: ['Férias', 'Cálculo', 'Direitos', 'Rescisão'],
-    author: 'Equipe Rescisão 2025'
+    author: 'Equipe Rescisão'
   },
   {
     id: 'fgts-saque-multa',
@@ -178,16 +178,16 @@ O Fundo de Garantia do Tempo de Serviço (FGTS) é um dos direitos mais importan
 
 ## O que é o FGTS?
 
-O FGTS é um fundo constituído por depósitos mensais feitos pelo empregador, equivalentes a **8% do salário bruto** do trabalhador.
+O FGTS é um fundo constituído por depósitos mensais feitos pelo empregador, equivalentes a 8% do salário bruto do trabalhador.
 
 ## Quando Posso Sacar?
 
 ### Situações que Permitem Saque Total:
-- **Demissão sem justa causa**
-- **Rescisão por acordo mútuo** (50% do valor)
-- **Aposentadoria**
-- **Compra da casa própria**
-- **Doenças graves**
+- Demissão sem justa causa
+- Rescisão por acordo mútuo (50% do valor)
+- Aposentadoria
+- Compra da casa própria
+- Doenças graves
 
 ### Saque-Aniversário
 - Disponível anualmente no mês de aniversário
@@ -197,9 +197,9 @@ O FGTS é um fundo constituído por depósitos mensais feitos pelo empregador, e
 ## Multa Rescisória
 
 ### Quando Há Direito à Multa:
-- **Demissão sem justa causa**: 40% sobre o saldo
-- **Rescisão por acordo**: 20% sobre o saldo
-- **Demissão por justa causa**: Sem direito à multa
+- Demissão sem justa causa: 40% sobre o saldo
+- Rescisão por acordo: 20% sobre o saldo
+- Demissão por justa causa: Sem direito à multa
 
 ### Cálculo da Multa:
 \`\`\`
@@ -208,68 +208,68 @@ Multa = Saldo do FGTS × 40%
 
 ## Exemplo Prático
 
-**Trabalhador com:**
+Trabalhador com:
 - 2 anos de trabalho
 - Salário: R$ 2.500,00
 - Demissão sem justa causa
 
-**Cálculo:**
+Cálculo:
 1. FGTS mensal: 2.500 × 8% = R$ 200,00
 2. Total depositado: 200 × 24 meses = R$ 4.800,00
 3. Multa 40%: 4.800 × 40% = R$ 1.920,00
-4. **Total a receber: R$ 6.720,00**
+4. Total a receber: R$ 6.720,00
 
 ## Prazos para Saque
 
 ### Demissão sem Justa Causa:
-- **Prazo para liberação**: Imediato após rescisão
-- **Validade do saque**: Indefinida
-- **Documentos**: TRCT, carteira de trabalho, documento com foto
+- Prazo para liberação: Imediato após rescisão
+- Validade do saque: Indefinida
+- Documentos: TRCT, carteira de trabalho, documento com foto
 
 ### Acordo Mútuo:
-- **Valor do saque**: 80% do saldo
-- **Multa**: 20% (paga ao trabalhador)
-- **Prazo**: Mesmo da demissão sem justa causa
+- Valor do saque: 80% do saldo
+- Multa: 20% (paga ao trabalhador)
+- Prazo: Mesmo da demissão sem justa causa
 
 ## Documentos Necessários
 
 Para sacar o FGTS você precisa de:
-- **TRCT** (Termo de Rescisão)
-- **Carteira de trabalho**
-- **Documento de identidade**
-- **CPF**
-- **Comprovante de residência**
+- TRCT (Termo de Rescisão)
+- Carteira de trabalho
+- Documento de identidade
+- CPF
+- Comprovante de residência
 
 ## Onde Sacar
 
 ### Canais Disponíveis:
-- **Caixa Econômica Federal** (agências)
-- **Lotéricas** credenciadas
-- **App FGTS** (para alguns valores)
-- **Terminais de autoatendimento**
+- Caixa Econômica Federal (agências)
+- Lotéricas credenciadas
+- App FGTS (para alguns valores)
+- Terminais de autoatendimento
 
 ## Dicas Importantes
 
-1. **Confira sempre** o extrato do FGTS
-2. **Guarde todos** os comprovantes de depósito
-3. **Acompanhe** os depósitos mensais
-4. **Consulte** regularmente seu saldo
+1. Confira sempre o extrato do FGTS
+2. Guarde todos os comprovantes de depósito
+3. Acompanhe os depósitos mensais
+4. Consulte regularmente seu saldo
 
 ## Cuidados e Fraudes
 
 ### Fique Atento:
-- **Nunca pague** para sacar o FGTS
-- **Desconfie** de promessas de saque antecipado
-- **Verifique** sempre a autenticidade dos documentos
-- **Use apenas** canais oficiais da Caixa
+- Nunca pague para sacar o FGTS
+- Desconfie de promessas de saque antecipado
+- Verifique sempre a autenticidade dos documentos
+- Use apenas canais oficiais da Caixa
 
 ## Planejamento Financeiro
 
 ### O que Fazer com o FGTS:
-- **Quite dívidas** com juros altos
-- **Invista** em educação ou capacitação
-- **Reserve** para emergências
-- **Considere** investimentos de longo prazo
+- Quite dívidas com juros altos
+- Invista em educação ou capacitação
+- Reserve para emergências
+- Considere investimentos de longo prazo
 
 ## Conclusão
 
@@ -281,7 +281,7 @@ Use nossa calculadora para estimar o valor total que você tem direito a receber
     readTime: '6 min',
     category: 'FGTS',
     tags: ['FGTS', 'Saque', 'Multa', 'Direitos'],
-    author: 'Equipe Rescisão 2025'
+    author: 'Equipe Rescisão'
   }
 ];
 

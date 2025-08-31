@@ -77,45 +77,61 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
         {/* Datas */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Data Admissão */}
-          <Input
-            label="Data Admissão"
-            type="date"
-            max={today} // não permite datas futuras
-            {...register('dataAdmissao', { 
-              required: 'Data de admissão é obrigatória',
-              validate: (value) => {
-                if (new Date(value) > new Date()) {
-                  return 'Data de admissão não pode ser futura';
+          <div>
+            <Input
+              label="Data Admissão"
+              type="date"
+              max={today}
+              {...register('dataAdmissao', { 
+                required: 'Data de admissão é obrigatória',
+                validate: (value) => {
+                  if (new Date(value) > new Date()) {
+                    return 'Data de admissão não pode ser futura';
+                  }
+                  return true;
                 }
-                return true;
-              }
-            })}
-            error={errors.dataAdmissao?.message}
-          />
+              })}
+              onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
+                if (new Date(e.target.value) > new Date()) {
+                  e.target.value = today; // trava manualmente se digitar futuro
+                }
+              }}
+              error={errors.dataAdmissao?.message}
+            />
+          </div>
           
           {/* Data Demissão */}
-          <Input
-            label="Data Demissão"
-            type="date"
-            min={dataAdmissao || undefined} // não pode ser antes da admissão
-            max={today} // trava no hoje
-            {...register('dataDemissao', { 
-              required: 'Data de demissão é obrigatória',
-              validate: (value) => {
-                const dem = new Date(value);
-                if (dem > new Date()) {
-                  return 'Data de demissão não pode ser futura';
-                }
-                if (dataAdmissao && !validateDates(dataAdmissao, value)) {
-                  return 'Data de demissão deve ser posterior à admissão';
-                }
-                return true;
-              }
-            })}
-            error={errors.dataDemissao?.message}
-          />
-        </div>
+          <div>
+            <Input
+              label="Data Demissão"
+              type="date"
+              min={dataAdmissao || undefined}
+              max={today}
+              {...register('dataDemissao', { 
+                required: 'Data de demissão é obrigatória',
+                validate: (value) => {
+                  const dem = new Date(value);
+                  const hoje = new Date();
 
+                  if (dem > hoje) {
+                    return 'Data de demissão não pode ser futura';
+                  }
+                  if (dataAdmissao && !validateDates(dataAdmissao, value)) {
+                    return 'Data de demissão deve ser posterior à admissão';
+                  }
+                  return true;
+                }
+              })}
+              onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
+                if (new Date(e.target.value) > new Date()) {
+                  e.target.value = today; // trava manualmente se digitar futuro
+                }
+              }}
+              error={errors.dataDemissao?.message}
+            />
+          </div>
+        </div>
+        
         {/* Aviso Prévio */}
         <Select
           label="Aviso Prévio"

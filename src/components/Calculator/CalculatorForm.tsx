@@ -38,6 +38,8 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
   const dataAdmissao = watch('dataAdmissao');
   const dataDemissao = watch('dataDemissao');
 
+  const today = new Date().toISOString().split("T")[0]; // data de hoje YYYY-MM-DD
+
   const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '');
     const numericValue = parseInt(value) / 100;
@@ -74,23 +76,38 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
 
         {/* Datas */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Data Admissão */}
           <Input
             label="Data Admissão"
             type="date"
+            max={today} // não permite datas futuras
             {...register('dataAdmissao', { 
-              required: 'Data de admissão é obrigatória' 
+              required: 'Data de admissão é obrigatória',
+              validate: (value) => {
+                if (new Date(value) > new Date()) {
+                  return 'Data de admissão não pode ser futura';
+                }
+                return true;
+              }
             })}
             error={errors.dataAdmissao?.message}
           />
           
+          {/* Data Demissão */}
           <Input
             label="Data Demissão"
             type="date"
+            min={dataAdmissao || undefined} // não pode ser antes da admissão
+            max={today} // trava no hoje
             {...register('dataDemissao', { 
               required: 'Data de demissão é obrigatória',
               validate: (value) => {
+                const dem = new Date(value);
+                if (dem > new Date()) {
+                  return 'Data de demissão não pode ser futura';
+                }
                 if (dataAdmissao && !validateDates(dataAdmissao, value)) {
-                  return 'Data de demissão deve ser posterior à admissão e não pode ser futura';
+                  return 'Data de demissão deve ser posterior à admissão';
                 }
                 return true;
               }

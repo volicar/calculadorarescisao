@@ -9,6 +9,25 @@ import { Card } from '@/components/ui/Card';
 import { validateDates } from '@/utils/calculations';
 import { formatCurrencyInput, parseCurrency } from '@/utils/formatters';
 import { useState } from 'react';
+import { Metadata } from 'next';
+
+
+
+export const metadata: Metadata = {
+  title: 'Calculadora de Rescisão Online — Calcule seus direitos CLT',
+  description: 'Use nossa calculadora de rescisão online para simular FGTS, férias, 13º salário e aviso prévio. Rápido, fácil e gratuito.',
+};
+
+
+export default function CalculadoraPage() {
+  return (
+    <div>
+      <h1>Calculadora de Rescisão Online</h1>
+      {/* ... seu componente de cálculo ... */}
+    </div>
+  );
+}
+
 
 interface CalculatorFormProps {
   onSubmit: (data: CalculatorFormData) => void;
@@ -61,7 +80,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
   };
 
   return (
-    <Card title="Calculadora de Rescisão Trabalhista" className="animate-fade-in">
+    <Card title="Preencha seus dados trabalhistas" className="animate-fade-in">
       <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
         {/* Salário Mensal */}
         <div>

@@ -7,10 +7,18 @@ import { Footer } from '@/components/Layout/Footer';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Calculadora de Rescisão Trabalhista 2025 | Calcule seus direitos',
-  description: 'Calcule de forma rápida e precisa os valores de rescisão trabalhista. Férias, 13º salário, FGTS e muito mais. Ferramenta gratuita e confiável.',
-  keywords: 'calculadora rescisão, rescisão trabalhista, cálculo trabalhista, direitos trabalhistas, FGTS, férias proporcionais',
-  authors: [{ name: 'Vinicius' }],
+  title: 'Rescisão Online | Calculadora de Rescisão Trabalhista',
+  description: 'Calcule sua rescisão trabalhista online com precisão, incluindo férias, 13º, FGTS e aviso prévio. Simples, rápido e gratuito!',
+  keywords: 'rescisão online, calculadora rescisão, rescisão trabalhista, cálculo trabalhista, direitos trabalhistas, FGTS, férias proporcionais',
+  authors: [{ name: 'Vinicius Olicar' }],
+  openGraph: {
+    title: 'Rescisão Online | Calculadora de Rescisão Trabalhista',
+    description: 'Calcule sua rescisão trabalhista online com precisão, incluindo férias, 13º, FGTS e aviso prévio.',
+    url: 'https://rescisaoonline.com.br',
+    siteName: 'Rescisão Online',
+    locale: 'pt_BR',
+    type: 'website',
+  },
 };
 
 export const viewport: Viewport = {

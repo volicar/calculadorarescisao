@@ -42,7 +42,7 @@ export const Footer = () => {
           </div>
           
           <div className="text-gray-400 text-sm">
-            Copyright © 2025 Vinicius olicar
+            Copyright © 2025 Rescisão Online. Todos os direitos reservados.
           </div>
         </div>
 
@@ -53,7 +53,7 @@ export const Footer = () => {
             <p className="text-gray-300 text-sm">
               {/*📧 contato@rescisao2025.com.br<br/>
               📱 WhatsApp: (11) 99999-9999<br/>*/}
-              🌐 Desenvolvido por Vinicius Olicar
+              🌐 Desenvolvido por Rescisão Online
             </p>
           </div>
         )}

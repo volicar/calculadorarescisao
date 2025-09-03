@@ -11,7 +11,7 @@ export const Header = () => {
   const { activeSection, scrollToSection } = useScrollNavigation();
 
   const menuItems = [
-    { label: 'Home', id: 'home', type: 'scroll' },
+    { label: 'Inicio', id: 'home', type: 'scroll' },
     { label: 'Como Funciona', id: 'como-funciona', type: 'scroll' },
     { label: 'Blog', id: '/blog', type: 'link' },
   ];
@@ -34,7 +34,7 @@ export const Header = () => {
             </div>
             <div>
               <span className="text-white font-bold text-lg">Rescisão</span>
-              <span className="text-primary-400 font-normal ml-1"></span>
+              <span className="text-primary-400 font-normal ml-1">Online</span>
             </div>
           </Link>
           

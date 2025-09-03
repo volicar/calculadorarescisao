@@ -1,3 +1,21 @@
+import { Metadata } from 'next';
+
+
+export const metadata: Metadata = {
+  title: 'Blog - Rescisão Online',
+  description: 'Artigos e Dicas sobre Rescisão Trabalhista',
+  keywords: 'blog, artigos, dicas, rescisão trabalhista, direitos trabalhistas',
+  authors: [{ name: 'Equipe Rescisão Online' }],
+  openGraph: {
+    title: 'Blog - Rescisão Online',
+    description: 'Artigos e Dicas sobre Rescisão Trabalhista',
+    url: 'https://rescisaoonline.com.br/blog',
+    siteName: 'Rescisão Online',
+    locale: 'pt_BR',
+    type: 'website',
+  },
+};
+
 export interface BlogPost {
   id: string;
   title: string;
@@ -79,7 +97,7 @@ Para calcular sua rescisão com base nas novas regras, utilize nossa calculadora
     readTime: '5 min',
     category: 'Legislação',
     tags: ['CLT', 'Rescisão', '2025', 'Direitos Trabalhistas'],
-    author: 'Equipe Rescisão'
+    author: 'Equipe Rescisão Online'
   },
   {
     id: 'calcular-ferias-proporcionais',
@@ -165,7 +183,7 @@ Utilize nossa calculadora online para fazer uma estimativa rápida e precisa dos
     readTime: '7 min',
     category: 'Cálculos',
     tags: ['Férias', 'Cálculo', 'Direitos', 'Rescisão'],
-    author: 'Equipe Rescisão'
+    author: 'Equipe Rescisão Online'
   },
   {
     id: 'fgts-saque-multa',
@@ -281,7 +299,7 @@ Use nossa calculadora para estimar o valor total que você tem direito a receber
     readTime: '6 min',
     category: 'FGTS',
     tags: ['FGTS', 'Saque', 'Multa', 'Direitos'],
-    author: 'Equipe Rescisão'
+    author: 'Equipe Rescisão Online'
   }
 ];
 

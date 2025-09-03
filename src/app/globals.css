@@ -70,3 +70,72 @@ section {
   animation: fadeIn 0.3s ease-in-out;
 }
 
+/* Correções específicas para iOS */
+@supports (-webkit-touch-callout: none) {
+  /* Campos de data no iOS */
+  input[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-height: 48px;
+    font-size: 16px; /* Previne zoom no iOS */
+    text-align: left;
+    padding-right: 10px !important;
+  }
+  
+  /* Indicador do calendário no iOS */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 1;
+    background: transparent;
+    color: white;
+    cursor: pointer;
+    font-size: 18px;
+    width: 20px;
+    height: 20px;
+    margin-left: auto;
+  }
+  
+  /* Valor da data no iOS */
+  input[type="date"]::-webkit-date-and-time-value {
+    text-align: left;
+    color: white;
+  }
+  
+  /* Container dos campos de data */
+  input[type="date"]::-webkit-datetime-edit {
+    color: white;
+    padding: 0;
+  }
+  
+  input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+    color: white;
+  }
+  
+  /* Fix para overflow no mobile */
+  .container {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+}
+
+/* Melhorias gerais para inputs no mobile */
+@media (max-width: 640px) {
+  input, select, textarea {
+    font-size: 16px !important; /* Previne zoom no iOS */
+    min-height: 48px;
+  }
+  
+  /* Container principal */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  
+  /* Cards responsivos */
+  .card {
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+    border-radius: 0.75rem;
+  }
+}

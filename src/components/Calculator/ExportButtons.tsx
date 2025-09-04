@@ -33,10 +33,10 @@ const generateWhatsAppText = () => {
   }
 
 *💰 VALORES A RECEBER:*
-💵 Saldo de Salário: ${formatCurrency(result.saldoSalario)}
-🏖️ Férias Proporcionais: ${formatCurrency(result.feriasPROPorcionais)}
-🎄 13º Proporcional: ${formatCurrency(result.decimoTerceiroProporcional)}
-📦 FGTS + Multa: ${formatCurrency(result.fgtsMulta)}
+• Saldo de Salário: ${formatCurrency(result.saldoSalario)}
+• Férias Proporcionais: ${formatCurrency(result.feriasPROPorcionais)}
+• 13º Proporcional: ${formatCurrency(result.decimoTerceiroProporcional)}
+• FGTS + Multa: ${formatCurrency(result.fgtsMulta)}
 
 *🎯 TOTAL: ${formatCurrency(result.total)}*
 
@@ -45,7 +45,6 @@ _Rescisão 2025 - Calculadora Trabalhista_
 
 👉 Acesse: https://www.rescisaoonline.com.br`;
 };
-
 
   const handleExportPDF = async () => {
     setLoading('pdf');

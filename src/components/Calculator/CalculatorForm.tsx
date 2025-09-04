@@ -83,7 +83,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
             <Input
               label="Data de Admissão"
               type="date"
-              placeholder="Selecione a data de admissão"
+              placeholder="dd/mm/aaaa"
               max={today}
               {...register('dataAdmissao', { 
                 required: 'Data de admissão é obrigatória',
@@ -109,7 +109,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
             <Input
               label="Data de Demissão"
               type="date"
-              placeholder="Selecione a data de demissão"
+              placeholder="dd/mm/aaaa"
               min={dataAdmissao || undefined}
               max={today}
               {...register('dataDemissao', { 

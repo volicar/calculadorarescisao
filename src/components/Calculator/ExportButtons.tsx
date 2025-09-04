@@ -43,7 +43,7 @@ const generateWhatsAppText = () => {
 _Calculado em: ${new Date().toLocaleString("pt-BR")}_
 _Rescisão 2025 - Calculadora Trabalhista_
 
-👉 Acesse: https://www.rescisaoonline.com.br`;
+👉 Acesse: https://www.rescisaonline.com.br`;
 };
 
   const handleExportPDF = async () => {

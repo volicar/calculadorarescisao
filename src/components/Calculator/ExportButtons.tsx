@@ -17,27 +17,35 @@ export const ExportButtons = ({ formData, result }: ExportButtonsProps) => {
 
   if (!formData || !result) return null;
 
-  const generateWhatsAppText = () => {
-    return `*🧾 CÁLCULO DE RESCISÃO TRABALHISTA*
+const generateWhatsAppText = () => {
+  return `*🧾 CÁLCULO DE RESCISÃO TRABALHISTA*
 
 *📊 DADOS:*
 💰 Salário: ${formatCurrency(formData.salarioMensal)}
 📅 Admissão: ${formatDate(formData.dataAdmissao)}
 📅 Demissão: ${formatDate(formData.dataDemissao)}
-⏰ Aviso Prévio: ${formData.avisoPrevio === 'indenizado' ? 'Indenizado' : 
-                  formData.avisoPrevio === 'trabalhado' ? 'Trabalhado' : 'Não Aplicável'}
+⏰ Aviso Prévio: ${
+    formData.avisoPrevio === "indenizado"
+      ? "Indenizado"
+      : formData.avisoPrevio === "trabalhado"
+      ? "Trabalhado"
+      : "Não Aplicável"
+  }
 
 *💰 VALORES A RECEBER:*
-• Saldo de Salário: ${formatCurrency(result.saldoSalario)}
-• Férias Proporcionais: ${formatCurrency(result.feriasPROPorcionais)}
-• 13º Proporcional: ${formatCurrency(result.decimoTerceiroProporcional)}
-• FGTS + Multa: ${formatCurrency(result.fgtsMulta)}
+💵 Saldo de Salário: ${formatCurrency(result.saldoSalario)}
+🏖️ Férias Proporcionais: ${formatCurrency(result.feriasPROPorcionais)}
+🎄 13º Proporcional: ${formatCurrency(result.decimoTerceiroProporcional)}
+📦 FGTS + Multa: ${formatCurrency(result.fgtsMulta)}
 
 *🎯 TOTAL: ${formatCurrency(result.total)}*
 
-_Calculado em: ${new Date().toLocaleString('pt-BR')}_
-_Rescisão 2025 - Calculadora Trabalhista_`;
-  };
+_Calculado em: ${new Date().toLocaleString("pt-BR")}_
+_Rescisão 2025 - Calculadora Trabalhista_
+
+👉 Acesse: https://www.rescisaoonline.com.br`;
+};
+
 
   const handleExportPDF = async () => {
     setLoading('pdf');

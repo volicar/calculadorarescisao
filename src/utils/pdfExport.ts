@@ -173,7 +173,7 @@ export const generatePDF = async ({ formData, result }: PDFExportData): Promise<
       align: 'left'
     });
     
-    addText('Rescisão - www.rescisaoonline.com.br', margin, yPosition, {
+    addText('Rescisão - www.rescisaonline.com.br', margin, yPosition, {
       fontSize: 8,
       align: 'right'
     });

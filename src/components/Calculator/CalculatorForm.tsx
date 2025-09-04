@@ -9,25 +9,6 @@ import { Card } from '@/components/ui/Card';
 import { validateDates } from '@/utils/calculations';
 import { formatCurrencyInput, parseCurrency } from '@/utils/formatters';
 import { useState } from 'react';
-import { Metadata } from 'next';
-
-
-
-export const metadata: Metadata = {
-  title: 'Calculadora de Rescisão Online — Calcule seus direitos CLT',
-  description: 'Use nossa calculadora de rescisão online para simular FGTS, férias, 13º salário e aviso prévio. Rápido, fácil e gratuito.',
-};
-
-
-export default function CalculadoraPage() {
-  return (
-    <div>
-      <h1>Calculadora de Rescisão Online</h1>
-      {/* ... seu componente de cálculo ... */}
-    </div>
-  );
-}
-
 
 interface CalculatorFormProps {
   onSubmit: (data: CalculatorFormData) => void;
@@ -84,11 +65,12 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
       <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
         {/* Salário Mensal */}
         <div>
+          <div className='ml-1 mb-1 text-sm'>Salário Mensal</div>
           <Input
             label="Salário Mensal"
             value={salaryDisplay}
             onChange={handleSalaryChange}
-            placeholder="R$ 0,00"
+            placeholder="Digite seu salário (R$)"
             error={errors.salarioMensal?.message}
           />
         </div>
@@ -97,9 +79,11 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Data Admissão */}
           <div>
+            <div className='ml-1 mb-1 text-sm'>Data de Admissão</div>
             <Input
-              label="Data Admissão"
+              label="Data de Admissão"
               type="date"
+              placeholder="Selecione a data de admissão"
               max={today}
               {...register('dataAdmissao', { 
                 required: 'Data de admissão é obrigatória',
@@ -121,9 +105,11 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
           
           {/* Data Demissão */}
           <div>
+            <div className='ml-1 mb-1 text-sm'>Data de Demissão</div>
             <Input
-              label="Data Demissão"
+              label="Data de Demissão"
               type="date"
+              placeholder="Selecione a data de demissão"
               min={dataAdmissao || undefined}
               max={today}
               {...register('dataDemissao', { 

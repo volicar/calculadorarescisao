@@ -16,10 +16,10 @@ export default function HomePage() {
 
   const handleCalculate = async (data: CalculatorFormData) => {
     setLoading(true);
-    
-    // Simulate API call delay
+
+    // Simula delay de API
     await new Promise(resolve => setTimeout(resolve, 800));
-    
+
     try {
       const calculationResult = calculateRescisao(data);
       setResult(calculationResult);
@@ -34,7 +34,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Hero Section */}
-      <section id="home" className="container mx-auto px-4 py-8 max-w-4xl">
+      <section id="home" className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="text-center mb-8">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
             Calculadora de Rescisão
@@ -46,22 +46,31 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Calculator Form */}
-          <div className="order-1">
-            <CalculatorForm onSubmit={handleCalculate} loading={loading} />
+        {/* 👉 Parte alterada */}
+        {!result ? (
+          // Antes de calcular: centralizado
+          <div className="flex justify-center">
+            <div className="w-full max-w-xl">
+              <CalculatorForm onSubmit={handleCalculate} loading={loading} />
+            </div>
           </div>
-          
-          {/* Results */}
-          <div className="order-2">
-            <ResultDisplay result={result} />
-            {result && formData && (
-              <ExportButtons formData={formData} result={result} />
-            )}
+        ) : (
+          // Depois de calcular: form na esquerda e resultado na direita
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="order-1">
+              <CalculatorForm onSubmit={handleCalculate} loading={loading} />
+            </div>
+
+            <div className="order-2">
+              <ResultDisplay result={result} />
+              {result && formData && (
+                <ExportButtons formData={formData} result={result} />
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </section>
-        
+
       {/* Como Funciona Section */}
       <section id="como-funciona" className="bg-gray-800/50 py-16">
         <div className="container mx-auto px-4 max-w-6xl">
@@ -193,7 +202,7 @@ export default function HomePage() {
               }
             ].map((article, index) => (
               <Link key={index} href={`/blog/${article.id}`}>
-                <article className="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:border-primary-500 transition-all duration-300 cursor-pointer group h-full">
+                <article className="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:border-primary-500 transition-colors duration-300 cursor-pointer group h-full">
                   <div className="text-sm text-primary-400 mb-2">{article.date}</div>
                   <h3 className="text-lg font-semibold text-white mb-3 group-hover:text-primary-400 transition-colors">
                     {article.title}
@@ -209,7 +218,6 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Ver Todos os Artigos */}
           <div className="text-center mt-8">
             <Link href="/blog">
               <Button variant="outline" size="lg">

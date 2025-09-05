@@ -1,13 +1,21 @@
 "use client";
-import Script from "next/script";
-import React from "react";
 
-const AdsterraAd: React.FC = () => {
+import { useEffect, useState } from "react";
+
+export default function AdsterraAd() {
+  const [showAd, setShowAd] = useState(false);
+
+  useEffect(() => {
+    setShowAd(true); // só ativa no client-side
+  }, []);
+
+  if (!showAd) return null;
+
   return (
     <div style={{ width: 300, height: 250 }}>
-      <Script id="adsterra-config" strategy="beforeInteractive">
-        {`
-          try {
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
             atOptions = {
               'key' : '5723724e6cffdec49f9c8c9537a79dc5',
               'format' : 'iframe',
@@ -15,18 +23,13 @@ const AdsterraAd: React.FC = () => {
               'width' : 300,
               'params' : {}
             };
-          } catch(e) {
-            console.warn('Adsterra config failed', e);
-          }
-        `}
-      </Script>
-
-      <Script
-        strategy="lazyOnload"
-        src="//www.highperformanceformat.com/5723724e6cffdec49f9c8c9537a79dc5/invoke.js"
+          `,
+        }}
       />
+      <script
+        type="text/javascript"
+        src="//www.highperformanceformat.com/5723724e6cffdec49f9c8c9537a79dc5/invoke.js"
+      ></script>
     </div>
   );
-};
-
-export default AdsterraAd;
+}

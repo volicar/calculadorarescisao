@@ -9,6 +9,9 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Rescisão Online | Calculadora de Rescisão Trabalhista',
   description: 'Calcule sua rescisão trabalhista online com precisão, incluindo férias, 13º, FGTS e aviso prévio. Simples, rápido e gratuito!',
+  verification: {
+    google: 'oF-QTbm38s2fVK7YIY7goNwsweWbdXTxZdQ_i0uX978',
+  },
   keywords: 'rescisão online, calculadora rescisão, rescisão trabalhista, cálculo trabalhista, direitos trabalhistas, FGTS, férias proporcionais',
   authors: [{ name: 'Vinicius Olicar' }],
   openGraph: {

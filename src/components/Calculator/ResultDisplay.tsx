@@ -3,7 +3,7 @@
 import { CalculationResult } from '@/types/calculator';
 import { Card } from '@/components/ui/Card';
 import { formatCurrency } from '@/utils/formatters';
-
+import AdsterraAd from '@/components/AdsterraAd/AdsterraAd';
 interface ResultDisplayProps {
   result: CalculationResult | null;
 }
@@ -42,9 +42,9 @@ export const ResultDisplay = ({ result }: ResultDisplayProps) => {
       
       {/* Ad Space */}
       <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 text-center">
-        <div className="text-gray-400 text-sm mb-2">Ads</div>
+        <div className="text-gray-400 text-sm mb-2"></div>
         <div className="bg-gray-700 rounded h-32 flex items-center justify-center">
-          <span className="text-gray-500 text-sm">300x250</span>
+          <span className="text-gray-500 text-sm"><AdsterraAd /></span>
         </div>
       </div>
     </div>

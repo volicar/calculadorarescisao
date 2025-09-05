@@ -37,6 +37,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" className="dark">
+      <head>
+        <meta name="google-adsense-account" content="ca-pub-5155326548013471"></meta>
+      </head>
       <body className={`${inter.className} min-h-screen`} style={{ backgroundColor: '#111827', color: '#ffffff' }}>
         <div className="flex flex-col min-h-screen bg-gray-900 text-white">
           <Header />

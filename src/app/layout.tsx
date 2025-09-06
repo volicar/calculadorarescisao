@@ -25,7 +25,7 @@ export const metadata: Metadata = {
         alt: "Calculadora de Rescisão Trabalhista",
       },
     ],
-    url: 'https://rescisaoonline.com.br',
+    url: 'https://rescisaonline.com.br',
     siteName: 'Rescisão Online',
     locale: 'pt_BR',
     type: 'website',

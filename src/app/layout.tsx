@@ -17,6 +17,14 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Rescisão Online | Calculadora de Rescisão Trabalhista',
     description: 'Calcule sua rescisão trabalhista online com precisão, incluindo férias, 13º, FGTS e aviso prévio.',
+     images: [
+      {
+        url: "/metadata_og.png", // coloca o arquivo em /public
+        width: 1200,
+        height: 630,
+        alt: "Calculadora de Rescisão Trabalhista",
+      },
+    ],
     url: 'https://rescisaoonline.com.br',
     siteName: 'Rescisão Online',
     locale: 'pt_BR',

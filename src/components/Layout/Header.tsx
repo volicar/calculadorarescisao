@@ -14,6 +14,7 @@ export const Header = () => {
     { label: 'Inicio', id: 'home', type: 'scroll' },
     { label: 'Como Funciona', id: 'como-funciona', type: 'scroll' },
     { label: 'Blog', id: '/blog', type: 'link' },
+    { label: 'Sobre', id: '/sobre', type: 'link' },
   ];
 
   const handleMenuClick = (item: typeof menuItems[0]) => {

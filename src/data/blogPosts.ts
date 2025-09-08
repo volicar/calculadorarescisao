@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Blog - Rescisão Online',
     description: 'Artigos e Dicas sobre Rescisão Trabalhista',
-    url: 'https://rescisaoonline.com.br/blog',
+    url: 'https://rescisaonline.com.br/blog',
     siteName: 'Rescisão Online',
     locale: 'pt_BR',
     type: 'website',
@@ -82,10 +82,10 @@ Para garantir todos os direitos, é fundamental manter:
 
 ## Recomendações
 
-1. Mantenha-se atualizado sobre as mudanças na legislação
-2. Consulte um advogado trabalhista quando necessário
-3. Use nossa calculadora para estimar os valores de rescisão
-4. Guarde toda documentação trabalhista organizada
+- Mantenha-se atualizado sobre as mudanças na legislação
+- Consulte um advogado trabalhista quando necessário
+- Use nossa calculadora para estimar os valores de rescisão
+- Guarde toda documentação trabalhista organizada
 
 ## Conclusão
 
@@ -136,9 +136,9 @@ Dados:
 - Período trabalhado: 8 meses
 
 Cálculo:
-1. Férias proporcionais: (3.000 ÷ 12) × 8 = R$ 2.000,00
-2. Adicional 1/3: 2.000 ÷ 3 = R$ 666,67
-3. Total: R$ 2.666,67
+- Férias proporcionais: (3.000 ÷ 12) × 8 = R$ 2.000,00
+- Adicional 1/3: 2.000 ÷ 3 = R$ 666,67
+- Total: R$ 2.666,67
 
 ## Regras Importantes
 
@@ -162,10 +162,10 @@ Para comprovar o direito às férias proporcionais:
 
 ## Dicas Importantes
 
-1. Sempre calcule o período exato trabalhado
-2. Considere faltas não justificadas (podem reduzir o direito)
-3. Verifique convenção coletiva da categoria
-4. Use nossa calculadora para verificar os valores
+- Sempre calcule o período exato trabalhado
+- Considere faltas não justificadas (podem reduzir o direito)
+- Verifique convenção coletiva da categoria
+- Use nossa calculadora para verificar os valores
 
 ## Quando Não Há Direito
 
@@ -232,10 +232,10 @@ Trabalhador com:
 - Demissão sem justa causa
 
 Cálculo:
-1. FGTS mensal: 2.500 × 8% = R$ 200,00
-2. Total depositado: 200 × 24 meses = R$ 4.800,00
-3. Multa 40%: 4.800 × 40% = R$ 1.920,00
-4. Total a receber: R$ 6.720,00
+- FGTS mensal: 2.500 × 8% = R$ 200,00
+- Total depositado: 200 × 24 meses = R$ 4.800,00
+- Multa 40%: 4.800 × 40% = R$ 1.920,00
+- Total a receber: R$ 6.720,00
 
 ## Prazos para Saque
 
@@ -267,11 +267,10 @@ Para sacar o FGTS você precisa de:
 - Terminais de autoatendimento
 
 ## Dicas Importantes
-
-1. Confira sempre o extrato do FGTS
-2. Guarde todos os comprovantes de depósito
-3. Acompanhe os depósitos mensais
-4. Consulte regularmente seu saldo
+- Confira sempre o extrato do FGTS
+- Guarde todos os comprovantes de depósito
+- Acompanhe os depósitos mensais
+- Consulte regularmente seu saldo
 
 ## Cuidados e Fraudes
 

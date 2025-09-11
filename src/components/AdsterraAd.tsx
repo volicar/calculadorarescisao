@@ -7,14 +7,14 @@ interface AdsterraAdProps {
   height?: number;
 }
 
-export const AdsterraAd = ({ width = 300, height = 250 }: AdsterraAdProps) => {
+export const AdsterraAd = ({ width = 320, height = 50 }: AdsterraAdProps) => {
   const adRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (adRef.current && !adRef.current.hasChildNodes()) {
       // Configurar as opções
       (window as any).atOptions = {
-        'key': '5723724e6cffdec49f9c8c9537a79dc5',
+        'key': '167803ea1387e4b7bd5426aae2aa9a8a',
         'format': 'iframe',
         'height': height,
         'width': width,
@@ -24,7 +24,7 @@ export const AdsterraAd = ({ width = 300, height = 250 }: AdsterraAdProps) => {
       // Criar e adicionar o script
       const script = document.createElement('script');
       script.type = 'text/javascript';
-      script.src = '//www.highperformanceformat.com/5723724e6cffdec49f9c8c9537a79dc5/invoke.js';
+      script.src = '//www.highperformanceformat.com/167803ea1387e4b7bd5426aae2aa9a8a/invoke.js';
       script.async = true;
       
       adRef.current.appendChild(script);

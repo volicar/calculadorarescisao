@@ -5,7 +5,8 @@ export default async function sitemap() {
   // Páginas estáticas
   const staticRoutes = [
     "",
-    "/blog", // 👈 aqui entra a listagem do blog
+    "/blog",
+    "/sobre" // 👈 aqui entra a listagem do blog
   ].map((path) => ({
     url: `${baseUrl}${path}`,
     lastModified: new Date().toISOString(),

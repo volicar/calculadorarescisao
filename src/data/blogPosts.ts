@@ -300,7 +300,64 @@ Use nossa calculadora para estimar o valor total que você tem direito a receber
     tags: ['FGTS', 'Saque', 'Multa', 'Direitos'],
     author: 'Equipe Rescisão Online'
   }
+
+  ,{
+    id: 'principais-direitos-trabalhistas-2025',
+    title: 'Principais Direitos Trabalhistas Garantidos pela CLT em 2025',
+    description: 'Análise dos direitos fundamentais assegurados aos trabalhadores pela CLT e normas correlatas em 2025.',
+    content: `
+# Principais Direitos Trabalhistas em 2025
+
+A Consolidação das Leis do Trabalho (CLT) e legislações complementares asseguram um conjunto de direitos mínimos ao trabalhador. Abaixo, destacamos os institutos mais relevantes:
+
+## Jornada de Trabalho
+- Art. 58 da CLT: limite de 8h diárias e 44h semanais.
+- Horas extraordinárias (art. 59): mínimo de 50% de adicional.
+
+## Férias
+- Art. 129: direito a 30 dias anuais após 12 meses de vínculo.
+- Art. 134: possibilidade de fracionamento em até 3 períodos, sendo um de no mínimo 14 dias.
+- Pagamento acrescido de 1/3 constitucional (art. 7º, XVII, CF).
+
+## Décimo Terceiro Salário
+- Lei 4.090/1962 e 4.749/1965: pagamento em duas parcelas (novembro e dezembro).
+- Proporcionalidade em caso de rescisão contratual.
+
+## FGTS
+- Lei 8.036/1990: depósitos mensais de 8% da remuneração.
+- Hipóteses de saque: dispensa sem justa causa, aposentadoria, aquisição de imóvel, doenças graves etc.
+- Multa de 40% em dispensa imotivada.
+
+## Aviso Prévio
+- Lei 12.506/2011: mínimo de 30 dias, acrescido de 3 dias por ano de serviço, até 90 dias.
+- Pode ser trabalhado ou indenizado.
+
+## Adicional Noturno
+- Art. 73 da CLT: acréscimo de 20% para jornada entre 22h e 5h.
+
+## Licenças
+- Licença-maternidade: 120 dias (art. 392).
+- Licença-paternidade: 5 dias, podendo ser estendida por programas governamentais.
+- Licença médica: via benefício do INSS.
+
+## Verbas Rescisórias
+- Saldo de salário, férias vencidas e proporcionais + 1/3, 13º proporcional e FGTS.
+- Multa de 40% sobre o FGTS em dispensa sem justa causa.
+- Prazos: até o 10º dia após o desligamento (art. 477).
+
+## Conclusão
+O cumprimento desses direitos é obrigatório e sua inobservância pode gerar passivos trabalhistas. Recomenda-se a constante atualização das práticas de RH e a consulta a profissionais jurídicos para adequação às normas vigentes.
+  `,
+    date: '2025-02-01',
+    readTime: '8 min',
+    category: 'Direitos',
+    tags: ['Direitos Trabalhistas', 'Direitos', 'CLT', 'Legislação'],
+    author: 'Equipe Rescisão Online'
+  }
+
 ];
+
+
 
 export const getBlogPost = (id: string): BlogPost | undefined => {
   return blogPosts.find(post => post.id === id);

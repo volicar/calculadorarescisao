@@ -350,8 +350,8 @@ O cumprimento desses direitos é obrigatório e sua inobservância pode gerar pa
   `,
     date: '2025-02-01',
     readTime: '8 min',
-    category: 'Direito',
-    tags: ['Direitos Trabalhistas', 'CLT', 'Legislação'],
+    category: 'Direitos',
+    tags: ['Direitos Trabalhistas', 'Direitos', 'CLT', 'Legislação'],
     author: 'Equipe Rescisão Online'
   }
 

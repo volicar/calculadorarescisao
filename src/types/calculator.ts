@@ -2,9 +2,11 @@ export interface CalculatorFormData {
   salarioMensal: number;
   dataAdmissao: string;
   dataDemissao: string;
-  avisoPrevio: 'indenizado' | 'trabalhado' | 'nao_aplicavel';
   temFGTS: boolean;
-  periodoFerias: number; // meses de férias proporcionais
+  avisoPrevio: 'trabalhado' | 'indenizado';
+  tipoContrato: 'normal' | 'experiencia';
+  motivoRescisao: 'empresa' | 'funcionario';
+  tempoContrato: number;
 }
 
 export interface CalculationResult {
@@ -13,6 +15,7 @@ export interface CalculationResult {
   decimoTerceiroProporcional: number;
   fgtsMulta: number;
   avisoPrevioIndenizado: number;
+  indenizacaoExperiencia: number;
   total: number;
 }
 

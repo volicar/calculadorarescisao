@@ -4,6 +4,7 @@ import { CalculationResult } from '@/types/calculator';
 import { Card } from '@/components/ui/Card';
 import { formatCurrency } from '@/utils/formatters';
 import { AdsterraAd } from '../AdsterraAd';
+
 interface ResultDisplayProps {
   result: CalculationResult | null;
 }
@@ -11,11 +12,20 @@ interface ResultDisplayProps {
 export const ResultDisplay = ({ result }: ResultDisplayProps) => {
   if (!result) return null;
 
+  // Array com todos os itens do resultado, incluindo os novos campos
   const resultItems = [
     { label: 'Saldo de Salário', value: result.saldoSalario },
     { label: 'Férias Proporcionais', value: result.feriasPROPorcionais },
     { label: '13º Proporcional', value: result.decimoTerceiroProporcional },
     { label: 'FGTS + Multa', value: result.fgtsMulta },
+    // Mostrar aviso prévio apenas se houver valor
+    ...(result.avisoPrevioIndenizado > 0 
+      ? [{ label: 'Aviso Prévio Indenizado', value: result.avisoPrevioIndenizado }] 
+      : []),
+    // Mostrar indenização de experiência apenas se houver valor
+    ...(result.indenizacaoExperiencia > 0 
+      ? [{ label: 'Indenização Contrato Experiência', value: result.indenizacaoExperiencia }] 
+      : [])
   ];
 
   return (

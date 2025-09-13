@@ -1,13 +1,13 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import { CalculatorFormData } from '@/types/calculator';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { validateDates } from '@/utils/calculations';
-import { formatCurrencyInput, parseCurrency } from '@/utils/formatters';
+import { formatCurrencyInput } from '@/utils/formatters';
 import { useState } from 'react';
 
 interface CalculatorFormProps {
@@ -24,7 +24,6 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
     formState: { errors },
     watch,
     setValue,
-    control
   } = useForm<CalculatorFormData>({
     defaultValues: {
       salarioMensal: 0,
@@ -32,7 +31,6 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
       dataDemissao: '',
       avisoPrevio: 'indenizado',
       temFGTS: true,
-      periodoFerias: 0,
       tipoContrato: 'normal',
       motivoRescisao: 'empresa',
       tempoContrato: 0
@@ -68,7 +66,8 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
     { value: 'funcionario', label: 'Funcionário' }
   ];
 
-  const onFormSubmit = (data: CalculatorFormData) => {
+  const onFormSubmit: SubmitHandler<CalculatorFormData> = (data) => {
+    // Validação adicional das datas
     if (dataAdmissao && dataDemissao && !validateDates(dataAdmissao, dataDemissao)) {
       return;
     }
@@ -78,56 +77,75 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
   return (
     <Card title="Preencha seus dados trabalhistas" className="animate-fade-in">
       <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
+        {/* Nome (Opcional) */}
+        <div>
+          <label className="bg-gray-800/50 block text-sm font-medium mb-2">
+            Nome <span className="text-gray-400 text-xs">(opcional)</span>
+          </label>
+          <Input
+            type="text"
+            className="bg-gray-800/50"
+            placeholder="Digite seu nome"
+            {...register('nome' as keyof CalculatorFormData)}
+            error={(errors as any).nome?.message}
+          />
+        </div>
+
         {/* Tipo de Contrato */}
-        <Select
-          label="Tipo de Contrato"
-          options={tipoContratoOptions}
-          {...register('tipoContrato')}
-          error={errors.tipoContrato?.message}
-        />
+        <div>
+          <label className="block text-sm font-medium mb-2">Tipo de Contrato</label>
+          <Select
+            options={tipoContratoOptions}
+            {...register('tipoContrato')}
+            error={errors.tipoContrato?.message}
+          />
+        </div>
 
+        {/* Campos específicos para contrato de experiência */}
         {tipoContrato === 'experiencia' && (
-  <>
-    <Select
-      label="Motivo da Rescisão"
-      options={motivoRescisaoOptions}
-      {...register('motivoRescisao')}
-      error={errors.motivoRescisao?.message}
-      className="bg-gray-700/50 border border-gray-600 text-gray-200
-        focus:ring-emerald-500/20 focus:border-emerald-500/50 
-        hover:border-emerald-500/30 transition-colors cursor-pointer"
-    />
+          <>
+            <div>
+              <label className="block text-sm font-medium mb-2">Motivo da Rescisão</label>
+              <Select
+                options={motivoRescisaoOptions}
+                {...register('motivoRescisao')}
+                error={errors.motivoRescisao?.message}
+                className="bg-gray-700/50 border border-gray-600 text-gray-200
+                  focus:ring-emerald-500/20 focus:border-emerald-500/50 
+                  hover:border-emerald-500/30 transition-colors cursor-pointer"
+              />
+            </div>
 
-    <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700/50 hover:bg-gray-800/70 transition-colors">
-      <div className="text-sm font-medium text-gray-200 mb-2">Dias Trabalhados</div>
-      <Input
-        type="number"
-        min={1}
-        max={90}
-        {...register('tempoContrato', {
-          required: 'Dias trabalhados é obrigatório',
-          min: { value: 1, message: 'Mínimo de 1 dia' },
-          max: { value: 90, message: 'Máximo de 90 dias' }
-        })}
-        className="bg-gray-700/50 border-gray-600 text-gray-200 
-          focus:ring-emerald-500/20 focus:border-emerald-500/50 
-          hover:border-emerald-500/30 transition-colors"
-        placeholder="Entre 1 e 90 dias"
-        error={errors.tempoContrato?.message}
-      />
-      <div className="mt-2 text-xs text-gray-400">
-        Período máximo de 90 dias para contrato de experiência
-      </div>
-    </div>
-  </>
-)}
-
+            <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700/50 hover:bg-gray-800/70 transition-colors">
+              <label className="block text-sm font-medium text-gray-200 mb-2">
+                Dias Trabalhados
+              </label>
+              <Input
+                type="number"
+                min={1}
+                max={90}
+                {...register('tempoContrato', {
+                  required: 'Dias trabalhados é obrigatório',
+                  min: { value: 1, message: 'Mínimo de 1 dia' },
+                  max: { value: 90, message: 'Máximo de 90 dias' }
+                })}
+                className="bg-gray-700/50 border-gray-600 text-gray-200 
+                  focus:ring-emerald-500/20 focus:border-emerald-500/50 
+                  hover:border-emerald-500/30 transition-colors"
+                placeholder="Entre 1 e 90 dias"
+                error={errors.tempoContrato?.message}
+              />
+              <div className="mt-2 text-xs text-gray-400">
+                Período máximo de 90 dias para contrato de experiência
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Salário Mensal */}
         <div>
-          <div className='ml-1 mb-1 text-sm'>Salário Mensal</div>
+          <label className="block text-sm font-medium mb-2">Salário Mensal</label>
           <Input
-            label="Salário Mensal"
             value={salaryDisplay}
             onChange={handleSalaryChange}
             placeholder="Digite seu salário (R$)"
@@ -139,11 +157,9 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Data Admissão */}
           <div>
-            <div className='ml-1 mb-1 text-sm'>Data de Admissão</div>
+            <label className="block text-sm font-medium mb-2">Data de Admissão</label>
             <Input
-              label="Data de Admissão"
               type="date"
-              placeholder="dd/mm/aaaa"
               max={today}
               {...register('dataAdmissao', {
                 required: 'Data de admissão é obrigatória',
@@ -165,11 +181,9 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
 
           {/* Data Demissão */}
           <div>
-            <div className='ml-1 mb-1 text-sm'>Data de Demissão</div>
+            <label className="block text-sm font-medium mb-2">Data de Demissão</label>
             <Input
-              label="Data de Demissão"
               type="date"
-              placeholder="dd/mm/aaaa"
               min={dataAdmissao || undefined}
               max={today}
               {...register('dataDemissao', {
@@ -205,29 +219,30 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
               {...register('temFGTS')}
               id="fgts-checkbox"
               className="h-5 w-5 rounded border-gray-600 bg-gray-700/50 
-        accent-emerald-500 
-        focus:ring-2 focus:ring-emerald-500/20 focus:ring-offset-0 
-        hover:border-emerald-500/50 transition-colors cursor-pointer"
+                accent-emerald-500 
+                focus:ring-2 focus:ring-emerald-500/20 focus:ring-offset-0 
+                hover:border-emerald-500/50 transition-colors cursor-pointer"
             />
             <label
               htmlFor="fgts-checkbox"
               className="ml-3 text-sm font-medium text-gray-200 hover:text-emerald-400 
-        transition-colors select-none cursor-pointer"
+                transition-colors select-none cursor-pointer"
             >
               Possui FGTS depositado
             </label>
           </div>
         </div>
 
-
         {/* Aviso Prévio - apenas para contrato normal */}
         {tipoContrato === 'normal' && (
-          <Select
-            label="Aviso Prévio"
-            options={avisoPrevioOptions}
-            {...register('avisoPrevio')}
-            error={errors.avisoPrevio?.message}
-          />
+          <div>
+            <label className="block text-sm font-medium mb-2">Aviso Prévio</label>
+            <Select
+              options={avisoPrevioOptions}
+              {...register('avisoPrevio')}
+              error={errors.avisoPrevio?.message}
+            />
+          </div>
         )}
 
         {/* Botão de Calcular */}

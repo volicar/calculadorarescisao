@@ -1,4 +1,5 @@
 export interface CalculatorFormData {
+  nome?: string; // Campo opcional para o nome do funcionário
   salarioMensal: number;
   dataAdmissao: string;
   dataDemissao: string;

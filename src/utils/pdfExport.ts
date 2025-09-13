@@ -76,14 +76,36 @@ export const generatePDF = async ({ formData, result }: PDFExportData): Promise<
     yPosition += addLine(yPosition);
     yPosition += 5;
 
-    const dadosFuncionario = [
+    const dadosFuncionario = [];
+    
+    // Adicionar nome se fornecido
+    if (formData.nome && formData.nome.trim()) {
+      dadosFuncionario.push(['Nome:', formData.nome]);
+    }
+    
+    dadosFuncionario.push(
+      ['Tipo de Contrato:', formData.tipoContrato === 'normal' ? 'Normal' : 'Experiência'],
       ['Salário Mensal:', formatCurrency(formData.salarioMensal)],
       ['Data de Admissão:', formatDate(formData.dataAdmissao)],
-      ['Data de Demissão:', formatDate(formData.dataDemissao)],
-      ['Aviso Prévio:', formData.avisoPrevio === 'indenizado' ? 'Indenizado' : 
-                       formData.avisoPrevio === 'trabalhado' ? 'Trabalhado' : 'Não Aplicável'],
-      ['FGTS:', formData.temFGTS ? 'Sim' : 'Não']
-    ];
+      ['Data de Demissão:', formatDate(formData.dataDemissao)]
+    );
+
+    // Adicionar campos específicos para contrato de experiência
+    if (formData.tipoContrato === 'experiencia') {
+      dadosFuncionario.push(
+        ['Motivo da Rescisão:', formData.motivoRescisao === 'empresa' ? 'Empresa' : 'Funcionário'],
+        ['Dias Trabalhados:', `${formData.tempoContrato} dias`]
+      );
+    } else {
+      // Para contrato normal, mostrar aviso prévio
+      dadosFuncionario.push([
+        'Aviso Prévio:', 
+        formData.avisoPrevio === 'indenizado' ? 'Indenizado' : 
+        formData.avisoPrevio === 'trabalhado' ? 'Trabalhado' : 'Não Aplicável'
+      ]);
+    }
+
+    dadosFuncionario.push(['FGTS:', formData.temFGTS ? 'Sim' : 'Não']);
 
     dadosFuncionario.forEach(([label, value]) => {
       yPosition += addText(label, margin, yPosition, { fontSize: 10, fontStyle: 'bold' });
@@ -107,9 +129,18 @@ export const generatePDF = async ({ formData, result }: PDFExportData): Promise<
       ['Saldo de Salário', result.saldoSalario],
       ['Férias Proporcionais', result.feriasPROPorcionais],
       ['13º Proporcional', result.decimoTerceiroProporcional],
-      ['FGTS + Multa (40%)', result.fgtsMulta],
-      ['Aviso Prévio Indenizado', result.avisoPrevioIndenizado || 0]
+      ['FGTS + Multa (40%)', result.fgtsMulta]
     ];
+
+    // Adicionar aviso prévio indenizado apenas se houver valor
+    if (result.avisoPrevioIndenizado && result.avisoPrevioIndenizado > 0) {
+      calculosRescisao.push(['Aviso Prévio Indenizado', result.avisoPrevioIndenizado]);
+    }
+
+    // Adicionar indenização de experiência apenas se houver valor
+    if (result.indenizacaoExperiencia && result.indenizacaoExperiencia > 0) {
+      calculosRescisao.push(['Indenização Contrato Experiência', result.indenizacaoExperiencia]);
+    }
 
     calculosRescisao.forEach(([label, value]) => {
       yPosition += addText(label as string, margin, yPosition, { fontSize: 10 });
@@ -179,8 +210,11 @@ export const generatePDF = async ({ formData, result }: PDFExportData): Promise<
     });
 
     // DOWNLOAD
-    const fileName = `rescisao-trabalhista-${new Date().toISOString().split('T')[0]}.pdf`;
-    pdf.save(fileName);
+    const nomeArquivo = formData.nome && formData.nome.trim() 
+      ? `rescisao-${formData.nome.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`
+      : `rescisao-trabalhista-${new Date().toISOString().split('T')[0]}.pdf`;
+    
+    pdf.save(nomeArquivo);
     
   } catch (error) {
     console.error('Erro ao gerar PDF:', error);
@@ -190,35 +224,148 @@ export const generatePDF = async ({ formData, result }: PDFExportData): Promise<
 
 // Função alternativa para dispositivos móveis que podem ter problemas com jsPDF
 export const generateTextFile = ({ formData, result }: PDFExportData): void => {
-  const content = `
+  let content = `
  CALCULADORA DE RESCISÃO TRABALHISTA 
 =====================================
 
-DADOS DO FUNCIONÁRIO:
+DADOS DO FUNCIONÁRIO:`;
+
+  // Adicionar nome se fornecido
+  if (formData.nome && formData.nome.trim()) {
+    content += `\nNome: ${formData.nome}`;
+  }
+
+  content += `
+Tipo de Contrato: ${formData.tipoContrato === 'normal' ? 'Normal' : 'Experiência'}
 Salário Mensal: ${formatCurrency(formData.salarioMensal)}
 Data de Admissão: ${formatDate(formData.dataAdmissao)}
-Data de Demissão: ${formatDate(formData.dataDemissao)}
+Data de Demissão: ${formatDate(formData.dataDemissao)}`;
+
+  // Adicionar campos específicos para cada tipo de contrato
+  if (formData.tipoContrato === 'experiencia') {
+    content += `
+Motivo da Rescisão: ${formData.motivoRescisao === 'empresa' ? 'Empresa' : 'Funcionário'}
+Dias Trabalhados: ${formData.tempoContrato} dias`;
+  } else {
+    content += `
 Aviso Prévio: ${formData.avisoPrevio === 'indenizado' ? 'Indenizado' : 
-               formData.avisoPrevio === 'trabalhado' ? 'Trabalhado' : 'Não Aplicável'}
+               formData.avisoPrevio === 'trabalhado' ? 'Trabalhado' : 'Não Aplicável'}`;
+  }
+
+  content += `
+FGTS: ${formData.temFGTS ? 'Sim' : 'Não'}
 
 CÁLCULOS DA RESCISÃO:
 Saldo de Salário: ${formatCurrency(result.saldoSalario)}
 Férias Proporcionais: ${formatCurrency(result.feriasPROPorcionais)}
 13º Proporcional: ${formatCurrency(result.decimoTerceiroProporcional)}
-FGTS + Multa (40%): ${formatCurrency(result.fgtsMulta)}
-Aviso Prévio Indenizado: ${formatCurrency(result.avisoPrevioIndenizado || 0)}
+FGTS + Multa (40%): ${formatCurrency(result.fgtsMulta)}`;
+
+  // Adicionar valores condicionais
+  if (result.avisoPrevioIndenizado && result.avisoPrevioIndenizado > 0) {
+    content += `\nAviso Prévio Indenizado: ${formatCurrency(result.avisoPrevioIndenizado)}`;
+  }
+
+  if (result.indenizacaoExperiencia && result.indenizacaoExperiencia > 0) {
+    content += `\nIndenização Contrato Experiência: ${formatCurrency(result.indenizacaoExperiencia)}`;
+  }
+
+  content += `
 
 VALOR TOTAL: ${formatCurrency(result.total)}
 
 Calculado em: ${new Date().toLocaleString('pt-BR')}
-Rescisão - Calculadora Trabalhista
-  `.trim();
+Rescisão - Calculadora Trabalhista`;
 
   const element = document.createElement('a');
-  const file = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const file = new Blob([content.trim()], { type: 'text/plain;charset=utf-8' });
   element.href = URL.createObjectURL(file);
-  element.download = `rescisao-trabalhista-${new Date().toISOString().split('T')[0]}.txt`;
+  
+  const nomeArquivo = formData.nome && formData.nome.trim() 
+    ? `rescisao-${formData.nome.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.txt`
+    : `rescisao-trabalhista-${new Date().toISOString().split('T')[0]}.txt`;
+  
+  element.download = nomeArquivo;
   document.body.appendChild(element);
   element.click();
   document.body.removeChild(element);
 };
+
+// Função CORRIGIDA para gerar mensagem para WhatsApp
+export const generateWhatsAppMessage = ({ formData, result }: PDFExportData): string => {
+  let message = `🧾 *CÁLCULO DE RESCISÃO TRABALHISTA*\n\n`;
+
+  message += `📊 *DADOS:*\n`;
+
+  // Adicionar nome se fornecido
+  if (formData.nome && formData.nome.trim()) {
+    message += `👤 Nome: ${formData.nome}\n`;
+  }
+
+  // Adicionar tipo de contrato sempre
+  message += `📋 Tipo de Contrato: ${formData.tipoContrato === 'normal' ? 'Normal' : 'Experiência'}\n`;
+  
+  message += `💰 Salário: ${formatCurrency(formData.salarioMensal)}\n`;
+  message += `📅 Admissão: ${formatDate(formData.dataAdmissao)}\n`;
+  message += `📅 Demissão: ${formatDate(formData.dataDemissao)}\n`;
+
+  // Adicionar informações específicas do tipo de contrato
+  if (formData.tipoContrato === 'experiencia') {
+    message += `❓ Motivo da Rescisão: ${formData.motivoRescisao === 'empresa' ? 'Empresa' : 'Funcionário'}\n`;
+    message += `⏰ Dias Trabalhados: ${formData.tempoContrato} dias\n`;
+  } else {
+    // Para contrato normal, mostrar aviso prévio
+    const avisoPrevio = formData.avisoPrevio === 'indenizado' ? 'Indenizado' : 
+                       formData.avisoPrevio === 'trabalhado' ? 'Trabalhado' : 'Não Aplicável';
+    message += `⏰ Aviso Prévio: ${avisoPrevio}\n`;
+  }
+
+  // Sempre mostrar FGTS
+  message += `🏦 FGTS: ${formData.temFGTS ? 'Sim' : 'Não'}\n`;
+
+  message += `\n💰 *VALORES A RECEBER:*\n`;
+  message += `• Saldo de Salário: ${formatCurrency(result.saldoSalario)}\n`;
+  message += `• Férias Proporcionais: ${formatCurrency(result.feriasPROPorcionais)}\n`;
+  message += `• 13º Proporcional: ${formatCurrency(result.decimoTerceiroProporcional)}\n`;
+  message += `• FGTS + Multa: ${formatCurrency(result.fgtsMulta)}\n`;
+
+  // Adicionar valores condicionais
+  if (result.avisoPrevioIndenizado && result.avisoPrevioIndenizado > 0) {
+    message += `• Aviso Prévio Indenizado: ${formatCurrency(result.avisoPrevioIndenizado)}\n`;
+  }
+
+  if (result.indenizacaoExperiencia && result.indenizacaoExperiencia > 0) {
+    message += `• Indenização Experiência: ${formatCurrency(result.indenizacaoExperiencia)}\n`;
+  }
+
+  message += `\n🎯 *TOTAL: ${formatCurrency(result.total)}*\n\n`;
+  
+  message += `*Calculado em: ${new Date().toLocaleString('pt-BR')}*\n`;
+  message += `*Rescisão 2025 - Calculadora Trabalhista*\n\n`;
+  message += `👉 Acesse: https://www.rescisaonline.com.br`;
+
+  return message;
+};
+
+// Função para copiar texto (alternativa ao WhatsApp)
+export const generateCopyText = ({ formData, result }: PDFExportData): string => {
+  return generateWhatsAppMessage({ formData, result });
+};
+
+// EXEMPLOS DE USO:
+
+// Para WhatsApp:
+// const message = generateWhatsAppMessage({ formData, result });
+// const encodedMessage = encodeURIComponent(message);
+// const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+// window.open(whatsappUrl, '_blank');
+
+// Para copiar para área de transferência:
+// const text = generateCopyText({ formData, result });
+// navigator.clipboard.writeText(text);
+
+// Para gerar PDF:
+// await generatePDF({ formData, result });
+
+// Para gerar arquivo TXT:
+// generateTextFile({ formData, result });

@@ -7,9 +7,10 @@ import { AdsterraAd } from '../AdsterraAd';
 
 interface ResultDisplayProps {
   result: CalculationResult | null;
+  nome?: string; // Nome opcional
 }
 
-export const ResultDisplay = ({ result }: ResultDisplayProps) => {
+export const ResultDisplay = ({ result, nome }: ResultDisplayProps) => {
   if (!result) return null;
 
   // Array com todos os itens do resultado, incluindo os novos campos
@@ -28,9 +29,20 @@ export const ResultDisplay = ({ result }: ResultDisplayProps) => {
       : [])
   ];
 
+  // Título dinâmico baseado no nome
+  const cardTitle = nome ? `Resultado - ${nome}` : 'Resultado';
+
   return (
     <div className="space-y-4 animate-fade-in">
-      <Card title="Resultado">
+      <Card title={cardTitle}>
+        {/* Exibir nome se fornecido */}
+        {nome && (
+          <div className="mb-4 p-3 bg-gray-800/50 rounded-lg border border-gray-700/50">
+            <div className="text-sm text-gray-400 mb-1">Funcionário(a):</div>
+            <div className="text-white font-medium">{nome}</div>
+          </div>
+        )}
+
         <div className="space-y-4">
           {resultItems.map((item, index) => (
             <div key={index} className="flex justify-between items-center py-2 border-b border-gray-700 last:border-b-0">

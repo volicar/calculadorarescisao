@@ -301,7 +301,7 @@ Use nossa calculadora para estimar o valor total que você tem direito a receber
     author: 'Equipe Rescisão Online'
   }
 
-  ,{
+  , {
     id: 'principais-direitos-trabalhistas-2025',
     title: 'Principais Direitos Trabalhistas Garantidos pela CLT em 2025',
     description: 'Análise dos direitos fundamentais assegurados aos trabalhadores pela CLT e normas correlatas em 2025.',
@@ -352,6 +352,62 @@ O cumprimento desses direitos é obrigatório e sua inobservância pode gerar pa
     readTime: '8 min',
     category: 'Direitos',
     tags: ['Direitos Trabalhistas', 'Direitos', 'CLT', 'Legislação'],
+    author: 'Equipe Rescisão Online'
+  },
+
+  {
+    id: 'contrato-experiencia-90-dias',
+    title: 'Contrato de Experiência de 90 Dias na CLT',
+    description: 'Entenda como funciona o contrato de experiência de até 90 dias segundo a Consolidação das Leis do Trabalho, incluindo regras de cálculo.',
+    content: `
+# Contrato de Experiência de 90 Dias
+
+O contrato de experiência é uma modalidade prevista na Consolidação das Leis do Trabalho (CLT), utilizada para que empregador e empregado possam avaliar se a relação de trabalho é adequada antes da efetivação do vínculo por prazo indeterminado.
+
+## Prazo Máximo
+- **Art. 445, parágrafo único, CLT**: prazo máximo de **90 dias**.
+- Pode ser firmado em período único ou dividido em dois (ex.: 45 + 45 dias).
+
+## Direitos Durante o Contrato
+Mesmo sendo por prazo determinado, o trabalhador em experiência possui os mesmos direitos básicos:
+- Registro em carteira (CTPS).
+- Jornada de trabalho regular e pagamento de horas extras.
+- FGTS com depósito mensal de 8%.
+- Férias e 13º proporcionais.
+- Benefícios previstos em convenção ou acordo coletivo.
+
+## Rescisão Antecipada
+- Se o contrato for rescindido **antes do término**, pode haver:
+  - Pagamento da indenização de metade dos dias restantes (**art. 479, CLT**), quando a dispensa for pelo empregador sem justa causa.
+  - Caso a rescisão seja pelo empregado, pode haver desconto equivalente (**art. 480, CLT**).
+- Se o contrato terminar no prazo combinado, **não há aviso prévio**.
+
+## Como é Realizado o Cálculo no Período de Experiência
+Ao final ou na rescisão antecipada do contrato de experiência, o empregado tem direito às verbas proporcionais:
+
+### Exemplo prático:
+- Salário: **R$ 2.000,00**
+- Tempo trabalhado: **60 dias**
+
+O cálculo inclui:
+- **Saldo de salário**: dias trabalhados no mês da rescisão.
+- **Férias proporcionais**: (60 ÷ 12 meses = 0,166) × R$ 2.000 = **R$ 333,33** + 1/3 constitucional.
+- **13º proporcional**: (60 ÷ 365 dias = 0,164) × R$ 2.000 = **R$ 328,77**.
+- **FGTS**: 8% sobre o salário total do período.
+- **Multa de 40% sobre o FGTS**: caso seja dispensa sem justa causa.
+
+> ⚖️ Se a rescisão ocorrer antes do prazo final, o empregador deve ainda pagar metade da remuneração dos dias que restariam para concluir os 90 dias.
+
+## Conversão em Prazo Indeterminado
+Se o empregado continuar trabalhando após os 90 dias sem nova formalização, o contrato se converte automaticamente em prazo indeterminado (**art. 451, CLT**).
+
+## Conclusão
+O contrato de experiência de 90 dias é uma ferramenta essencial para empresas avaliarem candidatos, sem retirar do trabalhador os direitos mínimos garantidos pela legislação. A correta aplicação evita passivos trabalhistas e garante segurança jurídica às partes.
+  `,
+    date: '2025-02-10',
+    readTime: '7 min',
+    category: 'Contratos',
+    tags: ['Contrato de Experiência', 'CLT', 'Cálculo Trabalhista', 'Direitos Trabalhistas'],
     author: 'Equipe Rescisão Online'
   }
 

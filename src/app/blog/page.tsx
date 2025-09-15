@@ -12,7 +12,7 @@ export default function BlogPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-  const categories = ['all', 'Legislação', 'Cálculos', 'FGTS', 'Direitos'];
+  const categories = ['all', 'Legislação', 'Cálculos', 'FGTS', 'Direitos', 'Contratos'];
 
   const filteredPosts = blogPosts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

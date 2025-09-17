@@ -42,7 +42,7 @@ export const Footer = () => {
           </div>
           
           <div className="text-gray-400 text-sm">
-            Copyright © 2025 Rescisão Online. Todos os direitos reservados.
+            Copyright © 2025 Rescisão Online.
           </div>
         </div>
 

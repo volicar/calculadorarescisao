@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Rescisão Online | Calculadora de Rescisão Trabalhista',
     description: 'Calcule sua rescisão trabalhista online com precisão, incluindo férias, 13º, FGTS e aviso prévio.',
-     images: [
+    images: [
       {
         url: "/metadata_og.png", // coloca o arquivo em /public
         width: 1200,
@@ -46,6 +46,8 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className="dark">
       <head>
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5155326548013471"
+          crossOrigin="anonymous"></script>
         <meta name="google-adsense-account" content="ca-pub-5155326548013471"></meta>
       </head>
       <body className={`${inter.className} min-h-screen`} style={{ backgroundColor: '#111827', color: '#ffffff' }}>

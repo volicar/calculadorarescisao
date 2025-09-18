@@ -1,7 +1,7 @@
 'use client';
 
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { CalculatorFormData } from '@/types/calculator';
+import { CalculatorFormData, getMotivosOptions, getMotivoInfo } from '@/types/calculator';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/Card';
 import { validateDates } from '@/utils/calculations';
 import { formatCurrencyInput } from '@/utils/formatters';
 import { useState } from 'react';
+import { Info } from 'lucide-react';
 
 interface CalculatorFormProps {
   onSubmit: (data: CalculatorFormData) => void;
@@ -17,6 +18,7 @@ interface CalculatorFormProps {
 
 export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProps) => {
   const [salaryDisplay, setSalaryDisplay] = useState('R$ 0,00');
+  const [showMotivoInfo, setShowMotivoInfo] = useState(false);
 
   const {
     register,
@@ -32,7 +34,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
       avisoPrevio: 'indenizado',
       temFGTS: true,
       tipoContrato: 'normal',
-      motivoRescisao: 'empresa',
+      motivoRescisao: 'dispensa_sem_justa_causa', // Valor padrão mais comum
       tempoContrato: 0
     }
   });
@@ -40,6 +42,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
   const dataAdmissao = watch('dataAdmissao');
   const dataDemissao = watch('dataDemissao');
   const tipoContrato = watch('tipoContrato');
+  const motivoRescisao = watch('motivoRescisao');
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -61,10 +64,11 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
     { value: 'experiencia', label: 'Experiência' }
   ];
 
-  const motivoRescisaoOptions = [
-    { value: 'empresa', label: 'Empresa' },
-    { value: 'funcionario', label: 'Funcionário' }
-  ];
+  // Obter opções dos motivos de rescisão da CLT
+  const motivoRescisaoOptions = getMotivosOptions();
+
+  // Obter informações do motivo selecionado
+  const motivoInfo = motivoRescisao ? getMotivoInfo(motivoRescisao) : null;
 
   const onFormSubmit: SubmitHandler<CalculatorFormData> = (data) => {
     // Validação adicional das datas
@@ -101,45 +105,97 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
           />
         </div>
 
-        {/* Campos específicos para contrato de experiência */}
-        {tipoContrato === 'experiencia' && (
-          <>
-            <div>
-              <label className="block text-sm font-medium mb-2">Motivo da Rescisão</label>
-              <Select
-                options={motivoRescisaoOptions}
-                {...register('motivoRescisao')}
-                error={errors.motivoRescisao?.message}
-                className="bg-gray-700/50 border border-gray-600 text-gray-200
-                  focus:ring-emerald-500/20 focus:border-emerald-500/50 
-                  hover:border-emerald-500/30 transition-colors cursor-pointer"
-              />
-            </div>
+        {/* Motivo da Rescisão - Agora para todos os contratos */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium">Motivo da Rescisão</label>
+            <button
+              type="button"
+              onClick={() => setShowMotivoInfo(!showMotivoInfo)}
+              className="flex items-center text-xs text-gray-400 hover:text-emerald-400 transition-colors"
+            >
+              <Info className="w-3 h-3 mr-1" />
+              Info
+            </button>
+          </div>
+          
+          <Select
+            options={motivoRescisaoOptions}
+            {...register('motivoRescisao', {
+              required: 'Motivo da rescisão é obrigatório'
+            })}
+            error={errors.motivoRescisao?.message}
+            className="bg-gray-700/50 border border-gray-600 text-gray-200
+              focus:ring-emerald-500/20 focus:border-emerald-500/50 
+              hover:border-emerald-500/30 transition-colors cursor-pointer"
+          />
 
-            <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700/50 hover:bg-gray-800/70 transition-colors">
-              <label className="block text-sm font-medium text-gray-200 mb-2">
-                Dias Trabalhados
-              </label>
-              <Input
-                type="number"
-                min={1}
-                max={90}
-                {...register('tempoContrato', {
-                  required: 'Dias trabalhados é obrigatório',
-                  min: { value: 1, message: 'Mínimo de 1 dia' },
-                  max: { value: 90, message: 'Máximo de 90 dias' }
-                })}
-                className="bg-gray-700/50 border-gray-600 text-gray-200 
-                  focus:ring-emerald-500/20 focus:border-emerald-500/50 
-                  hover:border-emerald-500/30 transition-colors"
-                placeholder="Entre 1 e 90 dias"
-                error={errors.tempoContrato?.message}
-              />
-              <div className="mt-2 text-xs text-gray-400">
-                Período máximo de 90 dias para contrato de experiência
+          {/* Informações do motivo selecionado */}
+          {showMotivoInfo && motivoInfo && (
+            <div className="mt-3 p-4 bg-gray-800/70 rounded-lg border border-gray-700/50">
+              <h4 className="text-sm font-semibold text-emerald-400 mb-2">{motivoInfo.nome}</h4>
+              <p className="text-xs text-gray-300 mb-3">{motivoInfo.descricao}</p>
+              
+              <div className="space-y-2">
+                <div className="text-xs">
+                  <span className="text-gray-400">Direitos:</span>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-1 text-xs">
+                    <div className={`flex items-center ${motivoInfo.direitos.saldoSalario ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <span className="mr-1">{motivoInfo.direitos.saldoSalario ? '✓' : '✗'}</span>
+                      Saldo Salário
+                    </div>
+                    <div className={`flex items-center ${motivoInfo.direitos.ferias ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <span className="mr-1">{motivoInfo.direitos.ferias ? '✓' : '✗'}</span>
+                      Férias
+                    </div>
+                    <div className={`flex items-center ${motivoInfo.direitos.decimoTerceiro ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <span className="mr-1">{motivoInfo.direitos.decimoTerceiro ? '✓' : '✗'}</span>
+                      13º Salário
+                    </div>
+                    <div className={`flex items-center ${motivoInfo.direitos.avisoPrevio ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <span className="mr-1">{motivoInfo.direitos.avisoPrevio ? '✓' : '✗'}</span>
+                      Aviso Prévio
+                    </div>
+                    <div className={`flex items-center ${motivoInfo.direitos.fgts ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <span className="mr-1">{motivoInfo.direitos.fgts ? '✓' : '✗'}</span>
+                      FGTS
+                    </div>
+                    <div className={`flex items-center ${motivoInfo.direitos.seguroDesemprego ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <span className="mr-1">{motivoInfo.direitos.seguroDesemprego ? '✓' : '✗'}</span>
+                      Seguro-Desemprego
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </>
+          )}
+        </div>
+
+        {/* Campos específicos para contrato de experiência */}
+        {tipoContrato === 'experiencia' && (
+          <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700/50 hover:bg-gray-800/70 transition-colors">
+            <label className="block text-sm font-medium text-gray-200 mb-2">
+              Dias Trabalhados
+            </label>
+            <Input
+              type="number"
+              min={1}
+              max={90}
+              {...register('tempoContrato', {
+                required: 'Dias trabalhados é obrigatório',
+                min: { value: 1, message: 'Mínimo de 1 dia' },
+                max: { value: 90, message: 'Máximo de 90 dias' }
+              })}
+              className="bg-gray-700/50 border-gray-600 text-gray-200 
+                focus:ring-emerald-500/20 focus:border-emerald-500/50 
+                hover:border-emerald-500/30 transition-colors"
+              placeholder="Entre 1 e 90 dias"
+              error={errors.tempoContrato?.message}
+            />
+            <div className="mt-2 text-xs text-gray-400">
+              Período máximo de 90 dias para contrato de experiência
+            </div>
+          </div>
         )}
 
         {/* Salário Mensal */}
@@ -233,8 +289,8 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
           </div>
         </div>
 
-        {/* Aviso Prévio - apenas para contrato normal */}
-        {tipoContrato === 'normal' && (
+        {/* Aviso Prévio - apenas se aplicável conforme o motivo */}
+        {motivoInfo?.direitos.avisoPrevio && tipoContrato === 'normal' && (
           <div>
             <label className="block text-sm font-medium mb-2">Aviso Prévio</label>
             <Select

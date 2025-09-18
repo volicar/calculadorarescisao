@@ -341,7 +341,7 @@ export const generateWhatsAppMessage = ({ formData, result }: PDFExportData): st
   message += `\n🎯 *TOTAL: ${formatCurrency(result.total)}*\n\n`;
   
   message += `*Calculado em: ${new Date().toLocaleString('pt-BR')}*\n`;
-  message += `*Rescisão 2025 - Calculadora Trabalhista*\n\n`;
+  message += `*Rescisão Online - Calculadora Trabalhista*\n\n`;
   message += `👉 Acesse: https://www.rescisaonline.com.br`;
 
   return message;

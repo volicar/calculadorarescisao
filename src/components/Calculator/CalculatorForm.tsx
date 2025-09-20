@@ -1,7 +1,7 @@
 'use client';
 
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { CalculatorFormData } from '@/types/calculator';
+import { CalculatorFormData, getMotivosOptions, getMotivoInfo } from '@/types/calculator';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/Card';
 import { validateDates } from '@/utils/calculations';
 import { formatCurrencyInput } from '@/utils/formatters';
 import { useState } from 'react';
+import { Info } from 'lucide-react';
 
 interface CalculatorFormProps {
   onSubmit: (data: CalculatorFormData) => void;
@@ -17,6 +18,7 @@ interface CalculatorFormProps {
 
 export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProps) => {
   const [salaryDisplay, setSalaryDisplay] = useState('R$ 0,00');
+  const [showMotivoInfo, setShowMotivoInfo] = useState(false);
 
   const {
     register,
@@ -40,6 +42,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
   const dataAdmissao = watch('dataAdmissao');
   const dataDemissao = watch('dataDemissao');
   const tipoContrato = watch('tipoContrato');
+  const motivoRescisao = watch('motivoRescisao');
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -247,8 +250,8 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
           </div>
         </div>
 
-        {/* Aviso Prévio - apenas para contrato normal */}
-        {tipoContrato === 'normal' && (
+        {/* Aviso Prévio - apenas se aplicável conforme o motivo */}
+        {motivoInfo?.direitos.avisoPrevio && tipoContrato === 'normal' && (
           <div>
             <label className="block text-sm font-medium mb-2">Aviso Prévio</label>
             <Select

@@ -164,6 +164,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
             onChange={handleSalaryChange}
             placeholder="Digite seu salário (R$)"
             error={errors.salarioMensal?.message}
+            inputMode='numeric'
           />
         </div>
 

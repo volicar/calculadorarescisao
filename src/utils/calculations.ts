@@ -107,25 +107,28 @@ export const calculateRescisao = (data: CalculatorFormData): CalculationResult =
     // Cálculos para contrato de experiência
     saldoSalario = (tempoContrato * salarioDiario);
 
-    // CORREÇÃO: Indenização experiência apenas para dispensa sem justa causa antecipada
-    if (motivoFinal === 'dispensa_sem_justa_causa') {
+    // CORREÇÃO: Indenização experiência Art. 479 CLT - apenas para rescisão antecipada pelo empregador
+    if (motivoFinal === 'dispensa_sem_justa_causa' && tempoContrato < 90) {
       const diasRestantes = Math.max(0, 90 - tempoContrato);
-      // Indenização = 50% dos dias restantes
+      // Art. 479 CLT: indenização = 50% da remuneração dos dias restantes
       indenizacaoExperiencia = (diasRestantes / 2) * salarioDiario;
     }
 
-    // CORREÇÃO: Férias para contrato experiência
-    // Direito a férias proporcionais se trabalhou mais de 15 dias E não foi demitido por justa causa
-    if (tempoContrato >= 15 && motivoFinal !== 'dispensa_com_justa_causa') {
-      // Base de cálculo: proporção dos dias trabalhados
-      feriasPROPorcionais = (tempoContrato / 30) * salarioMensal;
-      // Adicionar 1/3 constitucional
-      feriasPROPorcionais += feriasPROPorcionais / 3;
+    // CORREÇÃO: Férias proporcionais para contrato experiência
+    // CLT: Direito se trabalhou mais de 15 dias E não foi demitido por justa causa
+    if (tempoContrato > 15 && motivoFinal !== 'dispensa_com_justa_causa') {
+      // Base: meses trabalhados (considerando fração > 15 dias = mês completo)
+      const mesesTrabalhados = tempoContrato > 15 ? Math.ceil(tempoContrato / 30) : 0;
+      const valorFerias = (mesesTrabalhados / 12) * salarioMensal;
+      const umTerco = valorFerias / 3;
+      feriasPROPorcionais = valorFerias + umTerco;
     }
 
-    // CORREÇÃO: 13º proporcional para experiência
-    if (motivoInfo?.direitos?.decimoTerceiro) {
-      decimoTerceiroProporcional = (tempoContrato / 30) * salarioMensal;
+    // CORREÇÃO: 13º proporcional para experiência (Art. 24 Decreto-Lei 1.535/77)
+    if (motivoInfo?.direitos?.decimoTerceiro && tempoContrato >= 15) {
+      // Base: 1/12 por mês trabalhado (fração > 15 dias = mês completo)
+      const mesesPara13 = tempoContrato > 15 ? Math.ceil(tempoContrato / 30) : 0;
+      decimoTerceiroProporcional = (mesesPara13 / 12) * salarioMensal;
     }
 
   } else {

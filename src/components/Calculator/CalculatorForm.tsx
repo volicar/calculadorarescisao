@@ -32,7 +32,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
       avisoPrevio: 'indenizado',
       temFGTS: true,
       tipoContrato: 'normal',
-      motivoRescisao: 'empresa',
+      motivoRescisao: 'dispensa_sem_justa_causa', // Valor padrão mais apropriado
       tempoContrato: 0
     }
   });
@@ -61,9 +61,22 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
     { value: 'experiencia', label: 'Experiência' }
   ];
 
-  const motivoRescisaoOptions = [
-    { value: 'empresa', label: 'Empresa' },
-    { value: 'funcionario', label: 'Funcionário' }
+  // Opções para contrato NORMAL (mais completas)
+  const motivoRescisaoNormalOptions = [
+    { value: 'dispensa_sem_justa_causa', label: 'Dispensa sem Justa Causa' },
+    { value: 'dispensa_com_justa_causa', label: 'Dispensa com Justa Causa' },
+    { value: 'pedido_demissao', label: 'Pedido de Demissão' },
+    { value: 'comum_acordo', label: 'Comum Acordo' },
+    { value: 'termino_contrato', label: 'Término do Contrato' },
+    { value: 'aposentadoria', label: 'Aposentadoria' }
+  ];
+
+  // Opções para contrato de EXPERIÊNCIA (apenas as aplicáveis)
+  const motivoRescisaoExperienciaOptions = [
+    { value: 'dispensa_sem_justa_causa', label: 'Dispensa sem Justa Causa' },
+    { value: 'dispensa_com_justa_causa', label: 'Dispensa com Justa Causa' },
+    { value: 'pedido_demissao', label: 'Pedido de Demissão' },
+    { value: 'comum_acordo', label: 'Comum Acordo' }
   ];
 
   const onFormSubmit: SubmitHandler<CalculatorFormData> = (data) => {
@@ -101,45 +114,46 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
           />
         </div>
 
+        {/* MOTIVO DA RESCISÃO - Apenas para contrato NORMAL */}
+        {tipoContrato === 'normal' && (
+          <div>
+            <label className="block text-sm font-medium mb-2">Motivo da Rescisão</label>
+            <Select
+              options={motivoRescisaoNormalOptions}
+              {...register('motivoRescisao')}
+              error={errors.motivoRescisao?.message}
+              className="bg-gray-700/50 border border-gray-600 text-gray-200
+                focus:ring-emerald-500/20 focus:border-emerald-500/50 
+                hover:border-emerald-500/30 transition-colors cursor-pointer"
+            />
+          </div>
+        )}
+
         {/* Campos específicos para contrato de experiência */}
         {tipoContrato === 'experiencia' && (
-          <>
-            <div>
-              <label className="block text-sm font-medium mb-2">Motivo da Rescisão</label>
-              <Select
-                options={motivoRescisaoOptions}
-                {...register('motivoRescisao')}
-                error={errors.motivoRescisao?.message}
-                className="bg-gray-700/50 border border-gray-600 text-gray-200
-                  focus:ring-emerald-500/20 focus:border-emerald-500/50 
-                  hover:border-emerald-500/30 transition-colors cursor-pointer"
-              />
+          <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700/50 hover:bg-gray-800/70 transition-colors">
+            <label className="block text-sm font-medium text-gray-200 mb-2">
+              Dias Trabalhados
+            </label>
+            <Input
+              type="number"
+              min={1}
+              max={90}
+              {...register('tempoContrato', {
+                required: 'Dias trabalhados é obrigatório',
+                min: { value: 1, message: 'Mínimo de 1 dia' },
+                max: { value: 90, message: 'Máximo de 90 dias' }
+              })}
+              className="bg-gray-700/50 border-gray-600 text-gray-200 
+                focus:ring-emerald-500/20 focus:border-emerald-500/50 
+                hover:border-emerald-500/30 transition-colors"
+              placeholder="Entre 1 e 90 dias"
+              error={errors.tempoContrato?.message}
+            />
+            <div className="mt-2 text-xs text-gray-400">
+              Período máximo de 90 dias para contrato de experiência
             </div>
-
-            <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700/50 hover:bg-gray-800/70 transition-colors">
-              <label className="block text-sm font-medium text-gray-200 mb-2">
-                Dias Trabalhados
-              </label>
-              <Input
-                type="number"
-                min={1}
-                max={90}
-                {...register('tempoContrato', {
-                  required: 'Dias trabalhados é obrigatório',
-                  min: { value: 1, message: 'Mínimo de 1 dia' },
-                  max: { value: 90, message: 'Máximo de 90 dias' }
-                })}
-                className="bg-gray-700/50 border-gray-600 text-gray-200 
-                  focus:ring-emerald-500/20 focus:border-emerald-500/50 
-                  hover:border-emerald-500/30 transition-colors"
-                placeholder="Entre 1 e 90 dias"
-                error={errors.tempoContrato?.message}
-              />
-              <div className="mt-2 text-xs text-gray-400">
-                Período máximo de 90 dias para contrato de experiência
-              </div>
-            </div>
-          </>
+          </div>
         )}
 
         {/* Salário Mensal */}

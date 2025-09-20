@@ -7,6 +7,23 @@ interface PDFExportData {
   result: CalculationResult;
 }
 
+// Função auxiliar para formatar o motivo da rescisão
+const formatMotivoRescisao = (motivo: string): string => {
+  const motivosMap: { [key: string]: string } = {
+    'dispensa_sem_justa_causa': 'Dispensa sem Justa Causa',
+    'dispensa_com_justa_causa': 'Dispensa com Justa Causa', 
+    'pedido_demissao': 'Pedido de Demissão',
+    'comum_acordo': 'Comum Acordo',
+    'termino_contrato': 'Término do Contrato',
+    'aposentadoria': 'Aposentadoria',
+    'morte': 'Falecimento',
+    'empresa': 'Iniciativa da Empresa',
+    'funcionario': 'Iniciativa do Funcionário'
+  };
+
+  return motivosMap[motivo] || motivo;
+};
+
 export const generatePDF = async ({ formData, result }: PDFExportData): Promise<void> => {
   try {
     // Criar instância do PDF
@@ -90,19 +107,19 @@ export const generatePDF = async ({ formData, result }: PDFExportData): Promise<
       ['Data de Demissão:', formatDate(formData.dataDemissao)]
     );
 
-    // Adicionar campos específicos para contrato de experiência
+    // CORREÇÃO: Campos específicos por tipo de contrato
     if (formData.tipoContrato === 'experiencia') {
-      dadosFuncionario.push(
-        ['Motivo da Rescisão:', formData.motivoRescisao === 'empresa' ? 'Empresa' : 'Funcionário'],
-        ['Dias Trabalhados:', `${formData.tempoContrato} dias`]
-      );
+      // Para experiência: apenas dias trabalhados (SEM motivo da rescisão)
+      dadosFuncionario.push(['Dias Trabalhados:', `${formData.tempoContrato} dias`]);
     } else {
-      // Para contrato normal, mostrar aviso prévio
-      dadosFuncionario.push([
-        'Aviso Prévio:', 
-        formData.avisoPrevio === 'indenizado' ? 'Indenizado' : 
-        formData.avisoPrevio === 'trabalhado' ? 'Trabalhado' : 'Não Aplicável'
-      ]);
+      // Para contrato normal: motivo da rescisão + aviso prévio
+      dadosFuncionario.push(
+        ['Motivo da Rescisão:', formatMotivoRescisao(formData.motivoRescisao)],
+        ['Aviso Prévio:', 
+          formData.avisoPrevio === 'indenizado' ? 'Indenizado' : 
+          formData.avisoPrevio === 'trabalhado' ? 'Trabalhado' : 'Não Aplicável'
+        ]
+      );
     }
 
     dadosFuncionario.push(['FGTS:', formData.temFGTS ? 'Sim' : 'Não']);
@@ -241,13 +258,15 @@ Salário Mensal: ${formatCurrency(formData.salarioMensal)}
 Data de Admissão: ${formatDate(formData.dataAdmissao)}
 Data de Demissão: ${formatDate(formData.dataDemissao)}`;
 
-  // Adicionar campos específicos para cada tipo de contrato
+  // CORREÇÃO: Campos específicos por tipo de contrato
   if (formData.tipoContrato === 'experiencia') {
+    // Para experiência: apenas dias trabalhados (SEM motivo da rescisão)
     content += `
-Motivo da Rescisão: ${formData.motivoRescisao === 'empresa' ? 'Empresa' : 'Funcionário'}
 Dias Trabalhados: ${formData.tempoContrato} dias`;
   } else {
+    // Para contrato normal: motivo da rescisão + aviso prévio
     content += `
+Motivo da Rescisão: ${formatMotivoRescisao(formData.motivoRescisao)}
 Aviso Prévio: ${formData.avisoPrevio === 'indenizado' ? 'Indenizado' : 
                formData.avisoPrevio === 'trabalhado' ? 'Trabalhado' : 'Não Aplicável'}`;
   }
@@ -309,12 +328,13 @@ export const generateWhatsAppMessage = ({ formData, result }: PDFExportData): st
   message += `📅 Admissão: ${formatDate(formData.dataAdmissao)}\n`;
   message += `📅 Demissão: ${formatDate(formData.dataDemissao)}\n`;
 
-  // Adicionar informações específicas do tipo de contrato
+  // CORREÇÃO: Campos específicos por tipo de contrato
   if (formData.tipoContrato === 'experiencia') {
-    message += `❓ Motivo da Rescisão: ${formData.motivoRescisao === 'empresa' ? 'Empresa' : 'Funcionário'}\n`;
+    // Para experiência: apenas dias trabalhados (SEM motivo da rescisão)
     message += `⏰ Dias Trabalhados: ${formData.tempoContrato} dias\n`;
   } else {
-    // Para contrato normal, mostrar aviso prévio
+    // Para contrato normal: motivo da rescisão + aviso prévio
+    message += `❓ Motivo da Rescisão: ${formatMotivoRescisao(formData.motivoRescisao)}\n`;
     const avisoPrevio = formData.avisoPrevio === 'indenizado' ? 'Indenizado' : 
                        formData.avisoPrevio === 'trabalhado' ? 'Trabalhado' : 'Não Aplicável';
     message += `⏰ Aviso Prévio: ${avisoPrevio}\n`;

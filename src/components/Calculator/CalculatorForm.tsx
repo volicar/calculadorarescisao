@@ -32,7 +32,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
       avisoPrevio: 'indenizado',
       temFGTS: true,
       tipoContrato: 'normal',
-      motivoRescisao: 'dispensa_sem_justa_causa', // Valor padrão mais apropriado
+      motivoRescisao: 'dispensa_sem_justa_causa',
       tempoContrato: 0
     }
   });
@@ -61,7 +61,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
     { value: 'experiencia', label: 'Experiência' }
   ];
 
-  // Opções para contrato NORMAL (mais completas)
+  // Opções para contrato NORMAL
   const motivoRescisaoNormalOptions = [
     { value: 'dispensa_sem_justa_causa', label: 'Dispensa sem Justa Causa' },
     { value: 'dispensa_com_justa_causa', label: 'Dispensa com Justa Causa' },
@@ -71,7 +71,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
     { value: 'aposentadoria', label: 'Aposentadoria' }
   ];
 
-  // Opções para contrato de EXPERIÊNCIA (apenas as aplicáveis)
+  // Opções para contrato de EXPERIÊNCIA
   const motivoRescisaoExperienciaOptions = [
     { value: 'dispensa_sem_justa_causa', label: 'Dispensa sem Justa Causa' },
     { value: 'dispensa_com_justa_causa', label: 'Dispensa com Justa Causa' },
@@ -133,14 +133,14 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
         {tipoContrato === 'experiencia' && (
           <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700/50 hover:bg-gray-800/70 transition-colors">
             <label className="block text-sm font-medium text-gray-200 mb-2">
-              Dias Trabalhados
+              Dias Trabalhados no Contrato de Experiência
             </label>
             <Input
               type="number"
               min={1}
               max={90}
               {...register('tempoContrato', {
-                required: 'Dias trabalhados é obrigatório',
+                required: 'Dias trabalhados é obrigatório para contrato de experiência',
                 min: { value: 1, message: 'Mínimo de 1 dia' },
                 max: { value: 90, message: 'Máximo de 90 dias' }
               })}
@@ -151,7 +151,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
               error={errors.tempoContrato?.message}
             />
             <div className="mt-2 text-xs text-gray-400">
-              Período máximo de 90 dias para contrato de experiência
+              Informe quantos dias você trabalhou no contrato de experiência
             </div>
           </div>
         )}

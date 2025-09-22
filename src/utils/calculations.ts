@@ -1,4 +1,4 @@
-import { CalculatorFormData, CalculationResult, getMotivoInfo } from '@/types/calculator';
+import { CalculatorFormData, CalculationResult } from '@/types/calculator';
 
 export const validateDates = (admissao: string, demissao: string): boolean => {
   const dataAdmissao = new Date(admissao);
@@ -56,6 +56,86 @@ export const calculateProportionalDays = (startDate: string, endDate: string): n
   return Math.min(workedDays, daysInMonth);
 };
 
+// Função para determinar os direitos baseados no motivo de rescisão
+const getMotivoRescisaoInfo = (motivo: string, tipoContrato: string = 'normal') => {
+  const info = {
+    temDireitoAvisoPrevio: false,
+    temDireitoMultaFGTS: false,
+    percentualMultaFGTS: 0,
+    temDireitoFerias: true, // Na maioria dos casos tem direito
+    temDireito13: true, // Na maioria dos casos tem direito
+    temDireitoSeguroDesemprego: false,
+    podeMovimentarFGTS: false
+  };
+
+  switch (motivo) {
+    case 'dispensa_sem_justa_causa':
+      info.temDireitoAvisoPrevio = true;
+      info.temDireitoMultaFGTS = true;
+      info.percentualMultaFGTS = 40;
+      info.temDireitoSeguroDesemprego = true;
+      info.podeMovimentarFGTS = true;
+      break;
+
+    case 'dispensa_com_justa_causa':
+      info.temDireitoAvisoPrevio = false;
+      info.temDireitoMultaFGTS = false;
+      info.temDireitoFerias = false; // Apenas férias vencidas, não proporcionais
+      info.temDireito13 = false; // CLT nega 13º proporcional para justa causa
+      info.temDireitoSeguroDesemprego = false;
+      info.podeMovimentarFGTS = false;
+      break;
+
+    case 'pedido_demissao':
+      info.temDireitoAvisoPrevio = false; // Funcionário deve cumprir aviso
+      info.temDireitoMultaFGTS = false;
+      info.temDireitoSeguroDesemprego = false;
+      info.podeMovimentarFGTS = false;
+      break;
+
+    case 'comum_acordo':
+      info.temDireitoAvisoPrevio = true; // 50% do valor
+      info.temDireitoMultaFGTS = true;
+      info.percentualMultaFGTS = 20; // Lei 13.467/2017
+      info.temDireitoSeguroDesemprego = false;
+      info.podeMovimentarFGTS = true; // 80% do saldo
+      break;
+
+    case 'termino_contrato':
+    case 'aposentadoria':
+      info.temDireitoAvisoPrevio = false;
+      info.temDireitoMultaFGTS = false;
+      info.temDireitoSeguroDesemprego = false;
+      info.podeMovimentarFGTS = true;
+      break;
+
+    default:
+      // Dispensa sem justa causa como padrão
+      info.temDireitoAvisoPrevio = true;
+      info.temDireitoMultaFGTS = true;
+      info.percentualMultaFGTS = 40;
+      info.temDireitoSeguroDesemprego = true;
+      info.podeMovimentarFGTS = true;
+      break;
+  }
+
+  return info;
+};
+
+// Função para calcular anos trabalhados (para aviso prévio progressivo)
+const calculateYearsWorked = (startDate: string, endDate: string): number => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  let years = end.getFullYear() - start.getFullYear();
+  if (end.getMonth() < start.getMonth() || 
+      (end.getMonth() === start.getMonth() && end.getDate() < start.getDate())) {
+    years--;
+  }
+  
+  return Math.max(0, years);
+};
+
 export const calculateRescisao = (data: CalculatorFormData): CalculationResult => {
   const {
     salarioMensal,
@@ -68,163 +148,154 @@ export const calculateRescisao = (data: CalculatorFormData): CalculationResult =
     tempoContrato
   } = data;
 
-  // Definir motivo padrão para experiência (já que não há campo no form)
-  const motivoFinal = tipoContrato === 'experiencia' ? 'dispensa_sem_justa_causa' : motivoRescisao;
+  // Usar motivo informado ou padrão
+  const motivoFinal = motivoRescisao || 'dispensa_sem_justa_causa';
   
-  // Obter informações do motivo de rescisão com fallback de segurança
-  const motivoInfo = getMotivoInfo(motivoFinal) || {
-    direitos: {
-      saldoSalario: true,
-      ferias: true,
-      decimoTerceiro: true,
-      avisoPrevio: false,
-      multaFgts: false,
-      fgts: false,
-      seguroDesemprego: false
-    },
-    multaFgtsPercentual: 0,
-    fgtsAcessivel: 0,
-    observacoes: []
-  };
+  // Obter informações dos direitos baseados no motivo
+  const direitos = getMotivoRescisaoInfo(motivoFinal, tipoContrato);
 
-  // Variáveis auxiliares
-  let mesesTrabalhados = 0;
-  let diasPROPorcionais = 0;
-
+  // Variáveis de resultado
   let saldoSalario = 0;
   let feriasPROPorcionais = 0;
   let decimoTerceiroProporcional = 0;
   let fgtsMulta = 0;
   let avisoPrevioIndenizado = 0;
   let indenizacaoExperiencia = 0;
-  let seguroDesemprego = false;
-  let podeMovimentarFGTS = false;
-  let observacoes: string[] = [];
 
   const salarioDiario = salarioMensal / 30;
 
   if (tipoContrato === 'experiencia') {
-    // Cálculos para contrato de experiência
-    saldoSalario = (tempoContrato * salarioDiario);
+    // === CÁLCULOS PARA CONTRATO DE EXPERIÊNCIA ===
+    const diasTrabalhados = tempoContrato || 0;
+    
+    // 1. SALDO DE SALÁRIO - sempre pago
+    saldoSalario = diasTrabalhados * salarioDiario;
 
-    // CORREÇÃO: Indenização experiência Art. 479 CLT - apenas para rescisão antecipada pelo empregador
-    if (motivoFinal === 'dispensa_sem_justa_causa' && tempoContrato < 90) {
-      const diasRestantes = Math.max(0, 90 - tempoContrato);
-      // Art. 479 CLT: indenização = 50% da remuneração dos dias restantes
+    // 2. INDENIZAÇÃO POR RESCISÃO ANTECIPADA (Art. 479 CLT)
+    if (motivoFinal === 'dispensa_sem_justa_causa' && diasTrabalhados < 90) {
+      const diasRestantes = 90 - diasTrabalhados;
+      // 50% da remuneração dos dias restantes
       indenizacaoExperiencia = (diasRestantes / 2) * salarioDiario;
     }
 
-    // CORREÇÃO: Férias proporcionais para contrato experiência
-    // CLT: Direito se trabalhou mais de 15 dias E não foi demitido por justa causa
-    if (tempoContrato > 15 && motivoFinal !== 'dispensa_com_justa_causa') {
-      // Base: meses trabalhados (considerando fração > 15 dias = mês completo)
-      const mesesTrabalhados = tempoContrato > 15 ? Math.ceil(tempoContrato / 30) : 0;
-      const valorFerias = (mesesTrabalhados / 12) * salarioMensal;
+    // 3. FÉRIAS PROPORCIONAIS
+    if (direitos.temDireitoFerias && diasTrabalhados > 15) {
+      // Proporcional aos dias trabalhados
+      const valorFerias = (diasTrabalhados / 360) * salarioMensal; // Base anual
       const umTerco = valorFerias / 3;
       feriasPROPorcionais = valorFerias + umTerco;
     }
 
-    // CORREÇÃO: 13º proporcional para experiência (Art. 24 Decreto-Lei 1.535/77)
-    if (motivoInfo?.direitos?.decimoTerceiro && tempoContrato >= 15) {
-      // Base: 1/12 por mês trabalhado (fração > 15 dias = mês completo)
-      const mesesPara13 = tempoContrato > 15 ? Math.ceil(tempoContrato / 30) : 0;
-      decimoTerceiroProporcional = (mesesPara13 / 12) * salarioMensal;
+    // 4. 13º PROPORCIONAL
+    if (direitos.temDireito13 && diasTrabalhados >= 15) {
+      // Proporcional aos dias trabalhados
+      decimoTerceiroProporcional = (diasTrabalhados / 360) * salarioMensal;
+    }
+
+    // 5. FGTS + MULTA
+    if (temFGTS) {
+      const saldoFGTS = (diasTrabalhados / 30) * (salarioMensal * 0.08);
+      
+      if (direitos.temDireitoMultaFGTS && direitos.percentualMultaFGTS > 0) {
+        const valorMulta = saldoFGTS * (direitos.percentualMultaFGTS / 100);
+        fgtsMulta = saldoFGTS + valorMulta;
+      } else {
+        fgtsMulta = saldoFGTS; // Apenas o valor depositado, sem multa
+      }
     }
 
   } else {
-    // Cálculos para contrato normal
-    mesesTrabalhados = calculateMonthsDifference(dataAdmissao, dataDemissao);
-    diasPROPorcionais = calculateProportionalDays(dataAdmissao, dataDemissao);
+    // === CÁLCULOS PARA CONTRATO NORMAL ===
+    const mesesTrabalhados = calculateMonthsDifference(dataAdmissao, dataDemissao);
+    const diasPROPorcionais = calculateProportionalDays(dataAdmissao, dataDemissao);
+    const anosTrabalhados = calculateYearsWorked(dataAdmissao, dataDemissao);
 
-    // CORREÇÃO: Saldo de salário sempre pago (independente do motivo)
-    saldoSalario = (diasPROPorcionais * salarioDiario);
+    // 1. SALDO DE SALÁRIO - sempre pago
+    saldoSalario = diasPROPorcionais * salarioDiario;
 
-    // Cálculo de férias conforme CLT
-    feriasPROPorcionais = calculateFerias(
-      mesesTrabalhados, 
-      diasPROPorcionais, 
-      salarioMensal, 
-      motivoFinal
-    );
-
-    // CORREÇÃO: 13º proporcional sempre pago (exceto em casos específicos)
-    if (motivoFinal !== 'dispensa_com_justa_causa' || mesesTrabalhados >= 1) {
-      const mesesPara13 = mesesTrabalhados + (diasPROPorcionais > 14 ? 1 : 0);
-      decimoTerceiroProporcional = (mesesPara13 / 12) * salarioMensal;
+    // 2. FÉRIAS PROPORCIONAIS E VENCIDAS
+    if (direitos.temDireitoFerias) {
+      // Férias proporcionais normais
+      const mesesParaFerias = mesesTrabalhados + (diasPROPorcionais > 14 ? 1 : 0);
+      if (mesesParaFerias > 0) {
+        const valorFerias = (mesesParaFerias / 12) * salarioMensal;
+        const umTerco = valorFerias / 3;
+        feriasPROPorcionais = valorFerias + umTerco;
+      }
+    } else if (motivoFinal === 'dispensa_com_justa_causa') {
+      // Para justa causa: apenas férias vencidas (períodos completos de 12 meses)
+      const periodosCompletos = Math.floor(mesesTrabalhados / 12);
+      if (periodosCompletos > 0) {
+        const feriasVencidas = periodosCompletos * salarioMensal;
+        const umTercoVencidas = feriasVencidas / 3;
+        feriasPROPorcionais = feriasVencidas + umTercoVencidas;
+      }
     }
 
-    // Aviso prévio - com validação de segurança
-    if (motivoInfo?.direitos?.avisoPrevio && avisoPrevio === 'indenizado') {
-      let valorAvisoPrevio = salarioMensal;
+    // 3. 13º PROPORCIONAL
+    if (direitos.temDireito13) {
+      const mesesPara13 = mesesTrabalhados + (diasPROPorcionais > 14 ? 1 : 0);
+      if (mesesPara13 > 0) {
+        decimoTerceiroProporcional = (mesesPara13 / 12) * salarioMensal;
+      }
+    }
 
+    // 4. AVISO PRÉVIO INDENIZADO
+    if (direitos.temDireitoAvisoPrevio && avisoPrevio === 'indenizado') {
+      // Aviso prévio progressivo: 30 dias + 3 dias por ano trabalhado (máximo 90 dias)
+      const diasAvisoPrevio = Math.min(30 + (anosTrabalhados * 3), 90);
+      let valorAvisoPrevio = (diasAvisoPrevio / 30) * salarioMensal;
+
+      // Para comum acordo, é 50% do aviso prévio
       if (motivoFinal === 'comum_acordo') {
-        valorAvisoPrevio = salarioMensal / 2;
+        valorAvisoPrevio = valorAvisoPrevio / 2;
       }
 
       avisoPrevioIndenizado = valorAvisoPrevio;
     }
-  }
 
-  // CORREÇÃO: FGTS e Multa
-  if (temFGTS) {
-    let saldoFGTS = 0;
-
-    if (tipoContrato === 'experiencia') {
-      // Base: 8% sobre salário mensal × meses trabalhados (proporcionalmente)
-      saldoFGTS = (tempoContrato / 30) * (salarioMensal * 0.08);
-    } else {
-      // CORREÇÃO: Incluir dias proporcionais no cálculo do FGTS
+    // 5. FGTS + MULTA
+    if (temFGTS) {
+      // Base de cálculo: 8% sobre todos os salários
       const mesesCompletos = mesesTrabalhados;
-      const mesesProporcionais = diasPROPorcionais > 14 ? 1 : (diasPROPorcionais / 30);
-      const totalMeses = mesesCompletos + mesesProporcionais;
-      saldoFGTS = totalMeses * (salarioMensal * 0.08);
-    }
-
-    // Multa do FGTS conforme legislação atual
-    if (motivoInfo?.direitos?.multaFgts && motivoInfo?.multaFgtsPercentual) {
-      fgtsMulta = saldoFGTS * (motivoInfo.multaFgtsPercentual / 100);
-    }
-
-    podeMovimentarFGTS = motivoInfo?.direitos?.fgts || false;
-
-    if (podeMovimentarFGTS && motivoInfo?.fgtsAcessivel) {
-      observacoes.push(`Pode sacar ${motivoInfo.fgtsAcessivel}% do FGTS`);
+      const fracaoMes = diasPROPorcionais > 14 ? 1 : (diasPROPorcionais / 30);
+      const totalMesesFGTS = mesesCompletos + fracaoMes;
+      
+      const saldoFGTS = totalMesesFGTS * (salarioMensal * 0.08);
+      
+      if (direitos.temDireitoMultaFGTS && direitos.percentualMultaFGTS > 0) {
+        const valorMulta = saldoFGTS * (direitos.percentualMultaFGTS / 100);
+        fgtsMulta = saldoFGTS + valorMulta;
+      } else {
+        fgtsMulta = saldoFGTS; // Apenas o valor depositado, sem multa
+      }
     }
   }
 
-  // Seguro-desemprego
-  seguroDesemprego = motivoInfo?.direitos?.seguroDesemprego || false;
-
-  // Observações adicionais
-  observacoes = [...observacoes, ...(motivoInfo?.observacoes || [])];
-
-  // Total
+  // TOTAL GERAL
   const total = saldoSalario + feriasPROPorcionais + decimoTerceiroProporcional +
                 fgtsMulta + avisoPrevioIndenizado + indenizacaoExperiencia;
 
   return {
-    saldoSalario: Math.max(0, saldoSalario),
-    feriasPROPorcionais: Math.max(0, feriasPROPorcionais),
-    decimoTerceiroProporcional: Math.max(0, decimoTerceiroProporcional),
-    fgtsMulta: Math.max(0, fgtsMulta),
-    avisoPrevioIndenizado: Math.max(0, avisoPrevioIndenizado),
-    indenizacaoExperiencia: Math.max(0, indenizacaoExperiencia),
-    total: Math.max(0, total),
-    seguroDesemprego,
-    podeMovimentarFGTS,
-    observacoes
+    saldoSalario: Math.max(0, Number(saldoSalario.toFixed(2))),
+    feriasPROPorcionais: Math.max(0, Number(feriasPROPorcionais.toFixed(2))),
+    decimoTerceiroProporcional: Math.max(0, Number(decimoTerceiroProporcional.toFixed(2))),
+    fgtsMulta: Math.max(0, Number(fgtsMulta.toFixed(2))),
+    avisoPrevioIndenizado: Math.max(0, Number(avisoPrevioIndenizado.toFixed(2))),
+    indenizacaoExperiencia: Math.max(0, Number(indenizacaoExperiencia.toFixed(2))),
+    total: Math.max(0, Number(total.toFixed(2)))
   };
 };
 
 /**
- * Calcula férias conforme regras da CLT atualizadas
+ * Calcula férias conforme regras da CLT
  * @param mesesTrabalhados - Meses completos trabalhados
  * @param diasProporcionais - Dias do mês incompleto
  * @param salarioMensal - Salário mensal
  * @param motivoRescisao - Motivo da rescisão
  * @returns Valor total das férias (vencidas + proporcionais + 1/3)
  */
-function calculateFerias(
+export function calculateFerias(
   mesesTrabalhados: number, 
   diasProporcionais: number, 
   salarioMensal: number, 
@@ -233,7 +304,6 @@ function calculateFerias(
   let totalFerias = 0;
   
   // 1. FÉRIAS VENCIDAS (períodos completos de 12 meses)
-  // Todos têm direito às férias vencidas, inclusive justa causa
   const periodosCompletos = Math.floor(mesesTrabalhados / 12);
   if (periodosCompletos > 0) {
     const feriasVencidas = periodosCompletos * salarioMensal;
@@ -242,20 +312,16 @@ function calculateFerias(
   }
   
   // 2. FÉRIAS PROPORCIONAIS (período incompleto atual)
-  // CORREÇÃO CONFORME CLT: Só tem direito se NÃO foi por justa causa
   if (motivoRescisao !== 'dispensa_com_justa_causa') {
-    const mesesProporcional = mesesTrabalhados % 12; // Meses do período incompleto
-    
-    // CORREÇÃO: Regra dos 15 dias - Se trabalhou mais de 14 dias no mês, conta como mês completo
+    const mesesProporcional = mesesTrabalhados % 12;
     const mesesParaCalculo = mesesProporcional + (diasProporcionais > 14 ? 1 : 0);
     
     if (mesesParaCalculo > 0) {
-      // CORREÇÃO: Base de cálculo 1/12 por mês trabalhado
       const feriasProporcionais = (mesesParaCalculo / 12) * salarioMensal;
       const umTercoProporcionais = feriasProporcionais / 3;
       totalFerias += feriasProporcionais + umTercoProporcionais;
     }
   }
   
-  return totalFerias;
+  return Number(totalFerias.toFixed(2));
 }

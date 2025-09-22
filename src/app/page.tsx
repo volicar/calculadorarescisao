@@ -24,10 +24,39 @@ export default function HomePage() {
       const calculationResult = calculateRescisao(data);
       setResult(calculationResult);
       setFormData(data);
+
+      // Scroll suave para o resultado após o cálculo
+      setTimeout(() => {
+        const resultElement = document.getElementById('calculation-result');
+        if (resultElement) {
+          resultElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start',
+            inline: 'nearest'
+          });
+        }
+      }, 100);
+
     } catch (error) {
       console.error('Erro no cálculo:', error);
+      // Aqui você pode adicionar uma notificação de erro para o usuário
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleNewCalculation = () => {
+    setResult(null);
+    setFormData(null);
+    
+    // Scroll para o topo do formulário
+    const formElement = document.getElementById('calculator-form');
+    if (formElement) {
+      formElement.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start',
+        inline: 'nearest'
+      });
     }
   };
 
@@ -46,23 +75,53 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* 👉 Parte alterada */}
+        {/* Botão Nova Simulação - aparece quando há resultado */}
+        {result && (
+          <div className="text-center mb-6">
+            <button
+              onClick={handleNewCalculation}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white rounded-lg transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
+            >
+              <span className="text-lg">📝</span>
+              Nova Simulação
+            </button>
+          </div>
+        )}
+
+        {/* Layout Adaptativo */}
         {!result ? (
-          // Antes de calcular: centralizado
-          <div className="flex justify-center">
+          // Antes de calcular: formulário centralizado
+          <div id="calculator-form" className="flex justify-center">
             <div className="w-full max-w-xl">
               <CalculatorForm onSubmit={handleCalculate} loading={loading} />
             </div>
           </div>
         ) : (
-          // Depois de calcular: form na esquerda e resultado na direita
+          // Depois de calcular: layout lado a lado em telas grandes
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="order-1">
+            {/* Formulário */}
+            <div id="calculator-form" className="order-1">
               <CalculatorForm onSubmit={handleCalculate} loading={loading} />
             </div>
 
-            <div className="order-2">
-              <ResultDisplay result={result} />
+            {/* Resultado com Memória de Cálculo */}
+            <div id="calculation-result" className="order-2 space-y-4">
+              <ResultDisplay 
+                result={result}
+                nome={formData?.nome}
+                dadosOriginais={formData ? {
+                  salarioMensal: formData.salarioMensal,
+                  dataAdmissao: formData.dataAdmissao,
+                  dataDemissao: formData.dataDemissao,
+                  tipoContrato: formData.tipoContrato,
+                  motivoRescisao: formData.motivoRescisao,
+                  tempoContrato: formData.tempoContrato,
+                  avisoPrevio: formData.avisoPrevio,
+                  temFGTS: formData.temFGTS
+                } : undefined}
+              />
+              
+              {/* Botões de Export */}
               {result && formData && (
                 <ExportButtons formData={formData} result={result} />
               )}
@@ -80,19 +139,19 @@ export default function HomePage() {
             </h2>
             <p className="text-gray-300 text-lg max-w-3xl mx-auto">
               Nossa calculadora utiliza as fórmulas oficiais da legislação trabalhista brasileira 
-              para calcular todos os valores que você tem direito a receber.
+              para calcular todos os valores que você tem direito a receber, com memória de cálculo detalhada.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Card 1 */}
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:border-primary-500 transition-colors">
               <div className="w-12 h-12 bg-primary-500 rounded-lg flex items-center justify-center mb-4">
                 <span className="text-white font-bold text-xl">1</span>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-3">Preencha os Dados</h3>
-              <p className="text-gray-300">
-                Informe seu salário mensal, datas de admissão e demissão, e tipo de aviso prévio.
+              <h3 className="text-lg font-semibold text-white mb-3">Preencha os Dados</h3>
+              <p className="text-gray-300 text-sm">
+                Informe seu salário, datas de admissão e demissão, tipo de contrato e aviso prévio.
               </p>
             </div>
 
@@ -101,9 +160,9 @@ export default function HomePage() {
               <div className="w-12 h-12 bg-primary-500 rounded-lg flex items-center justify-center mb-4">
                 <span className="text-white font-bold text-xl">2</span>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-3">Cálculo Automático</h3>
-              <p className="text-gray-300">
-                Nossa ferramenta calcula automaticamente todos os valores: saldo, férias, 13º e FGTS.
+              <h3 className="text-lg font-semibold text-white mb-3">Cálculo Automático</h3>
+              <p className="text-gray-300 text-sm">
+                Calculamos automaticamente saldo, férias, 13º, FGTS e aviso prévio conforme a CLT.
               </p>
             </div>
 
@@ -112,8 +171,19 @@ export default function HomePage() {
               <div className="w-12 h-12 bg-primary-500 rounded-lg flex items-center justify-center mb-4">
                 <span className="text-white font-bold text-xl">3</span>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-3">Exporte o Resultado</h3>
-              <p className="text-gray-300">
+              <h3 className="text-lg font-semibold text-white mb-3">Memória de Cálculo</h3>
+              <p className="text-gray-300 text-sm">
+                Veja exatamente como cada valor foi calculado com fórmulas e explicações detalhadas.
+              </p>
+            </div>
+
+            {/* Card 4 */}
+            <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:border-primary-500 transition-colors">
+              <div className="w-12 h-12 bg-primary-500 rounded-lg flex items-center justify-center mb-4">
+                <span className="text-white font-bold text-xl">4</span>
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-3">Exporte o Resultado</h3>
+              <p className="text-gray-300 text-sm">
                 Baixe em PDF, compartilhe no WhatsApp ou copie para usar onde precisar.
               </p>
             </div>
@@ -122,15 +192,18 @@ export default function HomePage() {
           {/* Detalhes dos Cálculos */}
           <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
-              <h3 className="text-xl font-bold text-white mb-4">📊 Valores Calculados</h3>
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <span className="text-2xl">📊</span>
+                Valores Calculados
+              </h3>
               <ul className="space-y-3 text-gray-300">
                 <li className="flex items-start">
                   <span className="text-primary-400 mr-2">•</span>
-                  <span><strong>Saldo de Salário:</strong> Proporcional aos dias trabalhados no mês</span>
+                  <span><strong>Saldo de Salário:</strong> Proporcional aos dias trabalhados no último mês</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-primary-400 mr-2">•</span>
-                  <span><strong>Férias Proporcionais:</strong> 1/12 por mês + 1/3 constitucional</span>
+                  <span><strong>Férias Proporcionais:</strong> 1/12 por mês trabalhado + 1/3 constitucional</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-primary-400 mr-2">•</span>
@@ -140,29 +213,56 @@ export default function HomePage() {
                   <span className="text-primary-400 mr-2">•</span>
                   <span><strong>FGTS + Multa:</strong> 8% depositado + 40% de multa rescisória</span>
                 </li>
+                <li className="flex items-start">
+                  <span className="text-primary-400 mr-2">•</span>
+                  <span><strong>Aviso Prévio:</strong> 30 dias + 3 dias por ano trabalhado</span>
+                </li>
               </ul>
             </div>
 
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
-              <h3 className="text-xl font-bold text-white mb-4">⚠️ Informações Importantes</h3>
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <span className="text-2xl">🔍</span>
+                Funcionalidades Exclusivas
+              </h3>
               <ul className="space-y-3 text-gray-300">
                 <li className="flex items-start">
-                  <span className="text-yellow-400 mr-2">•</span>
-                  <span>Cálculos baseados na legislação trabalhista vigente em 2025</span>
+                  <span className="text-emerald-400 mr-2">✓</span>
+                  <span><strong>Memória de Cálculo:</strong> Veja como cada valor foi calculado</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-yellow-400 mr-2">•</span>
-                  <span>Valores aproximados para orientação geral</span>
+                  <span className="text-emerald-400 mr-2">✓</span>
+                  <span><strong>Contratos de Experiência:</strong> Cálculos específicos para esse tipo</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-yellow-400 mr-2">•</span>
-                  <span>Sempre consulte um advogado trabalhista qualificado</span>
+                  <span className="text-emerald-400 mr-2">✓</span>
+                  <span><strong>Aviso Prévio Progressivo:</strong> Conforme Lei 12.506/2011</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-yellow-400 mr-2">•</span>
-                  <span>Mantenha toda documentação trabalhista organizada</span>
+                  <span className="text-emerald-400 mr-2">✓</span>
+                  <span><strong>Base Legal:</strong> Referencias às leis aplicadas</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-emerald-400 mr-2">✓</span>
+                  <span><strong>Interface Didática:</strong> Explicações claras e acessíveis</span>
                 </li>
               </ul>
+            </div>
+          </div>
+
+          {/* Aviso Legal Atualizado */}
+          <div className="mt-12 bg-yellow-900/20 border border-yellow-800/50 rounded-lg p-6">
+            <div className="flex items-start gap-3">
+              <span className="text-yellow-400 text-2xl flex-shrink-0">⚠️</span>
+              <div>
+                <h4 className="text-lg font-semibold text-yellow-400 mb-2">Informações Importantes</h4>
+                <div className="text-gray-300 space-y-2 text-sm">
+                  <p>• <strong>Cálculos estimativos:</strong> Baseados na legislação trabalhista vigente, mas valores podem variar conforme situações específicas</p>
+                  <p>• <strong>Consulte um especialista:</strong> Para casos complexos, procure sempre um advogado trabalhista qualificado</p>
+                  <p>• <strong>Documentação:</strong> Mantenha toda sua documentação trabalhista organizada e atualizada</p>
+                  <p>• <strong>Atualização:</strong> Legislação atualizada conforme mudanças de 2025</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -195,10 +295,10 @@ export default function HomePage() {
                 date: "10 Jan 2025"
               },
               {
-                id: 'fgts-saque-multa',
-                title: "FGTS: Saque e Multa Rescisória",
-                description: "Entenda seus direitos sobre o FGTS e quando você pode sacar o valor integral.",
-                date: "05 Jan 2025"
+                id: 'memoria-calculo-rescisao',
+                title: "Entenda a Memória de Cálculo",
+                description: "Aprenda a interpretar cada item da sua rescisão trabalhista com nossa nova funcionalidade.",
+                date: "08 Jan 2025"
               }
             ].map((article, index) => (
               <Link key={index} href={`/blog/${article.id}`}>

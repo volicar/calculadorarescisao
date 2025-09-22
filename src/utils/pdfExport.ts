@@ -11,7 +11,7 @@ interface PDFExportData {
 const formatMotivoRescisao = (motivo: string): string => {
   const motivosMap: { [key: string]: string } = {
     'dispensa_sem_justa_causa': 'Dispensa sem Justa Causa',
-    'dispensa_com_justa_causa': 'Dispensa com Justa Causa', 
+    'dispensa_com_justa_causa': 'Dispensa com Justa Causa',
     'pedido_demissao': 'Pedido de Demissão',
     'comum_acordo': 'Comum Acordo',
     'termino_contrato': 'Término do Contrato',
@@ -40,17 +40,17 @@ export const generatePDF = async ({ formData, result }: PDFExportData): Promise<
     let yPosition = margin;
 
     // Função para adicionar texto com quebra de linha automática
-    const addText = (text: string, x: number, y: number, options: { 
-      fontSize?: number, 
-      fontStyle?: string, 
+    const addText = (text: string, x: number, y: number, options: {
+      fontSize?: number,
+      fontStyle?: string,
       maxWidth?: number,
       align?: 'left' | 'center' | 'right'
     } = {}) => {
       const { fontSize = 10, fontStyle = 'normal', maxWidth = contentWidth, align = 'left' } = options;
-      
+
       pdf.setFontSize(fontSize);
       pdf.setFont('helvetica', fontStyle);
-      
+
       if (align === 'center') {
         pdf.text(text, pageWidth / 2, y, { align: 'center', maxWidth });
       } else if (align === 'right') {
@@ -58,7 +58,7 @@ export const generatePDF = async ({ formData, result }: PDFExportData): Promise<
       } else {
         pdf.text(text, x, y, { maxWidth });
       }
-      
+
       return pdf.getTextDimensions(text).h + 2;
     };
 
@@ -73,7 +73,7 @@ export const generatePDF = async ({ formData, result }: PDFExportData): Promise<
     // CABEÇALHO
     pdf.setFillColor(34, 197, 94); // Primary green
     pdf.rect(0, 0, pageWidth, 25, 'F');
-    
+
     yPosition = 15;
     addText('CALCULADORA DE RESCISÃO TRABALHISTA', margin, yPosition, {
       fontSize: 16,
@@ -88,18 +88,18 @@ export const generatePDF = async ({ formData, result }: PDFExportData): Promise<
       fontSize: 14,
       fontStyle: 'bold'
     });
-    
+
     yPosition += 5;
     yPosition += addLine(yPosition);
     yPosition += 5;
 
     const dadosFuncionario = [];
-    
+
     // Adicionar nome se fornecido
     if (formData.nome && formData.nome.trim()) {
       dadosFuncionario.push(['Nome:', formData.nome]);
     }
-    
+
     dadosFuncionario.push(
       ['Tipo de Contrato:', formData.tipoContrato === 'normal' ? 'Normal' : 'Experiência'],
       ['Salário Mensal:', formatCurrency(formData.salarioMensal)],
@@ -114,10 +114,10 @@ export const generatePDF = async ({ formData, result }: PDFExportData): Promise<
     } else {
       // Para contrato normal: motivo da rescisão + aviso prévio
       dadosFuncionario.push(
-        ['Motivo da Rescisão:', formatMotivoRescisao(formData.motivoRescisao)],
-        ['Aviso Prévio:', 
-          formData.avisoPrevio === 'indenizado' ? 'Indenizado' : 
-          formData.avisoPrevio === 'trabalhado' ? 'Trabalhado' : 'Não Aplicável'
+        ['Motivo da Rescisão:', formData.motivoRescisao ? formatMotivoRescisao(formData.motivoRescisao) : 'Não informado'],
+        ['Aviso Prévio:',
+          formData.avisoPrevio === 'indenizado' ? 'Indenizado' :
+            formData.avisoPrevio === 'trabalhado' ? 'Trabalhado' : 'Não Aplicável'
         ]
       );
     }
@@ -137,7 +137,7 @@ export const generatePDF = async ({ formData, result }: PDFExportData): Promise<
       fontSize: 14,
       fontStyle: 'bold'
     });
-    
+
     yPosition += 5;
     yPosition += addLine(yPosition);
     yPosition += 5;
@@ -161,9 +161,9 @@ export const generatePDF = async ({ formData, result }: PDFExportData): Promise<
 
     calculosRescisao.forEach(([label, value]) => {
       yPosition += addText(label as string, margin, yPosition, { fontSize: 10 });
-      addText(formatCurrency(value as number), margin, yPosition - 4, { 
-        fontSize: 10, 
-        align: 'right' 
+      addText(formatCurrency(value as number), margin, yPosition - 4, {
+        fontSize: 10,
+        align: 'right'
       });
       yPosition += 2;
     });
@@ -177,7 +177,7 @@ export const generatePDF = async ({ formData, result }: PDFExportData): Promise<
       fontSize: 12,
       fontStyle: 'bold'
     });
-    
+
     addText(formatCurrency(result.total), margin, yPosition - 4, {
       fontSize: 14,
       fontStyle: 'bold',
@@ -191,7 +191,7 @@ export const generatePDF = async ({ formData, result }: PDFExportData): Promise<
       fontSize: 12,
       fontStyle: 'bold'
     });
-    
+
     yPosition += 5;
     yPosition += addLine(yPosition);
     yPosition += 5;
@@ -212,27 +212,27 @@ export const generatePDF = async ({ formData, result }: PDFExportData): Promise<
     // RODAPÉ
     const footerY = pdf.internal.pageSize.getHeight() - 20;
     yPosition = footerY - 10;
-    
+
     yPosition += addLine(yPosition, '#e5e7eb');
     yPosition += 5;
-    
+
     addText(`Calculado em: ${new Date().toLocaleString('pt-BR')}`, margin, yPosition, {
       fontSize: 8,
       align: 'left'
     });
-    
+
     addText('Rescisão - www.rescisaonline.com.br', margin, yPosition, {
       fontSize: 8,
       align: 'right'
     });
 
     // DOWNLOAD
-    const nomeArquivo = formData.nome && formData.nome.trim() 
+    const nomeArquivo = formData.nome && formData.nome.trim()
       ? `rescisao-${formData.nome.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`
       : `rescisao-trabalhista-${new Date().toISOString().split('T')[0]}.pdf`;
-    
+
     pdf.save(nomeArquivo);
-    
+
   } catch (error) {
     console.error('Erro ao gerar PDF:', error);
     throw new Error('Não foi possível gerar o PDF. Tente novamente.');
@@ -266,9 +266,10 @@ Dias Trabalhados: ${formData.tempoContrato} dias`;
   } else {
     // Para contrato normal: motivo da rescisão + aviso prévio
     content += `
-Motivo da Rescisão: ${formatMotivoRescisao(formData.motivoRescisao)}
-Aviso Prévio: ${formData.avisoPrevio === 'indenizado' ? 'Indenizado' : 
-               formData.avisoPrevio === 'trabalhado' ? 'Trabalhado' : 'Não Aplicável'}`;
+Motivo da Rescisão: ${formData.motivoRescisao ? formatMotivoRescisao(formData.motivoRescisao) : 'Não informado'}
+Aviso Prévio: ${formData.avisoPrevio === 'indenizado' ? 'Indenizado' :
+        formData.avisoPrevio === 'trabalhado' ? 'Trabalhado' : 'Não Aplicável'}`;
+
   }
 
   content += `
@@ -299,11 +300,11 @@ Rescisão - Calculadora Trabalhista`;
   const element = document.createElement('a');
   const file = new Blob([content.trim()], { type: 'text/plain;charset=utf-8' });
   element.href = URL.createObjectURL(file);
-  
-  const nomeArquivo = formData.nome && formData.nome.trim() 
+
+  const nomeArquivo = formData.nome && formData.nome.trim()
     ? `rescisao-${formData.nome.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.txt`
     : `rescisao-trabalhista-${new Date().toISOString().split('T')[0]}.txt`;
-  
+
   element.download = nomeArquivo;
   document.body.appendChild(element);
   element.click();
@@ -323,7 +324,7 @@ export const generateWhatsAppMessage = ({ formData, result }: PDFExportData): st
 
   // Adicionar tipo de contrato sempre
   message += `📋 Tipo de Contrato: ${formData.tipoContrato === 'normal' ? 'Normal' : 'Experiência'}\n`;
-  
+
   message += `💰 Salário: ${formatCurrency(formData.salarioMensal)}\n`;
   message += `📅 Admissão: ${formatDate(formData.dataAdmissao)}\n`;
   message += `📅 Demissão: ${formatDate(formData.dataDemissao)}\n`;
@@ -334,9 +335,11 @@ export const generateWhatsAppMessage = ({ formData, result }: PDFExportData): st
     message += `⏰ Dias Trabalhados: ${formData.tempoContrato} dias\n`;
   } else {
     // Para contrato normal: motivo da rescisão + aviso prévio
-    message += `❓ Motivo da Rescisão: ${formatMotivoRescisao(formData.motivoRescisao)}\n`;
-    const avisoPrevio = formData.avisoPrevio === 'indenizado' ? 'Indenizado' : 
-                       formData.avisoPrevio === 'trabalhado' ? 'Trabalhado' : 'Não Aplicável';
+    message += `❓ Motivo da Rescisão: ${formData.motivoRescisao ? formatMotivoRescisao(formData.motivoRescisao) : 'Não informado'
+      }\n`;
+
+    const avisoPrevio = formData.avisoPrevio === 'indenizado' ? 'Indenizado' :
+      formData.avisoPrevio === 'trabalhado' ? 'Trabalhado' : 'Não Aplicável';
     message += `⏰ Aviso Prévio: ${avisoPrevio}\n`;
   }
 
@@ -359,7 +362,7 @@ export const generateWhatsAppMessage = ({ formData, result }: PDFExportData): st
   }
 
   message += `\n🎯 *TOTAL: ${formatCurrency(result.total)}*\n\n`;
-  
+
   message += `*Calculado em: ${new Date().toLocaleString('pt-BR')}*\n`;
   message += `*Rescisão 2025 - Calculadora Trabalhista*\n\n`;
   message += `👉 Acesse: https://www.rescisaonline.com.br`;

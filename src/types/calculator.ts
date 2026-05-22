@@ -1,15 +1,28 @@
 // types/calculator.ts
 
 export interface CalculatorFormData {
-  nome?: string; // Campo opcional para o nome
+  nome?: string;
   salarioMensal: number;
+  comissoes?: number;
+  adicionaisHabituais?: number;
   dataAdmissao: string;
   dataDemissao: string;
   tipoContrato: 'normal' | 'experiencia';
   motivoRescisao?: 'dispensa_sem_justa_causa' | 'dispensa_com_justa_causa' | 'pedido_demissao' | 'comum_acordo' | 'termino_contrato' | 'aposentadoria';
-  tempoContrato?: number; // Para contratos de experiência (em dias)
+  tempoContrato?: number;
   avisoPrevio?: 'indenizado' | 'trabalhado' | 'nao_aplicavel';
   temFGTS: boolean;
+  temEstabilidade?: boolean;
+  tipoEstabilidade?: 'gestante' | 'acidente' | 'cipa' | 'sindical' | 'outro';
+  numeroDependentesIR?: number;
+}
+
+export interface SeguroDesempregoResult {
+  temDireito: boolean;
+  numeroParcelas: number;
+  valorEstimadoParcela: number;
+  totalEstimado: number;
+  motivoNaoDireito?: string;
 }
 
 export interface CalculationResult {
@@ -20,11 +33,31 @@ export interface CalculationResult {
   avisoPrevioIndenizado: number;
   indenizacaoExperiencia: number;
   total: number;
+
+  // FGTS detalhado
+  saldoFGTS: number;
+  multaFGTS: number;
+
+  // Deduções estimadas
+  deducaoINSS: number;
+  deducaoIRRF: number;
+  totalLiquido: number;
+
+  // Prazo de pagamento
+  prazoLimitePagamento: string;
+  diasParaPagamento: number;
+
+  // Seguro desemprego
+  seguroDesemprego: SeguroDesempregoResult;
+
+  // Alerta estabilidade
+  alertaEstabilidade?: string;
 }
 
-// Interface para os dados originais usados na memória de cálculo
 export interface CalculationInputData {
   salarioMensal: number;
+  comissoes?: number;
+  adicionaisHabituais?: number;
   dataAdmissao: string;
   dataDemissao: string;
   tipoContrato: string;
@@ -32,15 +65,16 @@ export interface CalculationInputData {
   tempoContrato?: number;
   avisoPrevio?: string;
   temFGTS: boolean;
+  temEstabilidade?: boolean;
+  tipoEstabilidade?: string;
+  numeroDependentesIR?: number;
 }
 
-// Enum para tipos de contrato
 export enum TipoContrato {
   NORMAL = 'normal',
   EXPERIENCIA = 'experiencia'
 }
 
-// Enum para motivos de rescisão
 export enum MotivoRescisao {
   DISPENSA_SEM_JUSTA_CAUSA = 'dispensa_sem_justa_causa',
   DISPENSA_COM_JUSTA_CAUSA = 'dispensa_com_justa_causa',
@@ -50,14 +84,12 @@ export enum MotivoRescisao {
   APOSENTADORIA = 'aposentadoria'
 }
 
-// Enum para aviso prévio
 export enum AvisoPrevio {
   INDENIZADO = 'indenizado',
   TRABALHADO = 'trabalhado',
   NAO_APLICAVEL = 'nao_aplicavel'
 }
 
-// Interface para período trabalhado
 export interface PeriodoTrabalhado {
   anos: number;
   meses: number;
@@ -65,7 +97,6 @@ export interface PeriodoTrabalhado {
   totalDias: number;
 }
 
-// Interface para detalhes do cálculo
 export interface CalculationDetails {
   periodoTrabalhado: PeriodoTrabalhado;
   salarioDiario: number;
@@ -74,4 +105,16 @@ export interface CalculationDetails {
   diasAvisoPrevio: number;
   mesesFeriasProporcionais: number;
   meses13Proporcional: number;
+}
+
+export interface HistoricoItem {
+  id: string;
+  data: string;
+  nome?: string;
+  salario: number;
+  motivo?: string;
+  total: number;
+  totalLiquido: number;
+  formData: CalculatorFormData;
+  result: CalculationResult;
 }

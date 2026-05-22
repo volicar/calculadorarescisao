@@ -6,17 +6,33 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { validateDates } from '@/utils/calculations';
 import { formatCurrencyInput } from '@/utils/formatters';
 import { useState } from 'react';
+import { ChevronDown, AlertTriangle, Info } from 'lucide-react';
 
 interface CalculatorFormProps {
   onSubmit: (data: CalculatorFormData) => void;
   loading?: boolean;
 }
 
+const TOOLTIPS = {
+  tipoContrato: 'Contrato Normal: CLT por prazo indeterminado. Contrato de Experiência: prazo máximo de 90 dias, usado para avaliar o empregado antes de efetivação.',
+  motivoRescisao: 'O motivo define quais verbas você tem direito. Dispensa sem justa causa garante FGTS + multa e seguro desemprego. Justa causa perde quase todos os direitos.',
+  avisoPrevio: 'Indenizado: a empresa paga o período sem você trabalhar. Trabalhado: você continua trabalhando durante o aviso (redução de 2h/dia ou 7 dias ao final). Não Aplicável: nos casos em que não há aviso prévio (pedido de demissão sem cumprimento, etc.).',
+  salario: 'Informe seu salário bruto mensal. Se tiver comissões ou adicionais habituais (noturno, insalubridade, periculosidade), use os campos abaixo para incluí-los na base de cálculo.',
+  fgts: 'O FGTS é o Fundo de Garantia por Tempo de Serviço. Se o empregador depositou regularmente os 8% mensais, marque esta opção para incluir o saldo e eventual multa no cálculo.',
+  estabilidade: 'Gestantes, cipeiros, dirigentes sindicais e acidentados do trabalho têm estabilidade provisória e não podem ser demitidos sem justa causa durante o período protegido.',
+  dependentesIR: 'Cada dependente reduz a base de cálculo do IRRF em R$ 189,59/mês. Incluindo filhos menores de 21 anos, cônjuge sem renda, pais e outros previstos na legislação.',
+  comissoes: 'Inclua aqui a média das comissões recebidas nos últimos 12 meses. Comissões habituais integram a remuneração e devem compor a base de cálculo das verbas rescisórias.',
+  adicionais: 'Adicionais pagos de forma habitual (noturno, insalubridade, periculosidade) integram a remuneração para fins de rescisão. Inclua a média mensal recebida.',
+};
+
 export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProps) => {
   const [salaryDisplay, setSalaryDisplay] = useState('R$ 0,00');
+  const [showAdicionais, setShowAdicionais] = useState(false);
+  const [showEstabilidade, setShowEstabilidade] = useState(false);
 
   const {
     register,
@@ -27,21 +43,31 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
   } = useForm<CalculatorFormData>({
     defaultValues: {
       salarioMensal: 0,
+      comissoes: 0,
+      adicionaisHabituais: 0,
       dataAdmissao: '',
       dataDemissao: '',
       avisoPrevio: 'indenizado',
       temFGTS: true,
       tipoContrato: 'normal',
       motivoRescisao: 'dispensa_sem_justa_causa',
-      tempoContrato: 0
-    }
+      tempoContrato: 0,
+      temEstabilidade: false,
+      numeroDependentesIR: 0,
+    },
   });
 
   const dataAdmissao = watch('dataAdmissao');
   const dataDemissao = watch('dataDemissao');
   const tipoContrato = watch('tipoContrato');
+  const motivoRescisao = watch('motivoRescisao');
+  const temEstabilidade = watch('temEstabilidade');
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split('T')[0];
+
+  const isJustaCausa = motivoRescisao === 'dispensa_com_justa_causa';
+  const isPedidoDemissao = motivoRescisao === 'pedido_demissao';
+  const isSemJustaCausa = motivoRescisao === 'dispensa_sem_justa_causa';
 
   const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '');
@@ -51,36 +77,41 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
   };
 
   const avisoPrevioOptions = [
-    { value: 'indenizado', label: 'Indenizado' },
-    { value: 'trabalhado', label: 'Trabalhado' },
-    { value: 'nao_aplicavel', label: 'Não Aplicável' }
+    { value: 'indenizado', label: 'Indenizado (empresa paga sem trabalhar)' },
+    { value: 'trabalhado', label: 'Trabalhado (continua trabalhando)' },
+    { value: 'nao_aplicavel', label: 'Não Aplicável' },
   ];
 
   const tipoContratoOptions = [
-    { value: 'normal', label: 'Normal' },
-    { value: 'experiencia', label: 'Experiência' }
+    { value: 'normal', label: 'Normal (prazo indeterminado)' },
+    { value: 'experiencia', label: 'Experiência (máx. 90 dias)' },
   ];
 
-  // Opções para contrato NORMAL
   const motivoRescisaoNormalOptions = [
     { value: 'dispensa_sem_justa_causa', label: 'Dispensa sem Justa Causa' },
     { value: 'dispensa_com_justa_causa', label: 'Dispensa com Justa Causa' },
     { value: 'pedido_demissao', label: 'Pedido de Demissão' },
-    { value: 'comum_acordo', label: 'Comum Acordo' },
+    { value: 'comum_acordo', label: 'Comum Acordo (Art. 484-A CLT)' },
     { value: 'termino_contrato', label: 'Término do Contrato' },
-    { value: 'aposentadoria', label: 'Aposentadoria' }
+    { value: 'aposentadoria', label: 'Aposentadoria' },
   ];
 
-  // Opções para contrato de EXPERIÊNCIA
   const motivoRescisaoExperienciaOptions = [
     { value: 'dispensa_sem_justa_causa', label: 'Dispensa sem Justa Causa' },
     { value: 'dispensa_com_justa_causa', label: 'Dispensa com Justa Causa' },
     { value: 'pedido_demissao', label: 'Pedido de Demissão' },
-    { value: 'comum_acordo', label: 'Comum Acordo' }
+    { value: 'comum_acordo', label: 'Comum Acordo' },
+  ];
+
+  const tipoEstabilidadeOptions = [
+    { value: 'gestante', label: 'Gestante' },
+    { value: 'acidente', label: 'Acidente de Trabalho' },
+    { value: 'cipa', label: 'Membro da CIPA' },
+    { value: 'sindical', label: 'Dirigente Sindical' },
+    { value: 'outro', label: 'Outro tipo de estabilidade' },
   ];
 
   const onFormSubmit: SubmitHandler<CalculatorFormData> = (data) => {
-    // Validação adicional das datas
     if (dataAdmissao && dataDemissao && !validateDates(dataAdmissao, dataDemissao)) {
       return;
     }
@@ -89,10 +120,11 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
 
   return (
     <Card title="Preencha seus dados trabalhistas" className="animate-fade-in">
-      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
-        {/* Nome (Opcional) */}
+      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-5">
+
+        {/* Nome */}
         <div>
-          <label className="bg-gray-800/50 block text-sm font-medium mb-2">
+          <label className="block text-sm font-medium mb-2">
             Nome <span className="text-gray-400 text-xs">(opcional)</span>
           </label>
           <Input
@@ -100,13 +132,16 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
             className="bg-gray-800/50"
             placeholder="Digite seu nome"
             {...register('nome' as keyof CalculatorFormData)}
-            error={(errors as any).nome?.message}
+            error={(errors as Record<string, { message?: string }>).nome?.message}
           />
         </div>
 
         {/* Tipo de Contrato */}
         <div>
-          <label className="block text-sm font-medium mb-2">Tipo de Contrato</label>
+          <label className="flex items-center text-sm font-medium mb-2">
+            Tipo de Contrato
+            <Tooltip content={TOOLTIPS.tipoContrato} />
+          </label>
           <Select
             options={tipoContratoOptions}
             {...register('tipoContrato')}
@@ -114,24 +149,58 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
           />
         </div>
 
-        {/* MOTIVO DA RESCISÃO - Apenas para contrato NORMAL */}
+        {/* Motivo da Rescisão */}
         {tipoContrato === 'normal' && (
           <div>
-            <label className="block text-sm font-medium mb-2">Motivo da Rescisão</label>
+            <label className="flex items-center text-sm font-medium mb-2">
+              Motivo da Rescisão
+              <Tooltip content={TOOLTIPS.motivoRescisao} />
+            </label>
             <Select
               options={motivoRescisaoNormalOptions}
               {...register('motivoRescisao')}
               error={errors.motivoRescisao?.message}
-              className="bg-gray-700/50 border border-gray-600 text-gray-200
-                focus:ring-emerald-500/20 focus:border-emerald-500/50 
-                hover:border-emerald-500/30 transition-colors cursor-pointer"
+            />
+
+            {/* Alerta justa causa */}
+            {isJustaCausa && (
+              <div className="mt-2 p-3 bg-red-900/30 border border-red-700/50 rounded-lg flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-red-300">
+                  Na dispensa por justa causa, o empregado perde o direito ao 13° proporcional, aviso prévio e multa do FGTS. Apenas o saldo de salário e férias vencidas são devidos.
+                </p>
+              </div>
+            )}
+
+            {/* Aviso pedido demissão */}
+            {isPedidoDemissao && (
+              <div className="mt-2 p-3 bg-yellow-900/20 border border-yellow-700/40 rounded-lg flex items-start gap-2">
+                <Info className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-yellow-300">
+                  No pedido de demissão, o empregado perde o direito à multa do FGTS e ao seguro desemprego. Deve também cumprir (ou indenizar) o aviso prévio.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tipoContrato === 'experiencia' && (
+          <div>
+            <label className="flex items-center text-sm font-medium mb-2">
+              Motivo da Rescisão
+              <Tooltip content={TOOLTIPS.motivoRescisao} />
+            </label>
+            <Select
+              options={motivoRescisaoExperienciaOptions}
+              {...register('motivoRescisao')}
+              error={errors.motivoRescisao?.message}
             />
           </div>
         )}
 
-        {/* Campos específicos para contrato de experiência */}
+        {/* Contrato de Experiência: dias */}
         {tipoContrato === 'experiencia' && (
-          <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700/50 hover:bg-gray-800/70 transition-colors">
+          <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
             <label className="block text-sm font-medium text-gray-200 mb-2">
               Dias Trabalhados no Contrato de Experiência
             </label>
@@ -140,37 +209,82 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
               min={1}
               max={90}
               {...register('tempoContrato', {
-                required: 'Dias trabalhados é obrigatório para contrato de experiência',
+                required: 'Dias trabalhados é obrigatório',
                 min: { value: 1, message: 'Mínimo de 1 dia' },
-                max: { value: 90, message: 'Máximo de 90 dias' }
+                max: { value: 90, message: 'Máximo de 90 dias' },
               })}
-              className="bg-gray-700/50 border-gray-600 text-gray-200 
-                focus:ring-emerald-500/20 focus:border-emerald-500/50 
-                hover:border-emerald-500/30 transition-colors"
               placeholder="Entre 1 e 90 dias"
               error={errors.tempoContrato?.message}
             />
-            <div className="mt-2 text-xs text-gray-400">
-              Informe quantos dias você trabalhou no contrato de experiência
-            </div>
+            <p className="mt-1 text-xs text-gray-400">Máximo de 90 dias para contratos de experiência (CLT Art. 445)</p>
           </div>
         )}
 
-        {/* Salário Mensal */}
+        {/* Salário */}
         <div>
-          <label className="block text-sm font-medium mb-2">Salário Mensal</label>
+          <label className="flex items-center text-sm font-medium mb-2">
+            Salário Mensal Bruto
+            <Tooltip content={TOOLTIPS.salario} />
+          </label>
           <Input
             value={salaryDisplay}
             onChange={handleSalaryChange}
-            placeholder="Digite seu salário (R$)"
+            placeholder="R$ 0,00"
             error={errors.salarioMensal?.message}
-            inputMode='numeric'
+            inputMode="numeric"
           />
+        </div>
+
+        {/* Adicionais salariais (opcional) */}
+        <div className="border border-gray-700/50 rounded-lg overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setShowAdicionais(!showAdicionais)}
+            className="w-full flex items-center justify-between px-4 py-3 bg-gray-800/30 hover:bg-gray-800/50 transition-colors text-sm font-medium text-gray-300"
+          >
+            <span className="flex items-center gap-2">
+              <span>Comissões e Adicionais Habituais</span>
+              <span className="text-xs text-gray-500 font-normal">(opcional)</span>
+            </span>
+            <ChevronDown className={`w-4 h-4 transition-transform ${showAdicionais ? 'rotate-180' : ''}`} />
+          </button>
+
+          {showAdicionais && (
+            <div className="p-4 space-y-4 bg-gray-800/20">
+              <div>
+                <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
+                  Média mensal de comissões
+                  <Tooltip content={TOOLTIPS.comissoes} />
+                </label>
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  {...register('comissoes', { min: 0, valueAsNumber: true })}
+                  placeholder="R$ 0,00"
+                  error={errors.comissoes?.message}
+                />
+              </div>
+              <div>
+                <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
+                  Adicionais habituais (noturno, insalubridade, etc.)
+                  <Tooltip content={TOOLTIPS.adicionais} />
+                </label>
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  {...register('adicionaisHabituais', { min: 0, valueAsNumber: true })}
+                  placeholder="R$ 0,00"
+                  error={errors.adicionaisHabituais?.message}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Datas */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Data Admissão */}
           <div>
             <label className="block text-sm font-medium mb-2">Data de Admissão</label>
             <Input
@@ -179,22 +293,17 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
               {...register('dataAdmissao', {
                 required: 'Data de admissão é obrigatória',
                 validate: (value) => {
-                  if (new Date(value) > new Date()) {
-                    return 'Data de admissão não pode ser futura';
-                  }
+                  if (new Date(value) > new Date()) return 'Data não pode ser futura';
                   return true;
-                }
+                },
               })}
               onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
-                if (new Date(e.target.value) > new Date()) {
-                  e.target.value = today;
-                }
+                if (new Date(e.target.value) > new Date()) e.target.value = today;
               }}
               error={errors.dataAdmissao?.message}
             />
           </div>
 
-          {/* Data Demissão */}
           <div>
             <label className="block text-sm font-medium mb-2">Data de Demissão</label>
             <Input
@@ -204,70 +313,111 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
               {...register('dataDemissao', {
                 required: 'Data de demissão é obrigatória',
                 validate: (value) => {
-                  const dem = new Date(value);
-                  const hoje = new Date();
-
-                  if (dem > hoje) {
-                    return 'Data de demissão não pode ser futura';
-                  }
-                  if (dataAdmissao && !validateDates(dataAdmissao, value)) {
-                    return 'Data de demissão deve ser posterior à admissão';
-                  }
+                  if (new Date(value) > new Date()) return 'Data não pode ser futura';
+                  if (dataAdmissao && !validateDates(dataAdmissao, value))
+                    return 'Deve ser posterior à admissão';
                   return true;
-                }
+                },
               })}
               onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
-                if (new Date(e.target.value) > new Date()) {
-                  e.target.value = today;
-                }
+                if (new Date(e.target.value) > new Date()) e.target.value = today;
               }}
               error={errors.dataDemissao?.message}
             />
           </div>
         </div>
 
-        {/* FGTS Checkbox */}
-        <div className="flex items-center p-4 bg-gray-800/50 rounded-lg border border-gray-700/50 hover:bg-gray-800/70 transition-colors">
-          <div className="flex items-center flex-1">
-            <input
-              type="checkbox"
-              {...register('temFGTS')}
-              id="fgts-checkbox"
-              className="h-5 w-5 rounded border-gray-600 bg-gray-700/50 
-                accent-emerald-500 
-                focus:ring-2 focus:ring-emerald-500/20 focus:ring-offset-0 
-                hover:border-emerald-500/50 transition-colors cursor-pointer"
-            />
-            <label
-              htmlFor="fgts-checkbox"
-              className="ml-3 text-sm font-medium text-gray-200 hover:text-emerald-400 
-                transition-colors select-none cursor-pointer"
-            >
-              Possui FGTS depositado
-            </label>
-          </div>
+        {/* FGTS */}
+        <div className="flex items-center p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
+          <input
+            type="checkbox"
+            {...register('temFGTS')}
+            id="fgts-checkbox"
+            className="h-5 w-5 rounded border-gray-600 bg-gray-700/50 accent-emerald-500 cursor-pointer"
+          />
+          <label htmlFor="fgts-checkbox" className="ml-3 text-sm font-medium text-gray-200 cursor-pointer flex items-center">
+            Possui FGTS depositado
+            <Tooltip content={TOOLTIPS.fgts} />
+          </label>
         </div>
 
-        {/* Aviso Prévio - apenas para contrato normal */}
+        {/* Aviso Prévio (contrato normal) */}
         {tipoContrato === 'normal' && (
           <div>
-            <label className="block text-sm font-medium mb-2">Aviso Prévio</label>
+            <label className="flex items-center text-sm font-medium mb-2">
+              Aviso Prévio
+              <Tooltip content={TOOLTIPS.avisoPrevio} />
+            </label>
             <Select
               options={avisoPrevioOptions}
               {...register('avisoPrevio')}
               error={errors.avisoPrevio?.message}
             />
+            {/* Nota aviso trabalhado */}
+            {watch('avisoPrevio') === 'trabalhado' && isSemJustaCausa && (
+              <p className="mt-1.5 text-xs text-blue-400">
+                Durante o aviso trabalhado, você tem direito à redução de 2 horas por dia ou 7 dias corridos ao final do período.
+              </p>
+            )}
           </div>
         )}
 
-        {/* Botão de Calcular */}
+        {/* Dependentes IR */}
+        <div>
+          <label className="flex items-center text-sm font-medium mb-2">
+            Dependentes para IR
+            <Tooltip content={TOOLTIPS.dependentesIR} />
+            <span className="ml-1.5 text-xs text-gray-400 font-normal">(afeta desconto de IRRF)</span>
+          </label>
+          <Input
+            type="number"
+            min={0}
+            max={20}
+            {...register('numeroDependentesIR', { min: 0, max: 20, valueAsNumber: true })}
+            placeholder="0"
+            error={errors.numeroDependentesIR?.message}
+          />
+        </div>
+
+        {/* Estabilidade provisória */}
+        <div className="border border-gray-700/50 rounded-lg overflow-hidden">
+          <div className="flex items-center p-4 bg-gray-800/30">
+            <input
+              type="checkbox"
+              {...register('temEstabilidade')}
+              id="estabilidade-checkbox"
+              className="h-5 w-5 rounded border-gray-600 bg-gray-700/50 accent-emerald-500 cursor-pointer"
+            />
+            <label htmlFor="estabilidade-checkbox" className="ml-3 text-sm font-medium text-gray-200 cursor-pointer flex items-center">
+              Possui estabilidade provisória
+              <Tooltip content={TOOLTIPS.estabilidade} />
+            </label>
+          </div>
+
+          {temEstabilidade && (
+            <div className="p-4 bg-gray-800/20">
+              <label className="block text-xs font-medium text-gray-300 mb-2">Tipo de estabilidade</label>
+              <Select
+                options={tipoEstabilidadeOptions}
+                {...register('tipoEstabilidade')}
+              />
+              <div className="mt-2 p-2 bg-yellow-900/20 border border-yellow-700/40 rounded flex items-start gap-2">
+                <AlertTriangle className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-yellow-300">
+                  Você pode ter direito a indenização adicional pelo período de estabilidade. Consulte um advogado trabalhista.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
         <Button
           type="submit"
           className="w-full"
           size="lg"
           loading={loading}
         >
-          Calcular Agora
+          Calcular Rescisão
         </Button>
       </form>
     </Card>

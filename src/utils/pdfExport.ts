@@ -7,388 +7,311 @@ interface PDFExportData {
   result: CalculationResult;
 }
 
-// Função auxiliar para formatar o motivo da rescisão
 const formatMotivoRescisao = (motivo: string): string => {
-  const motivosMap: { [key: string]: string } = {
-    'dispensa_sem_justa_causa': 'Dispensa sem Justa Causa',
-    'dispensa_com_justa_causa': 'Dispensa com Justa Causa',
-    'pedido_demissao': 'Pedido de Demissão',
-    'comum_acordo': 'Comum Acordo',
-    'termino_contrato': 'Término do Contrato',
-    'aposentadoria': 'Aposentadoria',
-    'morte': 'Falecimento',
-    'empresa': 'Iniciativa da Empresa',
-    'funcionario': 'Iniciativa do Funcionário'
+  const motivosMap: Record<string, string> = {
+    dispensa_sem_justa_causa: 'Dispensa sem Justa Causa',
+    dispensa_com_justa_causa: 'Dispensa com Justa Causa',
+    pedido_demissao: 'Pedido de Demissão',
+    comum_acordo: 'Comum Acordo',
+    termino_contrato: 'Término do Contrato',
+    aposentadoria: 'Aposentadoria',
   };
-
   return motivosMap[motivo] || motivo;
 };
 
 export const generatePDF = async ({ formData, result }: PDFExportData): Promise<void> => {
   try {
-    // Criar instância do PDF
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4'
-    });
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-    // Configurações de estilo
     const pageWidth = pdf.internal.pageSize.getWidth();
     const margin = 20;
-    const contentWidth = pageWidth - (margin * 2);
-    let yPosition = margin;
+    let y = margin;
 
-    // Função para adicionar texto com quebra de linha automática
-    const addText = (text: string, x: number, y: number, options: {
-      fontSize?: number,
-      fontStyle?: string,
-      maxWidth?: number,
-      align?: 'left' | 'center' | 'right'
+    const addText = (text: string, x: number, yPos: number, opts: {
+      fontSize?: number; fontStyle?: string; align?: 'left' | 'center' | 'right'; color?: [number, number, number];
     } = {}) => {
-      const { fontSize = 10, fontStyle = 'normal', maxWidth = contentWidth, align = 'left' } = options;
-
+      const { fontSize = 10, fontStyle = 'normal', align = 'left', color } = opts;
       pdf.setFontSize(fontSize);
       pdf.setFont('helvetica', fontStyle);
+      if (color) pdf.setTextColor(...color);
+      else pdf.setTextColor(30, 30, 30);
 
-      if (align === 'center') {
-        pdf.text(text, pageWidth / 2, y, { align: 'center', maxWidth });
-      } else if (align === 'right') {
-        pdf.text(text, pageWidth - margin, y, { align: 'right', maxWidth });
-      } else {
-        pdf.text(text, x, y, { maxWidth });
-      }
+      if (align === 'center') pdf.text(text, pageWidth / 2, yPos, { align: 'center' });
+      else if (align === 'right') pdf.text(text, pageWidth - margin, yPos, { align: 'right' });
+      else pdf.text(text, x, yPos);
 
       return pdf.getTextDimensions(text).h + 2;
     };
 
-    // Função para adicionar linha
-    const addLine = (y: number, color: string = '#e5e7eb') => {
-      pdf.setDrawColor(color);
-      pdf.setLineWidth(0.5);
-      pdf.line(margin, y, pageWidth - margin, y);
+    const addLine = (yPos: number, r = 200, g = 200, b = 200) => {
+      pdf.setDrawColor(r, g, b);
+      pdf.setLineWidth(0.3);
+      pdf.line(margin, yPos, pageWidth - margin, yPos);
       return 5;
     };
 
-    // CABEÇALHO
-    pdf.setFillColor(34, 197, 94); // Primary green
-    pdf.rect(0, 0, pageWidth, 25, 'F');
+    const section = (title: string, yPos: number) => {
+      pdf.setFillColor(240, 253, 244);
+      pdf.rect(margin, yPos - 4, pageWidth - margin * 2, 8, 'F');
+      addText(title, margin + 2, yPos + 1, { fontSize: 11, fontStyle: 'bold', color: [21, 128, 61] });
+      return 12;
+    };
 
-    yPosition = 15;
-    addText('CALCULADORA DE RESCISÃO TRABALHISTA', margin, yPosition, {
-      fontSize: 16,
-      fontStyle: 'bold',
-      align: 'center'
-    });
+    // Cabeçalho
+    pdf.setFillColor(34, 197, 94);
+    pdf.rect(0, 0, pageWidth, 28, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('CALCULADORA DE RESCISÃO TRABALHISTA', pageWidth / 2, 12, { align: 'center' });
+    pdf.setFontSize(9);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('www.rescisaonline.com.br', pageWidth / 2, 20, { align: 'center' });
+    y = 36;
 
-    yPosition = 35;
+    // Dados do funcionário
+    y += section('DADOS DO FUNCIONÁRIO', y);
+    y += addLine(y);
 
-    // DADOS DO FUNCIONÁRIO
-    yPosition += addText('DADOS DO FUNCIONÁRIO', margin, yPosition, {
-      fontSize: 14,
-      fontStyle: 'bold'
-    });
+    const dados: [string, string][] = [];
+    if (formData.nome?.trim()) dados.push(['Nome', formData.nome]);
+    dados.push(['Tipo de Contrato', formData.tipoContrato === 'normal' ? 'Normal' : 'Experiência']);
+    dados.push(['Salário Mensal', formatCurrency(formData.salarioMensal)]);
+    if ((formData.comissoes ?? 0) > 0) dados.push(['Comissões', formatCurrency(formData.comissoes!)]);
+    if ((formData.adicionaisHabituais ?? 0) > 0) dados.push(['Adicionais Habituais', formatCurrency(formData.adicionaisHabituais!)]);
+    dados.push(['Data de Admissão', formatDate(formData.dataAdmissao)]);
+    dados.push(['Data de Demissão', formatDate(formData.dataDemissao)]);
 
-    yPosition += 5;
-    yPosition += addLine(yPosition);
-    yPosition += 5;
-
-    const dadosFuncionario = [];
-
-    // Adicionar nome se fornecido
-    if (formData.nome && formData.nome.trim()) {
-      dadosFuncionario.push(['Nome:', formData.nome]);
-    }
-
-    dadosFuncionario.push(
-      ['Tipo de Contrato:', formData.tipoContrato === 'normal' ? 'Normal' : 'Experiência'],
-      ['Salário Mensal:', formatCurrency(formData.salarioMensal)],
-      ['Data de Admissão:', formatDate(formData.dataAdmissao)],
-      ['Data de Demissão:', formatDate(formData.dataDemissao)]
-    );
-
-    // CORREÇÃO: Campos específicos por tipo de contrato
     if (formData.tipoContrato === 'experiencia') {
-      // Para experiência: apenas dias trabalhados (SEM motivo da rescisão)
-      dadosFuncionario.push(['Dias Trabalhados:', `${formData.tempoContrato} dias`]);
+      dados.push(['Dias Trabalhados', `${formData.tempoContrato} dias`]);
     } else {
-      // Para contrato normal: motivo da rescisão + aviso prévio
-      dadosFuncionario.push(
-        ['Motivo da Rescisão:', formData.motivoRescisao ? formatMotivoRescisao(formData.motivoRescisao) : 'Não informado'],
-        ['Aviso Prévio:',
-          formData.avisoPrevio === 'indenizado' ? 'Indenizado' :
-            formData.avisoPrevio === 'trabalhado' ? 'Trabalhado' : 'Não Aplicável'
-        ]
-      );
+      dados.push(['Motivo da Rescisão', formData.motivoRescisao ? formatMotivoRescisao(formData.motivoRescisao) : 'Não informado']);
+      dados.push(['Aviso Prévio', formData.avisoPrevio === 'indenizado' ? 'Indenizado' : formData.avisoPrevio === 'trabalhado' ? 'Trabalhado' : 'Não Aplicável']);
     }
+    dados.push(['FGTS', formData.temFGTS ? 'Sim' : 'Não']);
+    if ((formData.numeroDependentesIR ?? 0) > 0) dados.push(['Dependentes IR', String(formData.numeroDependentesIR)]);
 
-    dadosFuncionario.push(['FGTS:', formData.temFGTS ? 'Sim' : 'Não']);
-
-    dadosFuncionario.forEach(([label, value]) => {
-      yPosition += addText(label, margin, yPosition, { fontSize: 10, fontStyle: 'bold' });
-      addText(value, margin + 50, yPosition - 4, { fontSize: 10 });
-      yPosition += 2;
+    dados.forEach(([label, value]) => {
+      addText(label + ':', margin, y, { fontSize: 9, fontStyle: 'bold', color: [70, 70, 70] });
+      addText(value, margin + 55, y, { fontSize: 9, color: [20, 20, 20] });
+      y += 6;
     });
 
-    yPosition += 10;
+    y += 6;
 
-    // CÁLCULOS DA RESCISÃO
-    yPosition += addText('CÁLCULOS DA RESCISÃO', margin, yPosition, {
-      fontSize: 14,
-      fontStyle: 'bold'
-    });
+    // Verbas
+    y += section('VERBAS RESCISÓRIAS (BRUTO)', y);
+    y += addLine(y);
 
-    yPosition += 5;
-    yPosition += addLine(yPosition);
-    yPosition += 5;
-
-    const calculosRescisao = [
+    const verbas: [string, number][] = [
       ['Saldo de Salário', result.saldoSalario],
-      ['Férias Proporcionais', result.feriasPROPorcionais],
-      ['13º Proporcional', result.decimoTerceiroProporcional],
-      ['FGTS + Multa (40%)', result.fgtsMulta]
+      ['Férias Proporcionais + 1/3', result.feriasPROPorcionais],
+      ['13° Proporcional', result.decimoTerceiroProporcional],
+      ['FGTS + Multa', result.fgtsMulta],
     ];
+    if (result.avisoPrevioIndenizado > 0) verbas.push(['Aviso Prévio Indenizado', result.avisoPrevioIndenizado]);
+    if (result.indenizacaoExperiencia > 0) verbas.push(['Indenização Contrato Experiência', result.indenizacaoExperiencia]);
 
-    // Adicionar aviso prévio indenizado apenas se houver valor
-    if (result.avisoPrevioIndenizado && result.avisoPrevioIndenizado > 0) {
-      calculosRescisao.push(['Aviso Prévio Indenizado', result.avisoPrevioIndenizado]);
+    verbas.forEach(([label, value]) => {
+      addText(label, margin, y, { fontSize: 9, color: [50, 50, 50] });
+      addText(formatCurrency(value), pageWidth - margin, y, { fontSize: 9, fontStyle: 'bold', align: 'right', color: [20, 20, 20] });
+      y += 6;
+    });
+
+    y += 3;
+    addLine(y, 34, 197, 94);
+    y += 6;
+    addText('TOTAL BRUTO', margin, y, { fontSize: 12, fontStyle: 'bold', color: [20, 20, 20] });
+    addText(formatCurrency(result.total), pageWidth - margin, y, { fontSize: 12, fontStyle: 'bold', align: 'right', color: [21, 128, 61] });
+    y += 10;
+
+    // Deduções
+    if (result.deducaoINSS > 0 || result.deducaoIRRF > 0) {
+      y += section('DEDUÇÕES ESTIMADAS', y);
+      y += addLine(y);
+
+      if (result.deducaoINSS > 0) {
+        addText('INSS (Previdência Social)', margin, y, { fontSize: 9, color: [50, 50, 50] });
+        addText('- ' + formatCurrency(result.deducaoINSS), pageWidth - margin, y, { fontSize: 9, align: 'right', color: [180, 50, 50] });
+        y += 6;
+      }
+      if (result.deducaoIRRF > 0) {
+        addText('IRRF (Imposto de Renda)', margin, y, { fontSize: 9, color: [50, 50, 50] });
+        addText('- ' + formatCurrency(result.deducaoIRRF), pageWidth - margin, y, { fontSize: 9, align: 'right', color: [180, 50, 50] });
+        y += 6;
+      }
+
+      y += 3;
+      addLine(y, 34, 197, 94);
+      y += 6;
+      addText('ESTIMATIVA LÍQUIDA', margin, y, { fontSize: 12, fontStyle: 'bold', color: [20, 20, 20] });
+      addText(formatCurrency(result.totalLiquido), pageWidth - margin, y, { fontSize: 12, fontStyle: 'bold', align: 'right', color: [21, 128, 61] });
+      y += 10;
+
+      addText('* Férias indenizadas são isentas de IRRF (Lei 7.713/88, art. 6°, V)', margin, y, { fontSize: 7, color: [120, 120, 120] });
+      y += 8;
     }
 
-    // Adicionar indenização de experiência apenas se houver valor
-    if (result.indenizacaoExperiencia && result.indenizacaoExperiencia > 0) {
-      calculosRescisao.push(['Indenização Contrato Experiência', result.indenizacaoExperiencia]);
+    // Seguro Desemprego
+    if (result.seguroDesemprego.temDireito) {
+      y += section('SEGURO DESEMPREGO', y);
+      y += addLine(y);
+      addText(`Parcelas: ${result.seguroDesemprego.numeroParcelas}`, margin, y, { fontSize: 9, color: [50, 50, 50] });
+      addText(`Valor/parcela estimado: ${formatCurrency(result.seguroDesemprego.valorEstimadoParcela)}`, margin + 50, y, { fontSize: 9, color: [50, 50, 50] });
+      y += 6;
+      addText(`Total estimado: ${formatCurrency(result.seguroDesemprego.totalEstimado)}`, margin, y, { fontSize: 9, fontStyle: 'bold', color: [21, 128, 61] });
+      y += 10;
     }
 
-    calculosRescisao.forEach(([label, value]) => {
-      yPosition += addText(label as string, margin, yPosition, { fontSize: 10 });
-      addText(formatCurrency(value as number), margin, yPosition - 4, {
-        fontSize: 10,
-        align: 'right'
-      });
-      yPosition += 2;
-    });
+    // Prazo pagamento
+    if (result.prazoLimitePagamento) {
+      y += section('PRAZO DE PAGAMENTO', y);
+      y += addLine(y);
+      addText(`Prazo limite: ${formatDate(result.prazoLimitePagamento)} (10 dias corridos — Art. 477 §6° CLT)`, margin, y, { fontSize: 9, color: [50, 50, 50] });
+      y += 10;
+    }
 
-    yPosition += 10;
-    yPosition += addLine(yPosition, '#22c55e');
-    yPosition += 5;
-
-    // TOTAL
-    yPosition += addText('VALOR TOTAL DA RESCISÃO', margin, yPosition, {
-      fontSize: 12,
-      fontStyle: 'bold'
-    });
-
-    addText(formatCurrency(result.total), margin, yPosition - 4, {
-      fontSize: 14,
-      fontStyle: 'bold',
-      align: 'right'
-    });
-
-    yPosition += 15;
-
-    // OBSERVAÇÕES
-    yPosition += addText('OBSERVAÇÕES IMPORTANTES', margin, yPosition, {
-      fontSize: 12,
-      fontStyle: 'bold'
-    });
-
-    yPosition += 5;
-    yPosition += addLine(yPosition);
-    yPosition += 5;
-
-    const observacoes = [
-      '• Este cálculo é uma estimativa baseada nas informações fornecidas.',
-      '• Os valores podem variar conforme convenções coletivas específicas.',
-      '• Consulte sempre um advogado trabalhista para orientação jurídica.',
-      '• Mantenha toda a documentação trabalhista organizada.',
-      '• Verifique se há acordos específicos em seu contrato de trabalho.'
+    // Observações
+    y += section('OBSERVAÇÕES', y);
+    y += addLine(y);
+    const obs = [
+      '• Cálculo estimativo baseado nas informações fornecidas — consulte a folha de rescisão oficial.',
+      '• Deduções de INSS e IRRF são estimativas; valores exatos dependem da situação fiscal individual.',
+      '• Em caso de divergência com o empregador, procure o sindicato ou a Justiça do Trabalho.',
+      '• Guarde todos os documentos de rescisão com autenticação.',
     ];
+    obs.forEach(o => { addText(o, margin, y, { fontSize: 8, color: [100, 100, 100] }); y += 6; });
 
-    observacoes.forEach(obs => {
-      yPosition += addText(obs, margin, yPosition, { fontSize: 9 });
-      yPosition += 2;
-    });
+    // Rodapé
+    const footerY = pdf.internal.pageSize.getHeight() - 14;
+    addLine(footerY, 200, 200, 200);
+    addText(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, margin, footerY + 8, { fontSize: 7, color: [150, 150, 150] });
+    addText('rescisaonline.com.br', pageWidth - margin, footerY + 8, { fontSize: 7, align: 'right', color: [34, 197, 94] });
 
-    // RODAPÉ
-    const footerY = pdf.internal.pageSize.getHeight() - 20;
-    yPosition = footerY - 10;
-
-    yPosition += addLine(yPosition, '#e5e7eb');
-    yPosition += 5;
-
-    addText(`Calculado em: ${new Date().toLocaleString('pt-BR')}`, margin, yPosition, {
-      fontSize: 8,
-      align: 'left'
-    });
-
-    addText('Rescisão - www.rescisaonline.com.br', margin, yPosition, {
-      fontSize: 8,
-      align: 'right'
-    });
-
-    // DOWNLOAD
-    const nomeArquivo = formData.nome && formData.nome.trim()
+    const nomeArquivo = formData.nome?.trim()
       ? `rescisao-${formData.nome.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`
       : `rescisao-trabalhista-${new Date().toISOString().split('T')[0]}.pdf`;
 
     pdf.save(nomeArquivo);
-
   } catch (error) {
     console.error('Erro ao gerar PDF:', error);
     throw new Error('Não foi possível gerar o PDF. Tente novamente.');
   }
 };
 
-// Função alternativa para dispositivos móveis que podem ter problemas com jsPDF
 export const generateTextFile = ({ formData, result }: PDFExportData): void => {
-  let content = `
- CALCULADORA DE RESCISÃO TRABALHISTA 
+  const motivo = formData.motivoRescisao ? formatMotivoRescisao(formData.motivoRescisao) : 'Não informado';
+  const salarioTotal = formData.salarioMensal + (formData.comissoes ?? 0) + (formData.adicionaisHabituais ?? 0);
+
+  let content = `CALCULADORA DE RESCISÃO TRABALHISTA
 =====================================
 
 DADOS DO FUNCIONÁRIO:`;
 
-  // Adicionar nome se fornecido
-  if (formData.nome && formData.nome.trim()) {
-    content += `\nNome: ${formData.nome}`;
-  }
+  if (formData.nome?.trim()) content += `\nNome: ${formData.nome}`;
 
   content += `
 Tipo de Contrato: ${formData.tipoContrato === 'normal' ? 'Normal' : 'Experiência'}
-Salário Mensal: ${formatCurrency(formData.salarioMensal)}
+Salário Mensal: ${formatCurrency(formData.salarioMensal)}`;
+
+  if ((formData.comissoes ?? 0) > 0) content += `\nComissões: ${formatCurrency(formData.comissoes!)}`;
+  if ((formData.adicionaisHabituais ?? 0) > 0) content += `\nAdicionais: ${formatCurrency(formData.adicionaisHabituais!)}`;
+  if (salarioTotal !== formData.salarioMensal) content += `\nSalário Total Base: ${formatCurrency(salarioTotal)}`;
+
+  content += `
 Data de Admissão: ${formatDate(formData.dataAdmissao)}
 Data de Demissão: ${formatDate(formData.dataDemissao)}`;
 
-  // CORREÇÃO: Campos específicos por tipo de contrato
   if (formData.tipoContrato === 'experiencia') {
-    // Para experiência: apenas dias trabalhados (SEM motivo da rescisão)
-    content += `
-Dias Trabalhados: ${formData.tempoContrato} dias`;
+    content += `\nDias Trabalhados: ${formData.tempoContrato} dias`;
   } else {
-    // Para contrato normal: motivo da rescisão + aviso prévio
-    content += `
-Motivo da Rescisão: ${formData.motivoRescisao ? formatMotivoRescisao(formData.motivoRescisao) : 'Não informado'}
-Aviso Prévio: ${formData.avisoPrevio === 'indenizado' ? 'Indenizado' :
-        formData.avisoPrevio === 'trabalhado' ? 'Trabalhado' : 'Não Aplicável'}`;
-
+    content += `\nMotivo da Rescisão: ${motivo}`;
+    content += `\nAviso Prévio: ${formData.avisoPrevio === 'indenizado' ? 'Indenizado' : formData.avisoPrevio === 'trabalhado' ? 'Trabalhado' : 'Não Aplicável'}`;
   }
 
-  content += `
-FGTS: ${formData.temFGTS ? 'Sim' : 'Não'}
+  content += `\nFGTS: ${formData.temFGTS ? 'Sim' : 'Não'}`;
 
-CÁLCULOS DA RESCISÃO:
+  content += `
+
+VERBAS RESCISÓRIAS (BRUTO):
 Saldo de Salário: ${formatCurrency(result.saldoSalario)}
-Férias Proporcionais: ${formatCurrency(result.feriasPROPorcionais)}
-13º Proporcional: ${formatCurrency(result.decimoTerceiroProporcional)}
-FGTS + Multa (40%): ${formatCurrency(result.fgtsMulta)}`;
+Férias Proporcionais + 1/3: ${formatCurrency(result.feriasPROPorcionais)}
+13° Proporcional: ${formatCurrency(result.decimoTerceiroProporcional)}
+FGTS + Multa: ${formatCurrency(result.fgtsMulta)}`;
 
-  // Adicionar valores condicionais
-  if (result.avisoPrevioIndenizado && result.avisoPrevioIndenizado > 0) {
-    content += `\nAviso Prévio Indenizado: ${formatCurrency(result.avisoPrevioIndenizado)}`;
+  if (result.avisoPrevioIndenizado > 0) content += `\nAviso Prévio Indenizado: ${formatCurrency(result.avisoPrevioIndenizado)}`;
+  if (result.indenizacaoExperiencia > 0) content += `\nIndenização Experiência: ${formatCurrency(result.indenizacaoExperiencia)}`;
+
+  content += `\n\nTOTAL BRUTO: ${formatCurrency(result.total)}`;
+
+  if (result.deducaoINSS > 0 || result.deducaoIRRF > 0) {
+    content += `\n\nDEDUÇÕES ESTIMADAS:`;
+    if (result.deducaoINSS > 0) content += `\nINSS: - ${formatCurrency(result.deducaoINSS)}`;
+    if (result.deducaoIRRF > 0) content += `\nIRRF: - ${formatCurrency(result.deducaoIRRF)}`;
+    content += `\nESTIMATIVA LÍQUIDA: ${formatCurrency(result.totalLiquido)}`;
   }
 
-  if (result.indenizacaoExperiencia && result.indenizacaoExperiencia > 0) {
-    content += `\nIndenização Contrato Experiência: ${formatCurrency(result.indenizacaoExperiencia)}`;
+  if (result.seguroDesemprego.temDireito) {
+    content += `\n\nSEGURO DESEMPREGO:
+Parcelas: ${result.seguroDesemprego.numeroParcelas}
+Valor estimado por parcela: ${formatCurrency(result.seguroDesemprego.valorEstimadoParcela)}
+Total estimado: ${formatCurrency(result.seguroDesemprego.totalEstimado)}`;
+  } else {
+    content += `\n\nSeguro Desemprego: ${result.seguroDesemprego.motivoNaoDireito ?? 'Não há direito'}`;
   }
 
-  content += `
+  if (result.prazoLimitePagamento) {
+    content += `\n\nPRAZO LIMITE DE PAGAMENTO: ${formatDate(result.prazoLimitePagamento)} (Art. 477 §6° CLT)`;
+  }
 
-VALOR TOTAL: ${formatCurrency(result.total)}
-
-Calculado em: ${new Date().toLocaleString('pt-BR')}
-Rescisão - Calculadora Trabalhista`;
+  content += `\n\nGerado em: ${new Date().toLocaleString('pt-BR')}
+Rescisão Online - www.rescisaonline.com.br`;
 
   const element = document.createElement('a');
   const file = new Blob([content.trim()], { type: 'text/plain;charset=utf-8' });
   element.href = URL.createObjectURL(file);
-
-  const nomeArquivo = formData.nome && formData.nome.trim()
+  element.download = formData.nome?.trim()
     ? `rescisao-${formData.nome.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.txt`
     : `rescisao-trabalhista-${new Date().toISOString().split('T')[0]}.txt`;
-
-  element.download = nomeArquivo;
   document.body.appendChild(element);
   element.click();
   document.body.removeChild(element);
 };
 
-// Função CORRIGIDA para gerar mensagem para WhatsApp
 export const generateWhatsAppMessage = ({ formData, result }: PDFExportData): string => {
-  let message = `🧾 *CÁLCULO DE RESCISÃO TRABALHISTA*\n\n`;
-
-  message += `📊 *DADOS:*\n`;
-
-  // Adicionar nome se fornecido
-  if (formData.nome && formData.nome.trim()) {
-    message += `👤 Nome: ${formData.nome}\n`;
-  }
-
-  // Adicionar tipo de contrato sempre
-  message += `📋 Tipo de Contrato: ${formData.tipoContrato === 'normal' ? 'Normal' : 'Experiência'}\n`;
-
-  message += `💰 Salário: ${formatCurrency(formData.salarioMensal)}\n`;
-  message += `📅 Admissão: ${formatDate(formData.dataAdmissao)}\n`;
-  message += `📅 Demissão: ${formatDate(formData.dataDemissao)}\n`;
-
-  // CORREÇÃO: Campos específicos por tipo de contrato
+  let msg = `🧾 *CÁLCULO DE RESCISÃO TRABALHISTA*\n\n`;
+  msg += `📊 *DADOS:*\n`;
+  if (formData.nome?.trim()) msg += `👤 ${formData.nome}\n`;
+  msg += `💰 Salário: ${formatCurrency(formData.salarioMensal)}\n`;
+  msg += `📅 Admissão: ${formatDate(formData.dataAdmissao)}\n`;
+  msg += `📅 Demissão: ${formatDate(formData.dataDemissao)}\n`;
   if (formData.tipoContrato === 'experiencia') {
-    // Para experiência: apenas dias trabalhados (SEM motivo da rescisão)
-    message += `⏰ Dias Trabalhados: ${formData.tempoContrato} dias\n`;
+    msg += `⏰ Dias trabalhados: ${formData.tempoContrato}\n`;
   } else {
-    // Para contrato normal: motivo da rescisão + aviso prévio
-    message += `❓ Motivo da Rescisão: ${formData.motivoRescisao ? formatMotivoRescisao(formData.motivoRescisao) : 'Não informado'
-      }\n`;
-
-    const avisoPrevio = formData.avisoPrevio === 'indenizado' ? 'Indenizado' :
-      formData.avisoPrevio === 'trabalhado' ? 'Trabalhado' : 'Não Aplicável';
-    message += `⏰ Aviso Prévio: ${avisoPrevio}\n`;
+    msg += `❓ Motivo: ${formData.motivoRescisao ? formatMotivoRescisao(formData.motivoRescisao) : 'Não informado'}\n`;
   }
 
-  // Sempre mostrar FGTS
-  message += `🏦 FGTS: ${formData.temFGTS ? 'Sim' : 'Não'}\n`;
+  msg += `\n💰 *VALORES A RECEBER:*\n`;
+  msg += `• Saldo de Salário: ${formatCurrency(result.saldoSalario)}\n`;
+  msg += `• Férias + 1/3: ${formatCurrency(result.feriasPROPorcionais)}\n`;
+  msg += `• 13° Proporcional: ${formatCurrency(result.decimoTerceiroProporcional)}\n`;
+  msg += `• FGTS + Multa: ${formatCurrency(result.fgtsMulta)}\n`;
+  if (result.avisoPrevioIndenizado > 0) msg += `• Aviso Prévio: ${formatCurrency(result.avisoPrevioIndenizado)}\n`;
 
-  message += `\n💰 *VALORES A RECEBER:*\n`;
-  message += `• Saldo de Salário: ${formatCurrency(result.saldoSalario)}\n`;
-  message += `• Férias Proporcionais: ${formatCurrency(result.feriasPROPorcionais)}\n`;
-  message += `• 13º Proporcional: ${formatCurrency(result.decimoTerceiroProporcional)}\n`;
-  message += `• FGTS + Multa: ${formatCurrency(result.fgtsMulta)}\n`;
+  msg += `\n🎯 *TOTAL BRUTO: ${formatCurrency(result.total)}*\n`;
 
-  // Adicionar valores condicionais
-  if (result.avisoPrevioIndenizado && result.avisoPrevioIndenizado > 0) {
-    message += `• Aviso Prévio Indenizado: ${formatCurrency(result.avisoPrevioIndenizado)}\n`;
+  if (result.totalLiquido > 0 && result.totalLiquido !== result.total) {
+    msg += `💵 *Estimativa Líquida: ${formatCurrency(result.totalLiquido)}*\n`;
   }
 
-  if (result.indenizacaoExperiencia && result.indenizacaoExperiencia > 0) {
-    message += `• Indenização Experiência: ${formatCurrency(result.indenizacaoExperiencia)}\n`;
+  if (result.seguroDesemprego.temDireito) {
+    msg += `\n📋 Seguro Desemprego: ${result.seguroDesemprego.numeroParcelas}x ${formatCurrency(result.seguroDesemprego.valorEstimadoParcela)}\n`;
   }
 
-  message += `\n🎯 *TOTAL: ${formatCurrency(result.total)}*\n\n`;
-
-  message += `*Calculado em: ${new Date().toLocaleString('pt-BR')}*\n`;
-  message += `*Rescisão 2025 - Calculadora Trabalhista*\n\n`;
-  message += `👉 Acesse: https://www.rescisaonline.com.br`;
-
-  return message;
+  msg += `\n_${new Date().toLocaleString('pt-BR')}_\n`;
+  msg += `👉 https://www.rescisaonline.com.br`;
+  return msg;
 };
 
-// Função para copiar texto (alternativa ao WhatsApp)
-export const generateCopyText = ({ formData, result }: PDFExportData): string => {
-  return generateWhatsAppMessage({ formData, result });
-};
-
-// EXEMPLOS DE USO:
-
-// Para WhatsApp:
-// const message = generateWhatsAppMessage({ formData, result });
-// const encodedMessage = encodeURIComponent(message);
-// const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
-// window.open(whatsappUrl, '_blank');
-
-// Para copiar para área de transferência:
-// const text = generateCopyText({ formData, result });
-// navigator.clipboard.writeText(text);
-
-// Para gerar PDF:
-// await generatePDF({ formData, result });
-
-// Para gerar arquivo TXT:
-// generateTextFile({ formData, result });
+export const generateCopyText = ({ formData, result }: PDFExportData): string =>
+  generateWhatsAppMessage({ formData, result });

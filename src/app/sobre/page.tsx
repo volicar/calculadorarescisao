@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Calculator, Users, Shield, Zap, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Calculator, Users, Shield, Zap, ArrowLeft, CheckCircle, BookOpen, RefreshCw, Scale, UserCheck } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Sobre - Calculadora de Rescisão Online',
@@ -34,8 +34,7 @@ export default function SobrePage() {
             <span className="block text-primary-400">Rescisão Online</span>
           </h1>
           <p className="text-gray-300 text-lg max-w-3xl mx-auto leading-relaxed">
-            Nossa missão é democratizar o acesso aos cálculos trabalhistas no Brasil, 
-            oferecendo uma ferramenta gratuita, precisa e sempre atualizada para todos os trabalhadores.
+            Criamos a Rescisão Online porque muita gente chega ao fim de um contrato sem saber ao certo o que tem direito a receber. Uma ferramenta gratuita, direta e sempre atualizada com a CLT vigente.
           </p>
         </div>
 
@@ -45,10 +44,9 @@ export default function SobrePage() {
             <div className="bg-primary-500/20 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
               <Shield className="w-8 h-8 text-primary-400" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-3">Nossa Missão</h3>
+            <h3 className="text-xl font-bold text-white mb-3">O que fazemos</h3>
             <p className="text-gray-300">
-              Garantir que todo trabalhador brasileiro tenha acesso fácil e gratuito 
-              aos cálculos corretos de seus direitos trabalhistas.
+              Calculamos saldo de salário, férias, 13°, FGTS + multa, aviso prévio, INSS, IRRF e seguro desemprego — tudo em um lugar, sem cadastro.
             </p>
           </Card>
 
@@ -56,10 +54,9 @@ export default function SobrePage() {
             <div className="bg-blue-500/20 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
               <Zap className="w-8 h-8 text-blue-400" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-3">Nossa Visão</h3>
+            <h3 className="text-xl font-bold text-white mb-3">Como funciona</h3>
             <p className="text-gray-300">
-              Ser a principal referência em cálculos trabalhistas online no Brasil, 
-              promovendo transparência e conhecimento.
+              Você preenche os dados do seu contrato e a calculadora aplica as tabelas de 2025 (INSS, IRRF, Lei 12.506/2011) para gerar a estimativa instantaneamente.
             </p>
           </Card>
 
@@ -67,10 +64,9 @@ export default function SobrePage() {
             <div className="bg-yellow-500/20 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
               <Users className="w-8 h-8 text-yellow-400" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-3">Nossos Valores</h3>
+            <h3 className="text-xl font-bold text-white mb-3">Para quem é</h3>
             <p className="text-gray-300">
-              Transparência, precisão, acessibilidade e compromisso com os 
-              direitos fundamentais dos trabalhadores brasileiros.
+              Para qualquer trabalhador que queira conferir os valores antes de assinar a rescisão ou entender o que cada linha do termo significa.
             </p>
           </Card>
         </div>
@@ -80,22 +76,17 @@ export default function SobrePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <div>
               <h2 className="text-2xl font-bold text-white mb-4">
-                Por que Criamos a Rescisão Online?
+                Por que criamos a Rescisão Online?
               </h2>
               <div className="space-y-4 text-gray-300">
                 <p>
-                  Identificamos que muitos trabalhadores brasileiros não sabem exatamente 
-                  quais são seus direitos na hora da rescisão do contrato de trabalho.
+                  Assinar uma rescisão sem conferir os números é arriscado. A maioria das pessoas não tem tempo nem conhecimento para verificar cada verba manualmente — e muitas acabam recebendo menos do que têm direito.
                 </p>
                 <p>
-                  Calculadoras complexas, informações desencontradas e falta de clareza 
-                  sobre os valores fazem com que milhares de pessoas sejam prejudicadas 
-                  mensalmente.
+                  Criamos esta ferramenta para que qualquer pessoa possa, em dois minutos, ter uma visão clara do que está sendo pago e do que ainda pode ser cobrado.
                 </p>
                 <p>
-                  Nossa ferramenta resolve isso oferecendo <strong className="text-white">
-                  cálculos precisos, explicações detalhadas e total gratuidade</strong>, 
-                  garantindo que você saiba exatamente o que tem direito a receber.
+                  <strong className="text-white">Sem cadastro, sem cobrança, sem coleta de dados.</strong> Os cálculos ficam no seu navegador.
                 </p>
               </div>
             </div>
@@ -174,85 +165,30 @@ export default function SobrePage() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
               <div>
-                <h3 className="font-semibold text-white mb-3">📚 Base Legal Sólida</h3>
+                <h3 className="font-semibold text-white mb-3 flex items-center gap-2"><BookOpen className="w-4 h-4 text-primary-400" /> Base Legal</h3>
                 <p className="text-gray-300 mb-4">
-                  Todos os cálculos são baseados na <strong>Consolidação das Leis do Trabalho (CLT)</strong> 
-                  atualizada, incluindo as mudanças de 2025.
+                  Todos os cálculos seguem a <strong>CLT</strong>, tabelas do INSS e IRRF de 2025, Lei 12.506/2011 (aviso prévio proporcional) e Lei 7.713/88 (isenção IRRF em férias).
                 </p>
-                
-                <h3 className="font-semibold text-white mb-3">🔄 Atualizações Constantes</h3>
+
+                <h3 className="font-semibold text-white mb-3 flex items-center gap-2"><RefreshCw className="w-4 h-4 text-blue-400" /> Atualização Constante</h3>
                 <p className="text-gray-300">
-                  Acompanhamos mudanças na legislação trabalhista e atualizamos 
-                  nossa ferramenta imediatamente.
+                  Sempre que a legislação muda — salário mínimo, faixas de INSS, limites do seguro desemprego — atualizamos a ferramenta.
                 </p>
               </div>
               <div>
-                <h3 className="font-semibold text-white mb-3">⚖️ Disclaimer Importante</h3>
+                <h3 className="font-semibold text-white mb-3 flex items-center gap-2"><Scale className="w-4 h-4 text-yellow-400" /> Estimativa, não certeza</h3>
                 <p className="text-gray-300 mb-4">
-                  Nossa calculadora oferece <strong>estimativas precisas</strong> baseadas 
-                  nas informações fornecidas e na legislação vigente.
+                  Os valores gerados são uma <strong>estimativa fundamentada</strong>. O documento oficial é o TRCT emitido pelo empregador, que pode incluir horas extras, adicionais e acordos coletivos.
                 </p>
-                
-                <h3 className="font-semibold text-white mb-3">👨‍💼 Recomendação</h3>
+
+                <h3 className="font-semibold text-white mb-3 flex items-center gap-2"><UserCheck className="w-4 h-4 text-green-400" /> Quando consultar um advogado</h3>
                 <p className="text-gray-300">
-                  Para casos complexos ou dúvidas específicas, sempre recomendamos 
-                  consultar um <strong>advogado trabalhista qualificado</strong>.
+                  Nos casos de justa causa contestável, estabilidade provisória, assédio ou irregularidades no contrato, busque um <strong>advogado trabalhista</strong>.
                 </p>
               </div>
             </div>
           </div>
         </Card>
-
-        {/* Equipe 
-        <Card className="mb-12">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-white mb-6">Nossa Equipe</h2>
-            <div className="max-w-2xl mx-auto">
-              <div className="bg-gray-700/30 rounded-lg p-6">
-                <div className="w-20 h-20 bg-primary-500 rounded-full mx-auto mb-4 flex items-center justify-center">
-                  <span className="text-white font-bold text-2xl">V</span>
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-2">Vinicius</h3>
-                <p className="text-primary-400 mb-3">Fundador & Desenvolvedor</p>
-                <p className="text-gray-300 text-sm">
-                  Especialista em desenvolvimento web e entusiasta dos direitos trabalhistas. 
-                  Criou a Rescisão 2025 com o objetivo de democratizar o acesso aos cálculos 
-                  trabalhistas no Brasil.
-                </p>
-              </div>
-            </div>
-          </div>
-        </Card> */}
-
-        {/* Contato 
-        <Card className="mb-12">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-white mb-6">Entre em Contato</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <h3 className="font-semibold text-white mb-2">📧 Email</h3>
-                <p className="text-gray-300">contato@rescisao2025.com.br</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-white mb-2">💬 WhatsApp</h3>
-                <p className="text-gray-300">(11) 99999-9999</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-white mb-2">🌐 Site</h3>
-                <p className="text-gray-300">www.rescisao2025.com.br</p>
-              </div>
-            </div>
-            
-            <div className="mt-8">
-              <p className="text-gray-400 text-sm mb-4">
-                Tem alguma sugestão ou encontrou algum problema? Entre em contato conosco!
-              </p>
-              <p className="text-gray-400 text-sm">
-                Respondemos todos os contatos em até 24 horas úteis.
-              </p>
-            </div>
-          </div>
-        </Card> */}
 
         {/* CTA Final */}
         <div className="text-center">

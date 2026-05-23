@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/Layout/Header';
 import { Footer } from '@/components/Layout/Footer';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-jakarta', display: 'swap' });
 
 export const metadata: Metadata = {
   title: 'Rescisão Online | Calculadora de Rescisão Trabalhista',
@@ -50,7 +51,7 @@ export default function RootLayout({
           crossOrigin="anonymous"></script>
         <meta name="google-adsense-account" content="ca-pub-5155326548013471"></meta>
       </head>
-      <body className={`${inter.className} min-h-screen`} style={{ backgroundColor: '#111827', color: '#ffffff' }}>
+      <body className={`${inter.variable} ${jakarta.variable} font-sans min-h-screen`} style={{ backgroundColor: '#111827', color: '#ffffff' }}>
         <div className="flex flex-col min-h-screen bg-gray-900 text-white">
           <Header />
           <main className="flex-grow">

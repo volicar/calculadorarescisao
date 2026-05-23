@@ -13,6 +13,15 @@ import {
   ChevronDown,
   ChevronUp,
   Info,
+  Banknote,
+  Umbrella,
+  Gift,
+  Landmark,
+  Clock,
+  TrendingDown,
+  Scale,
+  BarChart2,
+  ClipboardList,
 } from 'lucide-react';
 import { GoogleAd } from '@/components/GoogleAd';
 import { LeadGenCard } from '@/components/LeadGenCard';
@@ -334,7 +343,8 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
               onClick={() => setMostrarCalculos(!mostrarCalculos)}
               className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-gray-700/40 hover:bg-gray-700/70 text-gray-300 hover:text-white rounded-lg transition-all text-sm font-medium"
             >
-              {mostrarCalculos ? '📊 Ocultar Memória de Cálculo' : '🧮 Ver Como Foi Calculado'}
+              <BarChart2 className="w-4 h-4" />
+              {mostrarCalculos ? 'Ocultar Memória de Cálculo' : 'Ver Como Foi Calculado'}
               {mostrarCalculos ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
           </div>
@@ -343,7 +353,7 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
 
       {/* Checklist de documentos */}
       {mostrarChecklist && (
-        <Card title="📄 Documentos a Solicitar ao Empregador">
+        <Card title="Documentos a Solicitar ao Empregador">
           <p className="text-xs text-gray-400 mb-3">
             Motivo: <span className="text-gray-300 font-medium">{obterNomeMotivo(dadosOriginais?.motivoRescisao)}</span>
           </p>
@@ -363,12 +373,12 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
 
       {/* Memória de Cálculo */}
       {mostrarCalculos && dadosOriginais && (
-        <Card title="📋 Memória de Cálculo Detalhada">
+        <Card title="Memória de Cálculo Detalhada">
           <div className="space-y-5 text-sm">
             {/* Dados Base */}
             <div className="bg-gray-800/30 p-4 rounded-lg border border-gray-700/30">
               <h4 className="font-semibold text-gray-200 mb-3 flex items-center gap-2">
-                <span className="text-blue-400">📊</span> Dados Base
+                <BarChart2 className="w-4 h-4 text-blue-400" /> Dados Base
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                 <div><span className="text-gray-400">Salário base:</span> <span className="text-white ml-1">{formatCurrency(dadosOriginais.salarioMensal)}</span></div>
@@ -394,7 +404,7 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
             {/* Saldo Salário */}
             {result.saldoSalario > 0 && (
               <div className="bg-gray-800/30 p-4 rounded-lg border border-gray-700/30">
-                <h4 className="font-semibold text-gray-200 mb-2 flex items-center gap-2"><span className="text-green-400">💰</span> Saldo de Salário</h4>
+                <h4 className="font-semibold text-gray-200 mb-2 flex items-center gap-2"><Banknote className="w-4 h-4 text-green-400" /> Saldo de Salário</h4>
                 <p className="text-xs text-gray-400 mb-1">Dias trabalhados no último mês × (salário ÷ 30)</p>
                 <p className="text-green-400 font-medium">{formatCurrency(result.saldoSalario)}</p>
               </div>
@@ -403,7 +413,7 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
             {/* Férias */}
             {result.feriasPROPorcionais > 0 && (
               <div className="bg-gray-800/30 p-4 rounded-lg border border-gray-700/30">
-                <h4 className="font-semibold text-gray-200 mb-2 flex items-center gap-2"><span className="text-blue-400">🏖️</span> Férias Proporcionais</h4>
+                <h4 className="font-semibold text-gray-200 mb-2 flex items-center gap-2"><Umbrella className="w-4 h-4 text-blue-400" /> Férias Proporcionais</h4>
                 <p className="text-xs text-gray-400 mb-1">
                   {dadosOriginais.tipoContrato === 'experiencia'
                     ? 'Dias trabalhados ÷ 360 × salário × (1 + 1/3)'
@@ -416,7 +426,7 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
             {/* 13° */}
             {result.decimoTerceiroProporcional > 0 && (
               <div className="bg-gray-800/30 p-4 rounded-lg border border-gray-700/30">
-                <h4 className="font-semibold text-gray-200 mb-2 flex items-center gap-2"><span className="text-yellow-400">🎁</span> 13° Proporcional</h4>
+                <h4 className="font-semibold text-gray-200 mb-2 flex items-center gap-2"><Gift className="w-4 h-4 text-yellow-400" /> 13° Proporcional</h4>
                 <p className="text-xs text-gray-400 mb-1">
                   {dadosOriginais.tipoContrato === 'experiencia'
                     ? 'Dias trabalhados ÷ 360 × salário'
@@ -429,7 +439,7 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
             {/* FGTS */}
             {result.fgtsMulta > 0 && (
               <div className="bg-gray-800/30 p-4 rounded-lg border border-gray-700/30">
-                <h4 className="font-semibold text-gray-200 mb-2 flex items-center gap-2"><span className="text-purple-400">🏦</span> FGTS + Multa</h4>
+                <h4 className="font-semibold text-gray-200 mb-2 flex items-center gap-2"><Landmark className="w-4 h-4 text-purple-400" /> FGTS + Multa</h4>
                 <div className="text-xs text-gray-400 space-y-1 mb-2">
                   <p>Saldo estimado: 8% × salário × meses + 8% × 13° + 8% × aviso prévio</p>
                   <p>Multa: {dadosOriginais.motivoRescisao === 'dispensa_sem_justa_causa' ? '40%' : dadosOriginais.motivoRescisao === 'comum_acordo' ? '20%' : '0%'} sobre o saldo FGTS</p>
@@ -445,7 +455,7 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
             {/* Aviso Prévio */}
             {result.avisoPrevioIndenizado > 0 && (
               <div className="bg-gray-800/30 p-4 rounded-lg border border-gray-700/30">
-                <h4 className="font-semibold text-gray-200 mb-2 flex items-center gap-2"><span className="text-orange-400">⏰</span> Aviso Prévio Indenizado</h4>
+                <h4 className="font-semibold text-gray-200 mb-2 flex items-center gap-2"><Clock className="w-4 h-4 text-orange-400" /> Aviso Prévio Indenizado</h4>
                 <p className="text-xs text-gray-400 mb-1">
                   30 dias + 3 dias × {periodo.anos} anos = {Math.min(30 + periodo.anos * 3, 90)} dias × (salário ÷ 30)
                   {dadosOriginais.motivoRescisao === 'comum_acordo' ? ' × 50% (comum acordo)' : ''}
@@ -458,7 +468,7 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
             {/* Deduções */}
             {(result.deducaoINSS > 0 || result.deducaoIRRF > 0) && (
               <div className="bg-red-900/10 p-4 rounded-lg border border-red-800/30">
-                <h4 className="font-semibold text-red-300 mb-2 flex items-center gap-2"><span>📉</span> Deduções Estimadas</h4>
+                <h4 className="font-semibold text-red-300 mb-2 flex items-center gap-2"><TrendingDown className="w-4 h-4" /> Deduções Estimadas</h4>
                 <div className="text-xs text-gray-400 space-y-1">
                   <p>Base INSS: saldo + 13° + aviso prévio + base férias (sem 1/3)</p>
                   <p>Base IRRF: saldo + 13° + aviso prévio − INSS (férias isentas - Lei 7.713/88)</p>
@@ -475,14 +485,14 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
 
             {/* Observações legais */}
             <div className="bg-emerald-900/20 p-4 rounded-lg border border-emerald-800/30">
-              <h4 className="font-semibold text-emerald-400 mb-3">⚖️ Base Legal e Observações</h4>
+              <h4 className="font-semibold text-emerald-400 mb-3 flex items-center gap-2"><Scale className="w-4 h-4" /> Base Legal e Observações</h4>
               <div className="text-xs text-gray-300 space-y-2">
                 <p>• CLT (Decreto-Lei 5.452/43) — regras gerais de rescisão</p>
                 <p>• Lei 8.036/90 — FGTS</p>
                 <p>• Lei 12.506/2011 — Aviso Prévio Proporcional</p>
                 <p>• Lei 13.467/2017 (Reforma Trabalhista) — Comum Acordo</p>
                 <p>• Lei 7.713/88, art. 6°, V — Isenção IRRF férias indenizadas</p>
-                <p className="text-yellow-300 mt-2">⚠️ Este é um cálculo estimativo. Valores exatos devem ser verificados na folha de rescisão emitida pelo empregador. Consulte um advogado trabalhista para casos específicos.</p>
+                <p className="text-yellow-300 mt-2 flex items-start gap-1.5"><AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" /> Este é um cálculo estimativo. Valores exatos devem ser verificados na folha de rescisão emitida pelo empregador. Consulte um advogado trabalhista para casos específicos.</p>
               </div>
             </div>
           </div>

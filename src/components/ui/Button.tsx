@@ -22,7 +22,7 @@ export const Button = ({
   const variantClasses = {
     primary: 'bg-primary-500 hover:bg-primary-600 text-white focus:ring-primary-500 active:bg-primary-700',
     secondary: 'bg-gray-600 hover:bg-gray-700 text-white focus:ring-gray-500 active:bg-gray-800',
-    outline: 'border border-gray-300 hover:bg-gray-50 text-gray-700 focus:ring-primary-500 active:bg-gray-100'
+    outline: 'border border-gray-600 hover:bg-gray-700/50 text-gray-300 hover:text-white focus:ring-primary-500 active:bg-gray-700'
   };
   
   const sizeClasses = {

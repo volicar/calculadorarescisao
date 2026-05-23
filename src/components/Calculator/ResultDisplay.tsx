@@ -3,7 +3,6 @@
 import { CalculationResult } from '@/types/calculator';
 import { Card } from '@/components/ui/Card';
 import { formatCurrency, formatDate } from '@/utils/formatters';
-import { AdsterraAd } from '../AdsterraAd';
 import { useState } from 'react';
 import {
   AlertTriangle,
@@ -15,6 +14,8 @@ import {
   ChevronUp,
   Info,
 } from 'lucide-react';
+import { GoogleAd } from '@/components/GoogleAd';
+import { LeadGenCard } from '@/components/LeadGenCard';
 
 interface ResultDisplayProps {
   result: CalculationResult | null;
@@ -488,12 +489,14 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
         </Card>
       )}
 
-      {/* Ad Space */}
-      <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 text-center">
-        <div className="bg-gray-700 rounded h-32 flex items-center justify-center">
-          <span className="text-gray-500 text-sm"><AdsterraAd /></span>
-        </div>
-      </div>
+      {/* Lead Gen — acima dos exports, alta visibilidade */}
+      <LeadGenCard motivo={dadosOriginais?.motivoRescisao} />
+
+      {/* Anúncio AdSense — resultado topo */}
+      <GoogleAd slot="resultadoTopo" format="rectangle" />
+
+      {/* Anúncio AdSense — resultado meio (após engajamento) */}
+      <GoogleAd slot="resultadoMeio" format="horizontal" />
     </div>
   );
 };

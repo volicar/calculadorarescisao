@@ -10,6 +10,7 @@ import { SimuladorCenarios } from '@/components/Calculator/SimuladorCenarios';
 import { CalculatorFormData, CalculationResult } from '@/types/calculator';
 import { calculateRescisao } from '@/utils/calculations';
 import { Button } from '@/components/ui/Button';
+import { GoogleAd } from '@/components/GoogleAd';
 
 export default function HomePage() {
   const [result, setResult] = useState<CalculationResult | null>(null);
@@ -212,6 +213,11 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Anúncio entre seções — homepage */}
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <GoogleAd slot="homepageMeio" format="horizontal" />
+      </div>
 
       {/* Blog */}
       <section id="blog" className="py-16">

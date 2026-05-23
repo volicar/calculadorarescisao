@@ -6,6 +6,8 @@ import { getBlogPost, getRelatedPosts } from '@/data/blogPosts';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { ArrowLeft, Calendar, Clock, Tag, Share2, Copy } from 'lucide-react';
+import { GoogleAd } from '@/components/GoogleAd';
+import { LeadGenCard } from '@/components/LeadGenCard';
 import { useState } from 'react';
 
 export default function BlogPostPage() {
@@ -160,6 +162,11 @@ export default function BlogPostPage() {
               {renderContent(post.content)}
             </div>
 
+            {/* Anúncio no meio do artigo — alta visibilidade */}
+            <div className="my-8">
+              <GoogleAd slot="blogArtigo" format="rectangle" />
+            </div>
+
             {/* Autor */}
             <div className="border-t border-gray-700 pt-6 mt-8">
               <div className="flex items-center space-x-4">
@@ -210,8 +217,11 @@ export default function BlogPostPage() {
           </section>
         )}
 
+        {/* Lead Gen no blog — usuário lendo sobre direitos é lead quente */}
+        <LeadGenCard className="mt-8" />
+
         {/* CTA Final */}
-        <div className="mt-16 text-center bg-gradient-to-r from-primary-500/10 to-primary-600/10 border border-primary-500/20 rounded-lg p-8">
+        <div className="mt-8 text-center bg-gradient-to-r from-primary-500/10 to-primary-600/10 border border-primary-500/20 rounded-lg p-8">
           <h2 className="text-2xl font-bold text-white mb-4">
             Gostou do Artigo? Calcule sua Rescisão!
           </h2>

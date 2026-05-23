@@ -63,7 +63,7 @@ export default function HomePage() {
             <span className="block text-primary-400">Trabalhista</span>
           </h1>
           <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-            Saiba exatamente o que você vai receber: saldo de salário, férias, 13°, FGTS + multa e seguro desemprego — com deduções de INSS e IRRF. Gratuito e atualizado para 2025.
+            Saiba exatamente o que você vai receber: saldo de salário, férias, 13°, FGTS + multa e seguro desemprego — com deduções de INSS e IRRF. Gratuito e atualizado para {new Date().getFullYear()}.
           </p>
         </div>
 

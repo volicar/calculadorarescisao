@@ -33,11 +33,7 @@ export const GoogleAd = ({ slot, format = 'auto', className = '', label = true }
 
   // Não renderiza enquanto os IDs forem placeholder
   if (slotId === 'XXXXXXXXXX') {
-    return (
-      <div className={`flex items-center justify-center rounded-lg border border-dashed border-gray-700 bg-gray-800/30 text-gray-600 text-xs py-4 ${className}`}>
-        Anúncio — configure o slot "{slot}" em GoogleAd.tsx
-      </div>
-    );
+    return null;
   }
 
   useEffect(() => {

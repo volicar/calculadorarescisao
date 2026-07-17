@@ -85,13 +85,27 @@ html.light textarea {
   border-color: rgb(209 213 219) !important;
 }
 
-html.light .from-gray-900,
-html.light .via-gray-800,
-html.light .to-gray-900 {
-  --tw-gradient-from: rgb(249 250 251);
-  --tw-gradient-via: rgb(243 244 246);
-  --tw-gradient-to: rgb(249 250 251);
+html.light .bg-gradient-to-br.from-gray-900 {
+  background: linear-gradient(to bottom right, rgb(249 250 251), rgb(243 244 246), rgb(249 250 251)) !important;
 }
+
+/* Verde claro (primary-400) fica ilegível sobre fundo claro */
+html.light .text-primary-400 {
+  color: #15803d !important;
+}
+
+/* Amarelo/vermelho claros também perdem contraste no modo claro */
+html.light .text-yellow-400 { color: #a16207 !important; }
+html.light .text-yellow-300 { color: #854d0e !important; }
+html.light .text-red-400 { color: #b91c1c !important; }
+html.light .text-red-300 { color: #991b1b !important; }
+html.light .text-blue-400 { color: #1d4ed8 !important; }
+html.light .text-emerald-400 { color: #047857 !important; }
+html.light .text-emerald-300 { color: #065f46 !important; }
+html.light .text-blue-300 { color: #1e40af !important; }
+html.light .text-orange-400 { color: #c2410c !important; }
+html.light .text-purple-400 { color: #7e22ce !important; }
+html.light .text-green-400 { color: #15803d !important; }
 
 /* ===== BASE ===== */
 
@@ -127,6 +141,104 @@ body {
 
 .animate-fade-in {
   animation: fadeIn 0.25s ease-in-out;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.5s ease-out both;
+}
+
+.animate-delay-100 { animation-delay: 0.1s; }
+.animate-delay-200 { animation-delay: 0.2s; }
+.animate-delay-300 { animation-delay: 0.3s; }
+
+/* ===== HERO ===== */
+
+.hero-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 0%, rgba(34, 197, 94, 0.12), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 85% 20%, rgba(16, 185, 129, 0.08), transparent 60%);
+}
+
+.hero-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Grid quadriculado sutil — aplicado ao site inteiro */
+.grid-canvas {
+  position: relative;
+}
+
+.grid-canvas::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.045) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.grid-canvas > * {
+  position: relative;
+  z-index: 1;
+}
+
+html.light .grid-canvas::before {
+  background-image:
+    linear-gradient(rgba(71, 85, 105, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(71, 85, 105, 0.06) 1px, transparent 1px);
+}
+
+html.light .hero-bg::before {
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 0%, rgba(34, 197, 94, 0.10), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 85% 20%, rgba(16, 185, 129, 0.07), transparent 60%);
+}
+
+.text-gradient-primary {
+  background: linear-gradient(100deg, #4ade80 0%, #10b981 55%, #2dd4bf 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+html.light .text-gradient-primary {
+  background: linear-gradient(100deg, #16a34a 0%, #059669 55%, #0d9488 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.card-lift {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px -12px rgba(34, 197, 94, 0.25);
+}
+
+.form-glow {
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.15), 0 24px 64px -24px rgba(34, 197, 94, 0.25);
+  border-radius: 1rem;
 }
 
 section {

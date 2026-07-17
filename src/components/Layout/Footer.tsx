@@ -9,7 +9,7 @@ export const Footer = () => {
           <div>
             <p className="text-white font-semibold text-lg mb-2">Rescisão Online</p>
             <p className="text-gray-400 text-sm leading-relaxed">
-              Calculadora gratuita de verbas rescisórias atualizada com a legislação trabalhista de 2025.
+              Calculadora gratuita de verbas rescisórias atualizada com a legislação trabalhista de {new Date().getFullYear()}, incluindo a Lei 15.270/2025.
             </p>
           </div>
 

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function SobrePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="grid-canvas min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Navegação de volta */}
         <div className="mb-8">
@@ -56,7 +56,7 @@ export default function SobrePage() {
             </div>
             <h3 className="text-xl font-bold text-white mb-3">Como funciona</h3>
             <p className="text-gray-300">
-              Você preenche os dados do seu contrato e a calculadora aplica as tabelas de 2025 (INSS, IRRF, Lei 12.506/2011) para gerar a estimativa instantaneamente.
+              Você preenche os dados do seu contrato e a calculadora aplica as tabelas vigentes de 2026 (INSS, IRRF com a Lei 15.270/2025, Lei 12.506/2011) para gerar a estimativa instantaneamente.
             </p>
           </Card>
 
@@ -98,7 +98,7 @@ export default function SobrePage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
-                  <span className="text-white">Cálculos baseados na CLT 2025</span>
+                  <span className="text-white">Cálculos baseados na CLT e tabelas 2026</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
@@ -167,7 +167,7 @@ export default function SobrePage() {
               <div>
                 <h3 className="font-semibold text-white mb-3 flex items-center gap-2"><BookOpen className="w-4 h-4 text-primary-400" /> Base Legal</h3>
                 <p className="text-gray-300 mb-4">
-                  Todos os cálculos seguem a <strong>CLT</strong>, tabelas do INSS e IRRF de 2025, Lei 12.506/2011 (aviso prévio proporcional) e Lei 7.713/88 (isenção IRRF em férias).
+                  Todos os cálculos seguem a <strong>CLT</strong>, tabelas do INSS e IRRF de 2026 (incluindo a isenção da Lei 15.270/2025), Lei 12.506/2011 (aviso prévio proporcional) e Lei 7.713/88 (isenção IRRF em férias).
                 </p>
 
                 <h3 className="font-semibold text-white mb-3 flex items-center gap-2"><RefreshCw className="w-4 h-4 text-blue-400" /> Atualização Constante</h3>

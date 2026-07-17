@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { CalculatorFormData, CalculationResult } from '@/types/calculator';
 import { calculateRescisao } from '@/utils/calculations';
 import { formatCurrency } from '@/utils/formatters';
-import { GitCompare, ChevronDown, ChevronUp, CheckCircle, XCircle } from 'lucide-react';
+import { GitCompare, ChevronDown, ChevronUp, CheckCircle, XCircle, Trophy } from 'lucide-react';
 
 interface Cenario {
   motivo: CalculatorFormData['motivoRescisao'];
@@ -130,7 +130,9 @@ export const SimuladorCenarios = ({ formData }: SimuladorCenariosProps) => {
                   <th key={c.motivo} className="py-2 px-2 text-center text-xs font-medium">
                     <span className={`${c.cor.split(' ')[0]}`}>{c.label}</span>
                     {resultados[i]?.total === melhorTotal && (
-                      <span className="block text-emerald-400 text-xs font-normal">★ Melhor</span>
+                      <span className="flex items-center justify-center gap-1 text-emerald-400 text-xs font-normal">
+                        <Trophy className="w-3 h-3" /> Melhor
+                      </span>
                     )}
                   </th>
                 ))}

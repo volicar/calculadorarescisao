@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Download, Share2, Copy, FileText } from 'lucide-react';
+import { Download, Share2, Copy, FileText, Lightbulb } from 'lucide-react';
 import { CalculatorFormData, CalculationResult } from '@/types/calculator';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import { generatePDF, generateTextFile } from '@/utils/pdfExport';
@@ -89,7 +89,7 @@ _Rescisão ${new Date().getFullYear()} - Calculadora Trabalhista_
     setLoading('copy');
     try {
       await navigator.clipboard.writeText(generateWhatsAppText());
-      alert('✅ Cálculo copiado para a área de transferência!');
+      alert('Cálculo copiado para a área de transferência!');
     } catch (err) {
       console.error('Erro ao copiar:', err);
       // Fallback para dispositivos que não suportam clipboard API
@@ -99,7 +99,7 @@ _Rescisão ${new Date().getFullYear()} - Calculadora Trabalhista_
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
-      alert('✅ Cálculo copiado!');
+      alert('Cálculo copiado!');
     } finally {
       setLoading(null);
     }
@@ -156,8 +156,9 @@ _Rescisão ${new Date().getFullYear()} - Calculadora Trabalhista_
       </div>
 
       {/* Info adicional */}
-      <div className="text-xs text-gray-400 mt-4 p-3 bg-gray-800 rounded-lg border border-gray-700">
-        💡 <strong>Dica:</strong> O PDF funciona melhor no desktop. No mobile, use "Baixar TXT" ou "Copiar Texto".
+      <div className="flex items-start gap-2 text-xs text-gray-400 mt-4 p-3 bg-gray-800 rounded-lg border border-gray-700">
+        <Lightbulb className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+        <span><strong>Dica:</strong> O PDF funciona melhor no desktop. No mobile, use "Baixar TXT" ou "Copiar Texto".</span>
       </div>
     </div>
   );

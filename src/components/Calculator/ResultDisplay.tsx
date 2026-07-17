@@ -120,8 +120,11 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
   const calcularPeriodo = () => {
     if (!dadosOriginais || dadosOriginais.tipoContrato === 'experiencia') return { anos: 0, meses: 0, dias: 0, totalDias: 0 };
 
-    const dataInicio = new Date(dadosOriginais.dataAdmissao);
-    const dataFim = new Date(dadosOriginais.dataDemissao);
+    // Parse local: new Date('YYYY-MM-DD') interpretaria como UTC e deslocaria 1 dia no fuso BR
+    const [ya, ma, da] = dadosOriginais.dataAdmissao.split('-').map(Number);
+    const [yd, md, dd] = dadosOriginais.dataDemissao.split('-').map(Number);
+    const dataInicio = new Date(ya, ma - 1, da);
+    const dataFim = new Date(yd, md - 1, dd);
 
     const totalDias = Math.floor((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24));
 

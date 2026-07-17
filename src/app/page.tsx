@@ -212,49 +212,40 @@ export default function HomePage() {
             ))}
           </div>
 
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
-              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-primary-400" /> O que é calculado
-              </h3>
-              <ul className="space-y-2 text-gray-300 text-sm">
-                {[
-                  ['Saldo de Salário', 'Proporcional aos dias do último mês'],
-                  ['Férias + 1/3', 'Isentas de IRRF na rescisão'],
-                  ['13° Proporcional', '1/12 por mês trabalhado'],
-                  ['FGTS + Multa (40/20%)', 'Com base no saldo real estimado'],
-                  ['Aviso Prévio', '30 + 3 dias por ano (Lei 12.506/2011)'],
-                  ['INSS estimado', `Tabela progressiva ${new Date().getFullYear()}`],
-                  ['Isenção Lei 15.270', 'IR zerado até R$ 5.000/mês'],
-                  ['IRRF estimado', 'Por faixa sobre verbas tributáveis'],
-                  ['Seguro Desemprego', 'Parcelas e valor estimado'],
-                ].map(([label, desc]) => (
-                  <li key={label} className="flex items-start gap-2">
-                    <span className="text-primary-400 mt-0.5">•</span>
-                    <span><strong>{label}:</strong> {desc}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <div className="mt-16 bg-gray-800 border border-gray-700 rounded-xl p-6 sm:p-8">
+            <h3 className="text-xl font-bold text-white mb-5 flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-primary-400" /> Cada verba, com a base legal
+            </h3>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-2.5 text-gray-300 text-sm">
+              {[
+                ['Saldo de Salário', 'Proporcional aos dias do último mês'],
+                ['Férias + 1/3', 'Isentas de IRRF na rescisão'],
+                ['13° Proporcional', '1/12 por mês trabalhado no ano'],
+                ['FGTS + Multa (40/20%)', 'Sobre o saldo real informado'],
+                ['Aviso Prévio', '30 + 3 dias por ano (Lei 12.506/2011)'],
+                ['INSS estimado', `Tabela progressiva ${anoAtual}`],
+                ['IRRF + Lei 15.270', 'IR zerado até R$ 5.000/mês'],
+                ['Seguro Desemprego', 'Parcelas e valor estimado'],
+                ['Prazo de pagamento', 'Alerta de vencimento (Art. 477 CLT)'],
+              ].map(([label, desc]) => (
+                <li key={label} className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-primary-400 mt-0.5 flex-shrink-0" />
+                  <span><strong className="text-white font-medium">{label}:</strong> {desc}</span>
+                </li>
+              ))}
+            </ul>
 
-            <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
-              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary-400" /> Diferenciais
-              </h3>
-              <ul className="space-y-2 text-gray-300 text-sm">
+            <div className="mt-6 pt-6 border-t border-gray-700/60">
+              <p className="text-xs text-gray-400 uppercase tracking-wider mb-3">Só aqui você também encontra</p>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2.5 text-gray-300 text-sm">
                 {[
-                  'Simulador de cenários: compare todos os tipos de rescisão',
-                  'Deduções de INSS e IRRF com base legal',
-                  'Salário composto: comissões, adicionais e horas extras',
-                  'Projeção do aviso prévio indenizado (Lei 12.506 + OJ 82 TST)',
-                  'Alerta de estabilidade provisória (gestante, CIPA, etc.)',
-                  'Prazo de pagamento com alerta de vencimento',
-                  'Checklist de documentos por tipo de rescisão',
-                  'Histórico de cálculos salvos no navegador',
-                  'Memória de cálculo com base legal detalhada',
+                  'Memória de cálculo com a fórmula e a lei de cada verba',
+                  'Checklist de documentos a exigir do empregador',
+                  'Alerta de estabilidade (gestante, CIPA, acidentado, sindical)',
+                  'Histórico dos seus cálculos salvo no navegador',
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                    <Sparkles className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
                     <span>{item}</span>
                   </li>
                 ))}

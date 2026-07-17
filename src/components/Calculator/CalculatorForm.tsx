@@ -16,9 +16,7 @@ import {
   Info,
   Briefcase,
   Wallet,
-  CalendarDays,
   PiggyBank,
-  User,
   Clock,
 } from 'lucide-react';
 
@@ -101,8 +99,17 @@ const displaysFrom = (data?: CalculatorFormData): Record<string, string> =>
   );
 
 export const CalculatorForm = ({ onSubmit, loading = false, initialData }: CalculatorFormProps) => {
-  const [showAdicionais, setShowAdicionais] = useState(
-    Boolean(initialData && ((initialData.comissoes ?? 0) > 0 || (initialData.adicionaisHabituais ?? 0) > 0 || (initialData.mediaHorasExtras ?? 0) > 0))
+  // Abre o bloco opcional automaticamente quando um cálculo restaurado usa algum desses campos
+  const [showDetalhes, setShowDetalhes] = useState(
+    Boolean(
+      initialData &&
+        ((initialData.comissoes ?? 0) > 0 ||
+          (initialData.adicionaisHabituais ?? 0) > 0 ||
+          (initialData.mediaHorasExtras ?? 0) > 0 ||
+          (initialData.numeroDependentesIR ?? 0) > 0 ||
+          initialData.temEstabilidade ||
+          (initialData.nome ?? '').length > 0)
+    )
   );
   const [currencyDisplays, setCurrencyDisplays] = useState<Record<string, string>>(() => displaysFrom(initialData));
 
@@ -241,20 +248,6 @@ export const CalculatorForm = ({ onSubmit, loading = false, initialData }: Calcu
       <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-5">
 
         <SectionTitle icon={Briefcase}>Contrato</SectionTitle>
-
-        {/* Nome */}
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Nome <span className="text-gray-400 text-xs">(opcional)</span>
-          </label>
-          <Input
-            type="text"
-            className="bg-gray-800/50"
-            placeholder="Digite seu nome"
-            {...register('nome' as keyof CalculatorFormData)}
-            error={(errors as Record<string, { message?: string }>).nome?.message}
-          />
-        </div>
 
         {/* Tipo de Contrato */}
         <div>
@@ -403,48 +396,6 @@ export const CalculatorForm = ({ onSubmit, loading = false, initialData }: Calcu
           )}
         </div>
 
-        {/* Adicionais salariais (opcional) */}
-        <div className="border border-gray-700/50 rounded-lg overflow-hidden">
-          <button
-            type="button"
-            onClick={() => setShowAdicionais(!showAdicionais)}
-            aria-expanded={showAdicionais}
-            className="w-full flex items-center justify-between px-4 py-3 bg-gray-800/30 hover:bg-gray-800/50 transition-colors text-sm font-medium text-gray-300"
-          >
-            <span className="flex items-center gap-2">
-              <span>Comissões, Adicionais e Horas Extras</span>
-              <span className="text-xs text-gray-400 font-normal">(opcional)</span>
-            </span>
-            <ChevronDown className={`w-4 h-4 transition-transform ${showAdicionais ? 'rotate-180' : ''}`} />
-          </button>
-
-          {showAdicionais && (
-            <div className="p-4 space-y-4 bg-gray-800/20">
-              <div>
-                <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
-                  Média mensal de comissões
-                  <Tooltip content={TOOLTIPS.comissoes} label="Comissões" />
-                </label>
-                <Input {...currencyProps('comissoes')} error={errors.comissoes?.message} />
-              </div>
-              <div>
-                <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
-                  Adicionais habituais (noturno, insalubridade, etc.)
-                  <Tooltip content={TOOLTIPS.adicionais} label="Adicionais Habituais" />
-                </label>
-                <Input {...currencyProps('adicionaisHabituais')} error={errors.adicionaisHabituais?.message} />
-              </div>
-              <div>
-                <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
-                  Média mensal de horas extras
-                  <Tooltip content={TOOLTIPS.horasExtras} label="Horas Extras" />
-                </label>
-                <Input {...currencyProps('mediaHorasExtras')} error={errors.mediaHorasExtras?.message} />
-              </div>
-            </div>
-          )}
-        </div>
-
         <SectionTitle icon={PiggyBank}>Direitos e FGTS</SectionTitle>
 
         {/* Férias vencidas */}
@@ -515,60 +466,112 @@ export const CalculatorForm = ({ onSubmit, loading = false, initialData }: Calcu
           </div>
         )}
 
-        <SectionTitle icon={User}>Situação pessoal</SectionTitle>
-
-        {/* Dependentes IR */}
-        <div>
-          <label className="flex items-center text-sm font-medium mb-2">
-            Dependentes para IR
-            <Tooltip content={TOOLTIPS.dependentesIR} label="Dependentes para IR" />
-            <span className="ml-1.5 text-xs text-gray-400 font-normal">(afeta desconto de IRRF)</span>
-          </label>
-          <Input
-            type="number"
-            min={0}
-            max={20}
-            {...register('numeroDependentesIR', {
-              min: { value: 0, message: 'Mínimo 0' },
-              max: { value: 20, message: 'Máximo 20' },
-              // Campo vazio vira NaN com valueAsNumber e contaminaria INSS/IRRF
-              setValueAs: (v) => {
-                const n = Number(v);
-                return Number.isFinite(n) ? n : 0;
-              },
-            })}
-            placeholder="0"
-            error={errors.numeroDependentesIR?.message}
-          />
-        </div>
-
-        {/* Estabilidade provisória */}
+        {/* Outros detalhes (opcional) — reúne o que a maioria não precisa preencher:
+            nome, comissões/adicionais/horas extras, dependentes de IR e estabilidade */}
         <div className="border border-gray-700/50 rounded-lg overflow-hidden">
-          <div className="flex items-center p-4 bg-gray-800/30">
-            <input
-              type="checkbox"
-              {...register('temEstabilidade')}
-              id="estabilidade-checkbox"
-              className="h-5 w-5 rounded border-gray-600 bg-gray-700/50 accent-emerald-500 cursor-pointer"
-            />
-            <label htmlFor="estabilidade-checkbox" className="ml-3 text-sm font-medium text-gray-200 cursor-pointer flex items-center">
-              Possui estabilidade provisória
-              <Tooltip content={TOOLTIPS.estabilidade} label="Estabilidade Provisória" />
-            </label>
-          </div>
+          <button
+            type="button"
+            onClick={() => setShowDetalhes(!showDetalhes)}
+            aria-expanded={showDetalhes}
+            className="w-full flex items-center justify-between px-4 py-3 bg-gray-800/30 hover:bg-gray-800/50 transition-colors text-sm font-medium text-gray-300"
+          >
+            <span className="flex items-center gap-2">
+              <span>Outros detalhes</span>
+              <span className="text-xs text-gray-400 font-normal">(comissões, dependentes, estabilidade…)</span>
+            </span>
+            <ChevronDown className={`w-4 h-4 transition-transform ${showDetalhes ? 'rotate-180' : ''}`} />
+          </button>
 
-          {temEstabilidade && (
-            <div className="p-4 bg-gray-800/20">
-              <label className="block text-xs font-medium text-gray-300 mb-2">Tipo de estabilidade</label>
-              <Select
-                options={tipoEstabilidadeOptions}
-                {...register('tipoEstabilidade')}
-              />
-              <div className="mt-2 p-2 bg-yellow-900/20 border border-yellow-700/40 rounded flex items-start gap-2">
-                <AlertTriangle className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-yellow-300">
-                  Você pode ter direito a indenização adicional pelo período de estabilidade. Consulte um advogado trabalhista.
-                </p>
+          {showDetalhes && (
+            <div className="p-4 space-y-4 bg-gray-800/20">
+              {/* Nome */}
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1.5">
+                  Nome <span className="text-gray-400 font-normal">(aparece no PDF)</span>
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Digite seu nome"
+                  {...register('nome' as keyof CalculatorFormData)}
+                  error={(errors as Record<string, { message?: string }>).nome?.message}
+                />
+              </div>
+
+              {/* Comissões / Adicionais / Horas Extras */}
+              <div>
+                <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
+                  Média mensal de comissões
+                  <Tooltip content={TOOLTIPS.comissoes} label="Comissões" />
+                </label>
+                <Input {...currencyProps('comissoes')} error={errors.comissoes?.message} />
+              </div>
+              <div>
+                <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
+                  Adicionais habituais (noturno, insalubridade, etc.)
+                  <Tooltip content={TOOLTIPS.adicionais} label="Adicionais Habituais" />
+                </label>
+                <Input {...currencyProps('adicionaisHabituais')} error={errors.adicionaisHabituais?.message} />
+              </div>
+              <div>
+                <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
+                  Média mensal de horas extras
+                  <Tooltip content={TOOLTIPS.horasExtras} label="Horas Extras" />
+                </label>
+                <Input {...currencyProps('mediaHorasExtras')} error={errors.mediaHorasExtras?.message} />
+              </div>
+
+              {/* Dependentes IR */}
+              <div>
+                <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
+                  Dependentes para IR
+                  <Tooltip content={TOOLTIPS.dependentesIR} label="Dependentes para IR" />
+                  <span className="ml-1.5 text-gray-400 font-normal">(afeta o IRRF)</span>
+                </label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={20}
+                  {...register('numeroDependentesIR', {
+                    min: { value: 0, message: 'Mínimo 0' },
+                    max: { value: 20, message: 'Máximo 20' },
+                    // Campo vazio vira NaN com valueAsNumber e contaminaria INSS/IRRF
+                    setValueAs: (v) => {
+                      const n = Number(v);
+                      return Number.isFinite(n) ? n : 0;
+                    },
+                  })}
+                  placeholder="0"
+                  error={errors.numeroDependentesIR?.message}
+                />
+              </div>
+
+              {/* Estabilidade provisória */}
+              <div className="border border-gray-700/50 rounded-lg overflow-hidden">
+                <div className="flex items-center p-3">
+                  <input
+                    type="checkbox"
+                    {...register('temEstabilidade')}
+                    id="estabilidade-checkbox"
+                    className="h-5 w-5 rounded border-gray-600 bg-gray-700/50 accent-emerald-500 cursor-pointer"
+                  />
+                  <label htmlFor="estabilidade-checkbox" className="ml-3 text-sm font-medium text-gray-200 cursor-pointer flex items-center">
+                    Possui estabilidade provisória
+                    <Tooltip content={TOOLTIPS.estabilidade} label="Estabilidade Provisória" />
+                  </label>
+                </div>
+
+                {temEstabilidade && (
+                  <div className="p-3 bg-gray-800/30">
+                    <label className="block text-xs font-medium text-gray-300 mb-2">Tipo de estabilidade</label>
+                    <Select options={tipoEstabilidadeOptions} {...register('tipoEstabilidade')} />
+                    <div className="mt-2 p-2 bg-yellow-900/20 border border-yellow-700/40 rounded flex items-start gap-2">
+                      <AlertTriangle className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-yellow-300">
+                        Você pode ter direito a indenização adicional pelo período de estabilidade. Consulte um advogado trabalhista.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

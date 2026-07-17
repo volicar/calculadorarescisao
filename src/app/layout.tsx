@@ -48,6 +48,12 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className="dark">
       <head>
+        {/* Aplica o tema salvo antes do primeiro paint — evita flash escuro em quem usa o tema claro */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light')}catch(e){}`,
+          }}
+        />
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5155326548013471"
           crossOrigin="anonymous"></script>
         <meta name="google-adsense-account" content="ca-pub-5155326548013471"></meta>

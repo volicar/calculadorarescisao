@@ -75,8 +75,8 @@ export default function HomePage() {
       }, 100);
     } catch (error) {
       console.error('Erro no cálculo:', error);
-      setResult(null);
-      setErroCalculo('Não conseguimos calcular com esses dados. Confira as datas de admissão e demissão e o salário informado — se o problema continuar, tente recarregar a página.');
+      // Não apaga o resultado anterior: o usuário corrige um campo e tenta de novo sem perder o que já viu
+      setErroCalculo('Não conseguimos calcular com esses dados. Confira as datas de admissão e demissão e o salário informado e tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -185,6 +185,12 @@ export default function HomePage() {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div id="calculator-form" className="order-1">
+              {erroCalculo && (
+                <div role="alert" className="mb-4 p-4 bg-red-900/30 border border-red-700/50 rounded-lg flex items-start gap-3 animate-fade-in">
+                  <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-300 leading-relaxed">{erroCalculo}</p>
+                </div>
+              )}
               <CalculatorForm onSubmit={handleCalculate} loading={loading} initialData={formData ?? undefined} />
               <HistoricoCalculos onRestore={handleRestore} />
               {/* Simulador de cenários */}

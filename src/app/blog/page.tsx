@@ -80,7 +80,7 @@ export default function BlogPage() {
                   <div className="flex items-center justify-between text-sm text-gray-400">
                     <div className="flex items-center space-x-2">
                       <Calendar className="w-4 h-4" />
-                      <span>{new Date(post.date).toLocaleDateString('pt-BR')}</span>
+                      <span>{post.date.split('-').reverse().join('/')}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Clock className="w-4 h-4" />

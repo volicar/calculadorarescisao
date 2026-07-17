@@ -30,73 +30,54 @@ export interface BlogPost {
 
 export const blogPosts: BlogPost[] = [
   {
-    id: 'mudancas-clt-2025',
-    title: 'Mudanças na CLT em 2025',
-    description: 'Confira as principais alterações na Consolidação das Leis do Trabalho que entraram em vigor este ano.',
+    id: 'ir-rescisao-2026-lei-15270',
+    title: 'Imposto de Renda na Rescisão em 2026: a Lei 15.270 muda tudo',
+    description: 'A Lei 15.270/2025 isenta de IR quem ganha até R$ 5.000 por mês e reduz o imposto até R$ 7.350. Veja como isso afeta o valor líquido da sua rescisão em 2026.',
     content: `
-# Mudanças na CLT em 2025: O que Você Precisa Saber
+# Imposto de Renda na Rescisão em 2026: a Lei 15.270 muda tudo
 
-A Consolidação das Leis do Trabalho (CLT) passou por importantes atualizações em 2025, trazendo mudanças significativas para empregadores e trabalhadores. Neste artigo, vamos abordar as principais alterações que você precisa conhecer.
+A maior novidade trabalhista e tributária de 2026 não está na CLT — está no Imposto de Renda. A **Lei 15.270/2025**, sancionada em novembro de 2025 e em vigor desde janeiro de 2026, mudou de forma direta quanto você recebe líquido na rescisão.
 
-## Principais Mudanças
+## O que mudou
 
-### 1. Atualização dos Valores de Rescisão
-Os cálculos de rescisão trabalhista foram atualizados com novos parâmetros, incluindo:
-- Reajuste dos valores mínimos para indenizações
-- Novos critérios para cálculo de férias proporcionais
-- Atualização das alíquotas do FGTS
+### Isenção total até R$ 5.000
+A partir de 2026, quem tem rendimento tributável mensal de **até R$ 5.000 fica isento de IRRF**. Na prática, a imensa maioria das rescisões passou a não ter desconto de Imposto de Renda sobre o saldo de salário e o 13º.
 
-### 2. Modalidades de Trabalho
-Foram regulamentadas novas modalidades de trabalho:
-- Trabalho híbrido com regras específicas
-- Home office com direitos garantidos
-- Jornada flexível para determinadas categorias
+### Redução gradual até R$ 7.350
+Entre R$ 5.000,01 e R$ 7.350, existe um **desconto parcial** que diminui conforme o rendimento sobe. Acima de R$ 7.350, aplica-se a tabela progressiva tradicional, sem o benefício.
 
-### 3. Direitos Digitais
-A legislação agora contempla:
-- Direito à desconexão digital
-- Proteção de dados do trabalhador
-- Regulamentação do trabalho em plataformas digitais
+### Tabelas de INSS e IRRF de 2026
+Além da Lei 15.270, valem as novas tabelas do ano:
+- **INSS**: Portaria Interministerial MPS/MF nº 13/2026, com faixas de 7,5% a 14% e teto de R$ 8.475,55.
+- **Salário mínimo 2026**: R$ 1.621,00, que serve de piso para o seguro-desemprego.
 
-## Impactos na Rescisão
+## Como isso afeta a sua rescisão
 
-### Cálculo Atualizado
-As mudanças impactam diretamente no cálculo da rescisão:
-- Saldo de Salário: Mantém a proporção por dias trabalhados
-- Férias Proporcionais: Novo critério para período aquisitivo
-- 13º Salário: Cálculo proporcional sem alterações
-- FGTS: Mantém 8% + 40% de multa rescisória
+O Imposto de Renda na rescisão incide, em regra, sobre o **saldo de salário** e o **13º proporcional** (o 13º tem tributação exclusiva, calculada em separado). Não incide sobre:
+- **Férias indenizadas + 1/3** (isentas — Lei 7.713/88, art. 6º, V);
+- **Aviso prévio indenizado** (natureza indenizatória, jurisprudência pacífica).
 
-### Prazos para Pagamento
-Os prazos para pagamento da rescisão foram mantidos:
-- Aviso prévio trabalhado: Até o primeiro dia útil após o término
-- Aviso prévio indenizado: Até o 10º dia após a demissão
+Com a isenção até R$ 5.000, quem antes via um desconto de IRRF na rescisão agora costuma receber esse valor de volta no líquido.
 
-## Documentação Necessária
+## Exemplo prático
 
-Para garantir todos os direitos, é fundamental manter:
-- Carteira de trabalho atualizada
-- Contratos e aditivos contratuais
-- Comprovantes de pagamento
-- Exames médicos ocupacionais
+Trabalhador com salário de R$ 3.000, dispensado sem justa causa:
+- Saldo de salário e 13º ficam **abaixo de R$ 5.000** por mês;
+- Resultado: **IRRF zero** sobre essas verbas em 2026;
+- O líquido a receber sobe em relação às regras antigas.
 
-## Recomendações
+## Como conferir o seu caso
 
-- Mantenha-se atualizado sobre as mudanças na legislação
-- Consulte um advogado trabalhista quando necessário
-- Use nossa calculadora para estimar os valores de rescisão
-- Guarde toda documentação trabalhista organizada
+Nossa calculadora já aplica as tabelas de 2026 e a regra da Lei 15.270 automaticamente. Basta informar salário, datas e motivo da rescisão para ver o valor **líquido** estimado, com o detalhamento de INSS e IRRF na memória de cálculo.
 
 ## Conclusão
 
-As mudanças na CLT de 2025 trouxeram maior clareza para os direitos trabalhistas, especialmente em relação às novas modalidades de trabalho. É essencial que tanto empregadores quanto trabalhadores se mantenham informados sobre essas alterações.
-
-Para calcular sua rescisão com base nas novas regras, utilize nossa calculadora gratuita e sempre busque orientação jurídica especializada quando necessário.
+2026 é um ano de líquido maior na mão do trabalhador por causa da Lei 15.270. Ainda assim, valores exatos dependem da folha de rescisão emitida pelo empregador — use a calculadora para se preparar e, em caso de dúvida, procure um advogado trabalhista.
     `,
-    date: '2025-01-15',
-    readTime: '5 min',
+    date: '2026-01-20',
+    readTime: '6 min',
     category: 'Legislação',
-    tags: ['CLT', 'Rescisão', '2025', 'Direitos Trabalhistas'],
+    tags: ['Lei 15.270', 'Imposto de Renda', 'IRRF', 'Rescisão', '2026'],
     author: 'Equipe Rescisão Online'
   },
   {
@@ -179,7 +160,7 @@ O cálculo correto das férias proporcionais é fundamental para garantir que o 
 
 Utilize nossa calculadora online para fazer uma estimativa rápida e precisa dos seus valores de rescisão!
     `,
-    date: '2025-01-10',
+    date: '2026-01-15',
     readTime: '7 min',
     category: 'Cálculos',
     tags: ['Férias', 'Cálculo', 'Direitos', 'Rescisão'],
@@ -294,7 +275,7 @@ O FGTS é um direito fundamental que oferece segurança financeira ao trabalhado
 
 Use nossa calculadora para estimar o valor total que você tem direito a receber em caso de demissão!
     `,
-    date: '2025-01-05',
+    date: '2026-01-08',
     readTime: '6 min',
     category: 'FGTS',
     tags: ['FGTS', 'Saque', 'Multa', 'Direitos'],
@@ -302,11 +283,11 @@ Use nossa calculadora para estimar o valor total que você tem direito a receber
   }
 
   , {
-    id: 'principais-direitos-trabalhistas-2025',
-    title: 'Principais Direitos Trabalhistas Garantidos pela CLT em 2025',
-    description: 'Análise dos direitos fundamentais assegurados aos trabalhadores pela CLT e normas correlatas em 2025.',
+    id: 'principais-direitos-trabalhistas-2026',
+    title: 'Principais Direitos Trabalhistas Garantidos pela CLT em 2026',
+    description: 'Análise dos direitos fundamentais assegurados aos trabalhadores pela CLT e normas correlatas em 2026.',
     content: `
-# Principais Direitos Trabalhistas em 2025
+# Principais Direitos Trabalhistas em 2026
 
 A Consolidação das Leis do Trabalho (CLT) e legislações complementares asseguram um conjunto de direitos mínimos ao trabalhador. Abaixo, destacamos os institutos mais relevantes:
 
@@ -348,10 +329,10 @@ A Consolidação das Leis do Trabalho (CLT) e legislações complementares asseg
 ## Conclusão
 O cumprimento desses direitos é obrigatório e sua inobservância pode gerar passivos trabalhistas. Recomenda-se a constante atualização das práticas de RH e a consulta a profissionais jurídicos para adequação às normas vigentes.
   `,
-    date: '2025-02-01',
+    date: '2026-01-25',
     readTime: '8 min',
     category: 'Direitos',
-    tags: ['Direitos Trabalhistas', 'Direitos', 'CLT', 'Legislação'],
+    tags: ['Direitos Trabalhistas', 'Direitos', 'CLT', 'Legislação', '2026'],
     author: 'Equipe Rescisão Online'
   },
 
@@ -396,7 +377,7 @@ O cálculo inclui:
 - **FGTS**: 8% sobre o salário total do período.
 - **Multa de 40% sobre o FGTS**: caso seja dispensa sem justa causa.
 
-> ⚖️ Se a rescisão ocorrer antes do prazo final, o empregador deve ainda pagar metade da remuneração dos dias que restariam para concluir os 90 dias.
+> Atenção: se a rescisão ocorrer antes do prazo final, o empregador deve ainda pagar metade da remuneração dos dias que restariam para concluir os 90 dias.
 
 ## Conversão em Prazo Indeterminado
 Se o empregado continuar trabalhando após os 90 dias sem nova formalização, o contrato se converte automaticamente em prazo indeterminado (**art. 451, CLT**).
@@ -404,7 +385,7 @@ Se o empregado continuar trabalhando após os 90 dias sem nova formalização, o
 ## Conclusão
 O contrato de experiência de 90 dias é uma ferramenta essencial para empresas avaliarem candidatos, sem retirar do trabalhador os direitos mínimos garantidos pela legislação. A correta aplicação evita passivos trabalhistas e garante segurança jurídica às partes.
   `,
-    date: '2025-02-10',
+    date: '2026-01-12',
     readTime: '7 min',
     category: 'Contratos',
     tags: ['Contrato de Experiência', 'CLT', 'Cálculo Trabalhista', 'Direitos Trabalhistas'],

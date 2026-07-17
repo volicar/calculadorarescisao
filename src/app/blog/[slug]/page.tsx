@@ -104,7 +104,7 @@ export default function BlogPostPage() {
               <div className="flex flex-wrap items-center gap-4 mb-4 text-sm text-gray-400">
                 <div className="flex items-center space-x-2">
                   <Calendar className="w-4 h-4" />
-                  <span>{new Date(post.date).toLocaleDateString('pt-BR')}</span>
+                  <span>{post.date.split('-').reverse().join('/')}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Clock className="w-4 h-4" />
@@ -194,7 +194,7 @@ export default function BlogPostPage() {
                   <Link href={`/blog/${relatedPost.id}`}>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between text-xs text-gray-400">
-                        <span>{new Date(relatedPost.date).toLocaleDateString('pt-BR')}</span>
+                        <span>{relatedPost.date.split('-').reverse().join('/')}</span>
                         <span>{relatedPost.readTime}</span>
                       </div>
                       

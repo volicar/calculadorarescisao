@@ -11,7 +11,18 @@ import { CalculatorFormData, CalculationResult } from '@/types/calculator';
 import { calculateRescisao } from '@/utils/calculations';
 import { Button } from '@/components/ui/Button';
 import { GoogleAd } from '@/components/GoogleAd';
+import { blogPosts } from '@/data/blogPosts';
 import { RotateCcw, BarChart3, Sparkles, AlertTriangle, Check } from 'lucide-react';
+
+const MESES_ABREV = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+const formatarDataBlog = (iso: string) => {
+  const [ano, mes, dia] = iso.split('-').map(Number);
+  return `${String(dia).padStart(2, '0')} ${MESES_ABREV[mes - 1]} ${ano}`;
+};
+// 3 artigos mais recentes, direto dos dados — não desatualiza nem gera link quebrado
+const artigosRecentes = [...blogPosts]
+  .sort((a, b) => b.date.localeCompare(a.date))
+  .slice(0, 3);
 
 export default function HomePage() {
   const [result, setResult] = useState<CalculationResult | null>(null);
@@ -283,16 +294,12 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              { id: 'mudancas-clt-2025', title: 'Mudanças na CLT em 2025', description: 'Confira as principais alterações na legislação trabalhista vigentes este ano.', date: '15 Jan 2025' },
-              { id: 'calcular-ferias-proporcionais', title: 'Como Calcular Férias Proporcionais', description: 'Guia completo sobre o cálculo de férias proporcionais e o adicional de 1/3.', date: '10 Jan 2025' },
-              { id: 'memoria-calculo-rescisao', title: 'Entenda a Memória de Cálculo', description: 'Aprenda a interpretar cada item da sua rescisão com nossa calculadora.', date: '08 Jan 2025' },
-            ].map((article, index) => (
-              <Link key={index} href={`/blog/${article.id}`}>
-                <article className="card-lift bg-gray-800 border border-gray-700 rounded-xl p-6 hover:border-primary-500/60 cursor-pointer group h-full">
-                  <div className="text-sm text-primary-400 mb-2">{article.date}</div>
+            {artigosRecentes.map((article) => (
+              <Link key={article.id} href={`/blog/${article.id}`}>
+                <article className="card-lift bg-gray-800 border border-gray-700 rounded-xl p-6 hover:border-primary-500/60 cursor-pointer group h-full flex flex-col">
+                  <div className="text-sm text-primary-400 mb-2">{formatarDataBlog(article.date)}</div>
                   <h3 className="text-lg font-semibold text-white mb-3 group-hover:text-primary-400 transition-colors">{article.title}</h3>
-                  <p className="text-gray-300 text-sm leading-relaxed mb-4">{article.description}</p>
+                  <p className="text-gray-300 text-sm leading-relaxed mb-4 flex-1">{article.description}</p>
                   <div className="text-primary-400 text-sm font-medium group-hover:text-primary-300 transition-colors">Ler mais →</div>
                 </article>
               </Link>

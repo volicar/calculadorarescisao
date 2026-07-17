@@ -34,7 +34,7 @@ export const Footer = () => {
         </div>
 
         <div className="border-t border-gray-800 pt-6 text-center">
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-400 text-sm max-w-2xl mx-auto">
             Copyright © {new Date().getFullYear()} Rescisão Online. Ferramenta de estimativa — não substitui assessoria jurídica.
           </p>
         </div>

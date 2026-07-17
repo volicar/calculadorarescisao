@@ -160,7 +160,7 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
   const resultItems = [
     { label: 'Saldo de Salário', value: result.saldoSalario, color: 'text-green-400' },
     ...(result.feriasVencidas > 0
-      ? [{ label: 'Férias Vencidas + 1/3', value: result.feriasVencidas, color: 'text-cyan-400' }]
+      ? [{ label: 'Férias Vencidas + 1/3', value: result.feriasVencidas, color: 'text-blue-400' }]
       : []),
     { label: 'Férias Proporcionais + 1/3', value: result.feriasPROPorcionais, color: 'text-blue-400' },
     { label: '13º Proporcional', value: result.decimoTerceiroProporcional, color: 'text-yellow-400' },
@@ -187,31 +187,7 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
         </div>
       )}
 
-      {/* Prazo de pagamento */}
-      {prazoFormatado && (
-        <div className={`p-4 rounded-lg border flex items-start gap-3 ${result.diasParaPagamento < 0
-          ? 'bg-red-900/30 border-red-600/50'
-          : result.diasParaPagamento <= 3
-            ? 'bg-yellow-900/30 border-yellow-600/50'
-            : 'bg-blue-900/20 border-blue-700/40'
-          }`}>
-          <Calendar className={`w-5 h-5 flex-shrink-0 mt-0.5 ${result.diasParaPagamento < 0 ? 'text-red-400' : result.diasParaPagamento <= 3 ? 'text-yellow-400' : 'text-blue-400'}`} />
-          <div>
-            <p className={`text-sm font-medium ${result.diasParaPagamento < 0 ? 'text-red-300' : result.diasParaPagamento <= 3 ? 'text-yellow-300' : 'text-blue-300'}`}>
-              Prazo limite para pagamento: {prazoFormatado}
-            </p>
-            <p className="text-xs text-gray-400 mt-0.5">
-              {result.diasParaPagamento < 0
-                ? `Prazo vencido há ${Math.abs(result.diasParaPagamento)} dia(s). O empregador pode dever multa de 1 salário (Art. 477 §8° CLT).`
-                : result.diasParaPagamento === 0
-                  ? 'Prazo vence hoje! Verifique se o pagamento foi realizado.'
-                  : `${result.diasParaPagamento} dia(s) restantes — Art. 477 §6° CLT (10 dias corridos)`}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Projeção do aviso prévio indenizado */}
+      {/* Projeção do aviso prévio indenizado — contextualiza antes do prazo */}
       {result.dataTerminoProjetada && (
         <div className="p-4 bg-emerald-900/20 border border-emerald-700/40 rounded-lg flex items-start gap-3">
           <Info className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
@@ -225,6 +201,38 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
           </div>
         </div>
       )}
+
+      {/* Prazo de pagamento — vermelho só quando venceu há pouco (caso provavelmente real);
+          vencido há muito tempo é simulação de caso antigo, tom informativo */}
+      {prazoFormatado && (() => {
+        const dias = result.diasParaPagamento;
+        const vencidoRecente = dias < 0 && dias >= -30;
+        const vencidoAntigo = dias < -30;
+        const tom = vencidoRecente
+          ? { box: 'bg-red-900/30 border-red-600/50', icone: 'text-red-400', titulo: 'text-red-300' }
+          : dias >= 0 && dias <= 3
+            ? { box: 'bg-yellow-900/30 border-yellow-600/50', icone: 'text-yellow-400', titulo: 'text-yellow-300' }
+            : { box: 'bg-blue-900/20 border-blue-700/40', icone: 'text-blue-400', titulo: 'text-blue-300' };
+        return (
+          <div className={`p-4 rounded-lg border flex items-start gap-3 ${tom.box}`}>
+            <Calendar className={`w-5 h-5 flex-shrink-0 mt-0.5 ${tom.icone}`} />
+            <div>
+              <p className={`text-sm font-medium ${tom.titulo}`}>
+                Prazo limite para pagamento: {prazoFormatado}
+              </p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                {vencidoRecente
+                  ? `Se você ainda não recebeu, o empregador pode dever multa de 1 salário (Art. 477 §8º CLT). O prazo de 10 dias conta da comunicação da dispensa, mesmo com aviso indenizado.`
+                  : vencidoAntigo
+                    ? `O prazo legal era de 10 dias corridos a partir da comunicação da dispensa (Art. 477 §6º CLT). Se o pagamento não ocorreu nesse prazo, você pode ter direito à multa de 1 salário (§8º).`
+                    : dias === 0
+                      ? 'Prazo vence hoje! Verifique se o pagamento foi realizado.'
+                      : `${dias} dia(s) restantes — Art. 477 §6º CLT (10 dias corridos a partir da comunicação da dispensa)`}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
 
       <Card title={cardTitle}>
         {nome && (
@@ -279,6 +287,7 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
           <div className="mt-4 pt-4 border-t border-gray-700">
             <button
               onClick={() => setMostrarDeducoes(!mostrarDeducoes)}
+              aria-expanded={mostrarDeducoes}
               className="w-full flex items-center justify-between text-sm font-medium text-gray-300 hover:text-white transition-colors mb-3"
             >
               <span className="flex items-center gap-2">
@@ -380,6 +389,7 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
           <div className="mt-4 pt-4 border-t border-gray-700 space-y-2">
             <button
               onClick={() => setMostrarChecklist(!mostrarChecklist)}
+              aria-expanded={mostrarChecklist}
               className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-gray-700/40 hover:bg-gray-700/70 text-gray-300 hover:text-white rounded-lg transition-all text-sm font-medium"
             >
               <FileText className="w-4 h-4" />
@@ -389,6 +399,7 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
 
             <button
               onClick={() => setMostrarCalculos(!mostrarCalculos)}
+              aria-expanded={mostrarCalculos}
               className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-gray-700/40 hover:bg-gray-700/70 text-gray-300 hover:text-white rounded-lg transition-all text-sm font-medium"
             >
               <BarChart2 className="w-4 h-4" />
@@ -518,8 +529,9 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
               <div className="bg-red-900/10 p-4 rounded-lg border border-red-800/30">
                 <h4 className="font-semibold text-red-300 mb-2 flex items-center gap-2"><TrendingDown className="w-4 h-4" /> Deduções Estimadas</h4>
                 <div className="text-xs text-gray-400 space-y-1">
-                  <p>Base INSS: saldo + 13° + aviso prévio + base férias (sem 1/3)</p>
-                  <p>Base IRRF: saldo + 13° + aviso prévio − INSS (férias isentas - Lei 7.713/88)</p>
+                  <p>INSS: progressivo sobre o saldo de salário; 13° tem base própria (tributação exclusiva)</p>
+                  <p>IRRF: sobre saldo − INSS e sobre 13° − INSS do 13°, com a redução da Lei 15.270/2025</p>
+                  <p>Aviso indenizado e férias indenizadas (+1/3) são isentos de INSS e IRRF</p>
                   {dadosOriginais.numeroDependentesIR && dadosOriginais.numeroDependentesIR > 0 && (
                     <p>Dedução dependentes IR: {dadosOriginais.numeroDependentesIR} × R$ 189,59 = {formatCurrency(dadosOriginais.numeroDependentesIR * 189.59)}</p>
                   )}
@@ -547,14 +559,8 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
         </Card>
       )}
 
-      {/* Lead Gen — acima dos exports, alta visibilidade */}
+      {/* Lead Gen — único bloco comercial junto ao resultado; AdSense fica após os exports */}
       <LeadGenCard motivo={dadosOriginais?.motivoRescisao} />
-
-      {/* Anúncio AdSense — resultado topo */}
-      <GoogleAd slot="resultadoTopo" format="rectangle" />
-
-      {/* Anúncio AdSense — resultado meio (após engajamento) */}
-      <GoogleAd slot="resultadoMeio" format="horizontal" />
     </div>
   );
 };

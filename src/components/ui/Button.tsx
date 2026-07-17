@@ -20,7 +20,8 @@ export const Button = ({
   const baseClasses = 'font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
   
   const variantClasses = {
-    primary: 'bg-primary-500 hover:bg-primary-600 text-white focus:ring-primary-500 active:bg-primary-700',
+    // Texto escuro sobre esmeralda: branco sobre #22c55e dá só 2.3:1 (WCAG AA pede 4.5:1)
+    primary: 'bg-primary-500 hover:bg-primary-400 text-gray-900 font-semibold focus:ring-primary-500 active:bg-primary-600',
     secondary: 'bg-gray-600 hover:bg-gray-700 text-white focus:ring-gray-500 active:bg-gray-800',
     outline: 'border border-gray-600 hover:bg-gray-700/50 text-gray-300 hover:text-white focus:ring-primary-500 active:bg-gray-700'
   };

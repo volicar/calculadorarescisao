@@ -17,11 +17,13 @@ export default function HomePage() {
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [formData, setFormData] = useState<CalculatorFormData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [erroCalculo, setErroCalculo] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
   const handleCalculate = async (data: CalculatorFormData) => {
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 600));
+    setErroCalculo(null);
+    await new Promise(resolve => setTimeout(resolve, 150));
 
     try {
       const calculationResult = calculateRescisao(data);
@@ -35,6 +37,8 @@ export default function HomePage() {
       }, 100);
     } catch (error) {
       console.error('Erro no cálculo:', error);
+      setResult(null);
+      setErroCalculo('Não conseguimos calcular com esses dados. Confira as datas de admissão e demissão e o salário informado — se o problema continuar, tente recarregar a página.');
     } finally {
       setLoading(false);
     }
@@ -66,7 +70,7 @@ export default function HomePage() {
             {/* Copy */}
             <div className="lg:sticky lg:top-24 animate-fade-up">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-6 rounded-full border border-primary-500/30 bg-primary-500/10 text-primary-400 text-xs font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary-400 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-primary-400" />
                 Tabelas oficiais {anoAtual} — Lei 15.270/2025 e Portaria MPS/MF 13/2026
               </div>
 
@@ -98,24 +102,30 @@ export default function HomePage() {
                 ))}
               </ul>
 
-              <div className="grid grid-cols-3 gap-4 max-w-md">
+              <div className="flex flex-wrap gap-2 max-w-md">
                 {[
-                  ['10+', 'verbas calculadas'],
-                  ['100%', 'gratuito, sem cadastro'],
-                  [String(anoAtual), 'tabelas atualizadas'],
-                ].map(([num, label]) => (
-                  <div key={label} className="border-l-2 border-primary-500/40 pl-3">
-                    <div className="text-2xl font-bold text-white">{num}</div>
-                    <div className="text-xs text-gray-400 leading-tight">{label}</div>
-                  </div>
+                  `Tabelas INSS e IRRF de ${anoAtual}`,
+                  'Grátis, sem cadastro',
+                  'Cálculo feito no seu navegador',
+                ].map((label) => (
+                  <span key={label} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800/60 border border-gray-700/60 text-xs text-gray-300">
+                    <Check className="w-3.5 h-3.5 text-primary-400" />
+                    {label}
+                  </span>
                 ))}
               </div>
             </div>
 
             {/* Form */}
             <div id="calculator-form" className="animate-fade-up animate-delay-200">
+              {erroCalculo && (
+                <div role="alert" className="mb-4 p-4 bg-red-900/30 border border-red-700/50 rounded-lg flex items-start gap-3 animate-fade-in">
+                  <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-300 leading-relaxed">{erroCalculo}</p>
+                </div>
+              )}
               <div className="form-glow">
-                <CalculatorForm onSubmit={handleCalculate} loading={loading} />
+                <CalculatorForm onSubmit={handleCalculate} loading={loading} initialData={formData ?? undefined} />
               </div>
               <HistoricoCalculos onRestore={handleRestore} />
             </div>
@@ -135,7 +145,7 @@ export default function HomePage() {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div id="calculator-form" className="order-1">
-              <CalculatorForm onSubmit={handleCalculate} loading={loading} />
+              <CalculatorForm onSubmit={handleCalculate} loading={loading} initialData={formData ?? undefined} />
               <HistoricoCalculos onRestore={handleRestore} />
               {/* Simulador de cenários */}
               {formData && <SimuladorCenarios formData={formData} />}
@@ -163,7 +173,10 @@ export default function HomePage() {
               />
 
               {result && formData && (
-                <ExportButtons formData={formData} result={result} />
+                <>
+                  <ExportButtons formData={formData} result={result} />
+                  <GoogleAd slot="resultadoTopo" format="rectangle" />
+                </>
               )}
             </div>
           </div>
@@ -190,8 +203,8 @@ export default function HomePage() {
               { n: 4, title: 'Exporte', desc: 'PDF profissional, WhatsApp, TXT ou copie para usar onde precisar.' },
             ].map(({ n, title, desc }) => (
               <div key={n} className="card-lift bg-gray-800 border border-gray-700 rounded-xl p-6 hover:border-primary-500/60">
-                <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-emerald-600 rounded-xl flex items-center justify-center mb-4 shadow-lg shadow-primary-500/20">
-                  <span className="text-white font-bold text-xl">{n}</span>
+                <div className="w-12 h-12 bg-primary-500/15 border border-primary-500/30 rounded-xl flex items-center justify-center mb-4">
+                  <span className="text-primary-400 font-bold text-xl">{n}</span>
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
                 <p className="text-gray-300 text-sm">{desc}</p>
@@ -254,7 +267,7 @@ export default function HomePage() {
               <AlertTriangle className="w-6 h-6 text-yellow-400 flex-shrink-0" />
               <div>
                 <h4 className="text-lg font-semibold text-yellow-400 mb-2">Informações Importantes</h4>
-                <div className="text-gray-300 space-y-1.5 text-sm">
+                <div className="text-amber-100 space-y-1.5 text-sm">
                   <p>• <strong>Cálculos estimativos:</strong> Baseados na legislação vigente. Valores exatos constam na folha de rescisão emitida pelo empregador.</p>
                   <p>• <strong>INSS e IRRF:</strong> Calculados sobre verbas tributáveis com as tabelas vigentes de {new Date().getFullYear()}, incluindo a isenção da Lei 15.270/2025. Valores podem diferir conforme situação fiscal específica.</p>
                   <p>• <strong>Consulte um especialista:</strong> Para casos com adicional de insalubridade, horas extras, estabilidade ou acordos coletivos diferenciados.</p>

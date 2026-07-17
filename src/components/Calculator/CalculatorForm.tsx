@@ -25,6 +25,8 @@ import {
 interface CalculatorFormProps {
   onSubmit: (data: CalculatorFormData) => void;
   loading?: boolean;
+  /** Dados do último cálculo — preserva o formulário preenchido para ajustes rápidos */
+  initialData?: CalculatorFormData;
 }
 
 const SALARIO_MINIMO = 1621.0;
@@ -88,15 +90,21 @@ const SectionTitle = ({ icon: Icon, children }: { icon: React.ElementType; child
   </div>
 );
 
-export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProps) => {
-  const [showAdicionais, setShowAdicionais] = useState(false);
-  const [currencyDisplays, setCurrencyDisplays] = useState<Record<string, string>>({
-    salarioMensal: '',
-    comissoes: '',
-    adicionaisHabituais: '',
-    mediaHorasExtras: '',
-    saldoFGTSReal: '',
-  });
+const CAMPOS_MOEDA = ['salarioMensal', 'comissoes', 'adicionaisHabituais', 'mediaHorasExtras', 'saldoFGTSReal'] as const;
+
+const displaysFrom = (data?: CalculatorFormData): Record<string, string> =>
+  Object.fromEntries(
+    CAMPOS_MOEDA.map((campo) => {
+      const valor = data?.[campo];
+      return [campo, valor && valor > 0 ? formatCurrencyInput(String(Math.round(valor * 100))) : ''];
+    })
+  );
+
+export const CalculatorForm = ({ onSubmit, loading = false, initialData }: CalculatorFormProps) => {
+  const [showAdicionais, setShowAdicionais] = useState(
+    Boolean(initialData && ((initialData.comissoes ?? 0) > 0 || (initialData.adicionaisHabituais ?? 0) > 0 || (initialData.mediaHorasExtras ?? 0) > 0))
+  );
+  const [currencyDisplays, setCurrencyDisplays] = useState<Record<string, string>>(() => displaysFrom(initialData));
 
   const {
     register,
@@ -104,8 +112,9 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
     formState: { errors },
     watch,
     setValue,
+    reset,
   } = useForm<CalculatorFormData>({
-    defaultValues: {
+    defaultValues: initialData ?? {
       salarioMensal: 0,
       comissoes: 0,
       adicionaisHabituais: 0,
@@ -130,6 +139,14 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
       validate: (v) => (v && v > 0) || 'Informe o salário bruto mensal',
     });
   }, [register]);
+
+  // Restauração do histórico ou novo cálculo: sincroniza campos e máscaras
+  useEffect(() => {
+    if (initialData) {
+      reset(initialData);
+      setCurrencyDisplays(displaysFrom(initialData));
+    }
+  }, [initialData, reset]);
 
   const dataAdmissao = watch('dataAdmissao');
   const dataDemissao = watch('dataDemissao');
@@ -243,7 +260,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
         <div>
           <label className="flex items-center text-sm font-medium mb-2">
             Tipo de Contrato
-            <Tooltip content={TOOLTIPS.tipoContrato} />
+            <Tooltip content={TOOLTIPS.tipoContrato} label="Tipo de Contrato" />
           </label>
           <Select
             options={tipoContratoOptions}
@@ -256,7 +273,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
         <div>
           <label className="flex items-center text-sm font-medium mb-2">
             Motivo da Rescisão
-            <Tooltip content={TOOLTIPS.motivoRescisao} />
+            <Tooltip content={TOOLTIPS.motivoRescisao} label="Motivo da Rescisão" />
           </label>
           <Select
             options={tipoContrato === 'experiencia' ? motivoRescisaoExperienciaOptions : motivoRescisaoNormalOptions}
@@ -372,7 +389,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
         <div>
           <label className="flex items-center text-sm font-medium mb-2">
             Salário Mensal Bruto
-            <Tooltip content={TOOLTIPS.salario} />
+            <Tooltip content={TOOLTIPS.salario} label="Salário Mensal Bruto" />
           </label>
           <Input
             {...currencyProps('salarioMensal')}
@@ -391,6 +408,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
           <button
             type="button"
             onClick={() => setShowAdicionais(!showAdicionais)}
+            aria-expanded={showAdicionais}
             className="w-full flex items-center justify-between px-4 py-3 bg-gray-800/30 hover:bg-gray-800/50 transition-colors text-sm font-medium text-gray-300"
           >
             <span className="flex items-center gap-2">
@@ -405,21 +423,21 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
               <div>
                 <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
                   Média mensal de comissões
-                  <Tooltip content={TOOLTIPS.comissoes} />
+                  <Tooltip content={TOOLTIPS.comissoes} label="Comissões" />
                 </label>
                 <Input {...currencyProps('comissoes')} error={errors.comissoes?.message} />
               </div>
               <div>
                 <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
                   Adicionais habituais (noturno, insalubridade, etc.)
-                  <Tooltip content={TOOLTIPS.adicionais} />
+                  <Tooltip content={TOOLTIPS.adicionais} label="Adicionais Habituais" />
                 </label>
                 <Input {...currencyProps('adicionaisHabituais')} error={errors.adicionaisHabituais?.message} />
               </div>
               <div>
                 <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
                   Média mensal de horas extras
-                  <Tooltip content={TOOLTIPS.horasExtras} />
+                  <Tooltip content={TOOLTIPS.horasExtras} label="Horas Extras" />
                 </label>
                 <Input {...currencyProps('mediaHorasExtras')} error={errors.mediaHorasExtras?.message} />
               </div>
@@ -440,7 +458,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
             />
             <label htmlFor="ferias-vencidas-checkbox" className="ml-3 text-sm font-medium text-gray-200 cursor-pointer flex items-center">
               Possui férias vencidas (não gozadas)
-              <Tooltip content={TOOLTIPS.feriasVencidas} />
+              <Tooltip content={TOOLTIPS.feriasVencidas} label="Férias Vencidas" />
             </label>
           </div>
         )}
@@ -456,7 +474,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
             />
             <label htmlFor="fgts-checkbox" className="ml-3 text-sm font-medium text-gray-200 cursor-pointer flex items-center">
               Possui FGTS depositado
-              <Tooltip content={TOOLTIPS.fgts} />
+              <Tooltip content={TOOLTIPS.fgts} label="FGTS" />
             </label>
           </div>
 
@@ -464,7 +482,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
             <div className="p-4 bg-gray-800/20">
               <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
                 Saldo atual da conta do FGTS
-                <Tooltip content={TOOLTIPS.saldoFGTS} />
+                <Tooltip content={TOOLTIPS.saldoFGTS} label="Saldo do FGTS" />
                 <span className="ml-1.5 text-gray-500 font-normal">(opcional — melhora a precisão)</span>
               </label>
               <Input {...currencyProps('saldoFGTSReal')} placeholder="Deixe em branco para estimar" error={errors.saldoFGTSReal?.message} />
@@ -477,7 +495,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
           <div className="animate-fade-in">
             <label className="flex items-center text-sm font-medium mb-2">
               Aviso Prévio
-              <Tooltip content={TOOLTIPS.avisoPrevio} />
+              <Tooltip content={TOOLTIPS.avisoPrevio} label="Aviso Prévio" />
             </label>
             <Select
               options={avisoPrevioOptions}
@@ -503,7 +521,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
         <div>
           <label className="flex items-center text-sm font-medium mb-2">
             Dependentes para IR
-            <Tooltip content={TOOLTIPS.dependentesIR} />
+            <Tooltip content={TOOLTIPS.dependentesIR} label="Dependentes para IR" />
             <span className="ml-1.5 text-xs text-gray-400 font-normal">(afeta desconto de IRRF)</span>
           </label>
           <Input
@@ -535,7 +553,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
             />
             <label htmlFor="estabilidade-checkbox" className="ml-3 text-sm font-medium text-gray-200 cursor-pointer flex items-center">
               Possui estabilidade provisória
-              <Tooltip content={TOOLTIPS.estabilidade} />
+              <Tooltip content={TOOLTIPS.estabilidade} label="Estabilidade Provisória" />
             </label>
           </div>
 

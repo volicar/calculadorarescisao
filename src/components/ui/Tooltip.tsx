@@ -6,9 +6,11 @@ import { HelpCircle } from 'lucide-react';
 interface TooltipProps {
   content: string;
   className?: string;
+  /** Nome do campo — diferencia os botões de ajuda para leitores de tela */
+  label?: string;
 }
 
-export const Tooltip = ({ content, className = '' }: TooltipProps) => {
+export const Tooltip = ({ content, className = '', label }: TooltipProps) => {
   const [visible, setVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -35,7 +37,7 @@ export const Tooltip = ({ content, className = '' }: TooltipProps) => {
           if (e.key === 'Escape') setVisible(false);
         }}
         className="text-gray-400 hover:text-emerald-400 transition-colors ml-1.5 flex-shrink-0"
-        aria-label="Mais informações"
+        aria-label={label ? `Mais informações sobre ${label}` : 'Mais informações'}
         aria-expanded={visible}
       >
         <HelpCircle className="w-4 h-4" />

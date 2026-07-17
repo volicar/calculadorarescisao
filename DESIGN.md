@@ -21,6 +21,12 @@ colors:
   info-blue: "#60a5fa"
   verba-fgts: "#c084fc"
   verba-aviso: "#fb923c"
+  gradient-emerald-mid: "#10b981"
+  gradient-teal: "#2dd4bf"
+  gradient-emerald-light: "#059669"
+  gradient-teal-light: "#0d9488"
+  primary-on-light: "#047857"
+  primary-on-light-deep: "#065f46"
 typography:
   display:
     fontFamily: "Plus Jakarta Sans, Inter, sans-serif"
@@ -28,6 +34,11 @@ typography:
     fontWeight: 700
     lineHeight: 1.1
     letterSpacing: "-0.02em"
+  display-number:
+    fontFamily: "Plus Jakarta Sans, Inter, sans-serif"
+    fontSize: "2.75rem"
+    fontWeight: 700
+    lineHeight: 1.15
   headline:
     fontFamily: "Plus Jakarta Sans, Inter, sans-serif"
     fontSize: "1.875rem"

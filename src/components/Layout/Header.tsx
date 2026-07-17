@@ -33,7 +33,7 @@ export const Header = () => {
   };
 
   const menuItems = [
-    { label: 'Inicio', id: 'home', type: 'scroll' },
+    { label: 'Início', id: 'home', type: 'scroll' },
     { label: 'Como Funciona', id: 'como-funciona', type: 'scroll' },
     { label: 'Blog', id: '/blog', type: 'link' },
     { label: 'Sobre', id: '/sobre', type: 'link' },

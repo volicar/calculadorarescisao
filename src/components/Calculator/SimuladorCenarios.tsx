@@ -72,6 +72,7 @@ export const SimuladorCenarios = ({ formData }: SimuladorCenariosProps) => {
     <div id="simulador-cenarios" className="mt-6 border border-emerald-700/40 rounded-xl overflow-hidden scroll-mt-24">
       <button
         onClick={handleToggle}
+        aria-expanded={expandido}
         className="w-full flex items-center justify-between px-4 py-4 bg-emerald-900/15 hover:bg-emerald-900/25 transition-colors"
       >
         <div className="flex items-start gap-3 text-left">
@@ -123,11 +124,12 @@ export const SimuladorCenarios = ({ formData }: SimuladorCenariosProps) => {
 
           {/* Tabela no desktop */}
           <table className="hidden sm:table w-full text-sm">
+            <caption className="sr-only">Comparação de verbas rescisórias entre os tipos de rescisão, com os mesmos dados informados</caption>
             <thead>
               <tr>
-                <th className="text-left py-2 pr-4 text-gray-400 font-medium text-xs w-40">Verba</th>
+                <th scope="col" className="text-left py-2 pr-4 text-gray-400 font-medium text-xs w-40">Verba</th>
                 {CENARIOS.map((c, i) => (
-                  <th key={c.motivo} className="py-2 px-2 text-center text-xs font-medium">
+                  <th key={c.motivo} scope="col" className="py-2 px-2 text-center text-xs font-medium">
                     <span className={`${c.cor.split(' ')[0]}`}>{c.label}</span>
                     {resultados[i]?.total === melhorTotal && (
                       <span className="flex items-center justify-center gap-1 text-emerald-400 text-xs font-normal">
@@ -141,13 +143,13 @@ export const SimuladorCenarios = ({ formData }: SimuladorCenariosProps) => {
             <tbody className="divide-y divide-gray-700/40">
               {linhas.map((linha) => (
                 <tr key={linha.label} className={linha.label.includes('Bruto') || linha.label.includes('Líquida') ? 'bg-gray-800/30 font-semibold' : ''}>
-                  <td className="py-2 pr-4 text-gray-400 text-xs">{linha.label}</td>
+                  <th scope="row" className="py-2 pr-4 text-gray-400 text-xs font-medium text-left">{linha.label}</th>
                   {linha.valores.map((val, i) => (
                     <td key={i} className="py-2 px-2 text-center">
                       {linha.tipo === 'bool' ? (
                         val
-                          ? <CheckCircle className="w-4 h-4 text-emerald-400 mx-auto" />
-                          : <XCircle className="w-4 h-4 text-gray-600 mx-auto" />
+                          ? <><CheckCircle aria-hidden className="w-4 h-4 text-emerald-400 mx-auto" /><span className="sr-only">Tem direito</span></>
+                          : <><XCircle aria-hidden className="w-4 h-4 text-gray-600 mx-auto" /><span className="sr-only">Não tem direito</span></>
                       ) : (
                         <span className={`text-xs ${(val as number) > 0 ? 'text-gray-300' : 'text-gray-600'}`}>
                           {(val as number) > 0 ? formatCurrency(val as number) : '—'}

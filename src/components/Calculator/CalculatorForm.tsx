@@ -413,7 +413,7 @@ export const CalculatorForm = ({ onSubmit, loading = false, initialData }: Calcu
           >
             <span className="flex items-center gap-2">
               <span>Comissões, Adicionais e Horas Extras</span>
-              <span className="text-xs text-gray-500 font-normal">(opcional)</span>
+              <span className="text-xs text-gray-400 font-normal">(opcional)</span>
             </span>
             <ChevronDown className={`w-4 h-4 transition-transform ${showAdicionais ? 'rotate-180' : ''}`} />
           </button>
@@ -483,7 +483,7 @@ export const CalculatorForm = ({ onSubmit, loading = false, initialData }: Calcu
               <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
                 Saldo atual da conta do FGTS
                 <Tooltip content={TOOLTIPS.saldoFGTS} label="Saldo do FGTS" />
-                <span className="ml-1.5 text-gray-500 font-normal">(opcional — melhora a precisão)</span>
+                <span className="ml-1.5 text-gray-400 font-normal">(opcional — melhora a precisão)</span>
               </label>
               <Input {...currencyProps('saldoFGTSReal')} placeholder="Deixe em branco para estimar" error={errors.saldoFGTSReal?.message} />
             </div>

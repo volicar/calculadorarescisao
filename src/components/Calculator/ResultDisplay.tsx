@@ -195,7 +195,7 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
             <p className="text-sm font-medium text-emerald-300">
               Aviso prévio de {result.diasAvisoPrevio} dias projeta o contrato até {formatDate(result.dataTerminoProjetada)}
             </p>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-gray-300 mt-0.5">
               O período do aviso indenizado conta como tempo de serviço para férias e 13º (Lei 12.506/2011 + OJ 82 SDI-1 TST).
             </p>
           </div>
@@ -220,7 +220,7 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
               <p className={`text-sm font-medium ${tom.titulo}`}>
                 Prazo limite para pagamento: {prazoFormatado}
               </p>
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className="text-xs text-gray-300 mt-0.5">
                 {vencidoRecente
                   ? `Se você ainda não recebeu, o empregador pode dever multa de 1 salário (Art. 477 §8º CLT). O prazo de 10 dias conta da comunicação da dispensa, mesmo com aviso indenizado.`
                   : vencidoAntigo
@@ -244,11 +244,11 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
 
         {/* Número herói: a estimativa líquida lidera o card */}
         <div className="mb-5 p-5 bg-emerald-900/20 border border-emerald-700/40 rounded-xl text-center">
-          <p className="text-xs text-gray-400 uppercase tracking-wide mb-1.5">Estimativa líquida a receber</p>
+          <p className="text-xs text-gray-300 uppercase tracking-wide mb-1.5">Estimativa líquida a receber</p>
           <p className="text-4xl sm:text-[2.75rem] leading-tight font-bold text-emerald-400">
             {formatCurrency(result.totalLiquido)}
           </p>
-          <p className="text-xs text-gray-400 mt-2">
+          <p className="text-xs text-gray-300 mt-2">
             Bruto {formatCurrency(result.total)}
             {result.deducaoINSS + result.deducaoIRRF > 0 && (
               <> − {formatCurrency(result.deducaoINSS + result.deducaoIRRF)} de INSS e IRRF estimados</>
@@ -336,19 +336,19 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
               </div>
               <div className="grid grid-cols-3 gap-3 text-center mt-3">
                 <div className="bg-gray-800/50 p-2 rounded">
-                  <p className="text-xs text-gray-400">Parcelas</p>
+                  <p className="text-xs text-gray-300">Parcelas</p>
                   <p className="text-white font-bold text-lg">{result.seguroDesemprego.numeroParcelas}</p>
                 </div>
                 <div className="bg-gray-800/50 p-2 rounded">
-                  <p className="text-xs text-gray-400">Valor/parcela</p>
+                  <p className="text-xs text-gray-300">Valor/parcela</p>
                   <p className="text-emerald-400 font-bold text-sm">{formatCurrency(result.seguroDesemprego.valorEstimadoParcela)}</p>
                 </div>
                 <div className="bg-gray-800/50 p-2 rounded">
-                  <p className="text-xs text-gray-400">Total estimado</p>
+                  <p className="text-xs text-gray-300">Total estimado</p>
                   <p className="text-emerald-400 font-bold text-sm">{formatCurrency(result.seguroDesemprego.totalEstimado)}</p>
                 </div>
               </div>
-              <p className="text-xs text-gray-400 mt-2">Solicite via app Carteira de Trabalho Digital (CTPS Digital) ou nas agências SINE/MTE.</p>
+              <p className="text-xs text-gray-300 mt-2">Solicite via app Carteira de Trabalho Digital (CTPS Digital) ou nas agências SINE/MTE.</p>
             </div>
           ) : (
             <div className="p-3 bg-gray-800/30 border border-gray-700/50 rounded-lg flex items-start gap-2">

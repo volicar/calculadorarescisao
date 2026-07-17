@@ -98,7 +98,7 @@ export const SimuladorCenarios = ({ formData }: SimuladorCenariosProps) => {
               return (
                 <div key={cenario.motivo} className={`p-4 rounded-lg border ${cenario.cor} relative`}>
                   {isMelhor && (
-                    <span className="absolute top-2 right-2 text-xs bg-emerald-600 text-white px-2 py-0.5 rounded-full">Melhor</span>
+                    <span className="absolute top-2 right-2 text-xs font-semibold bg-emerald-500 text-gray-900 px-2 py-0.5 rounded-full">Melhor</span>
                   )}
                   <p className="font-semibold text-sm mb-3">{cenario.label}</p>
                   <div className="space-y-1.5 text-xs">
@@ -162,7 +162,7 @@ export const SimuladorCenarios = ({ formData }: SimuladorCenariosProps) => {
             </tbody>
           </table>
 
-          <p className="mt-3 text-xs text-gray-500 text-center">
+          <p className="mt-3 text-xs text-gray-400 text-center">
             Simulação com os mesmos dados informados. Valores são estimativas — regras específicas podem variar.
           </p>
         </div>

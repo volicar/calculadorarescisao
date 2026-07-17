@@ -219,6 +219,9 @@ export const calculateRescisao = (data: CalculatorFormData): CalculationResult =
     numeroDependentesIR = 0,
   } = data;
 
+  // Blindagem: NaN em qualquer campo numérico contaminaria todo o cálculo
+  const dependentesIR = Number.isFinite(numeroDependentesIR) ? Math.max(0, numeroDependentesIR) : 0;
+
   // Salário base para cálculos (inclui comissões, adicionais habituais e média de horas extras)
   const salarioBase = salarioMensal + comissoes + adicionaisHabituais + mediaHorasExtras;
 
@@ -375,7 +378,7 @@ export const calculateRescisao = (data: CalculatorFormData): CalculationResult =
   const deducoes = calcularDeducoesRescisao({
     saldoSalario: Math.max(0, saldoSalario),
     decimoTerceiro: Math.max(0, decimoTerceiroProporcional),
-    numeroDependentes: numeroDependentesIR,
+    numeroDependentes: dependentesIR,
   });
 
   const totalLiquido = Number(Math.max(0, total - deducoes.totalDeducoes).toFixed(2));

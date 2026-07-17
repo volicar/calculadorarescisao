@@ -510,7 +510,15 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
             type="number"
             min={0}
             max={20}
-            {...register('numeroDependentesIR', { min: 0, max: 20, valueAsNumber: true })}
+            {...register('numeroDependentesIR', {
+              min: { value: 0, message: 'Mínimo 0' },
+              max: { value: 20, message: 'Máximo 20' },
+              // Campo vazio vira NaN com valueAsNumber e contaminaria INSS/IRRF
+              setValueAs: (v) => {
+                const n = Number(v);
+                return Number.isFinite(n) ? n : 0;
+              },
+            })}
             placeholder="0"
             error={errors.numeroDependentesIR?.message}
           />

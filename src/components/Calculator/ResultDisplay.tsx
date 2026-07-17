@@ -145,7 +145,9 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
   };
 
   const periodo = calcularPeriodo();
-  const cardTitle = nome ? `Resultado — ${nome}` : 'Resultado da Rescisão';
+  // Nome muito longo estouraria o título do card
+  const nomeExibido = nome && nome.length > 40 ? `${nome.slice(0, 40)}…` : nome;
+  const cardTitle = nomeExibido ? `Resultado — ${nomeExibido}` : 'Resultado da Rescisão';
   const prazoFormatado = result.prazoLimitePagamento
     ? formatDate(result.prazoLimitePagamento)
     : null;
@@ -173,6 +175,10 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
 
   return (
     <div className="space-y-4 animate-fade-in">
+      {/* Anúncio para leitores de tela quando o cálculo aparece */}
+      <p className="sr-only" role="status" aria-live="polite">
+        Cálculo concluído. Total bruto {formatCurrency(result.total)}, estimativa líquida {formatCurrency(result.totalLiquido)}.
+      </p>
       {/* Alerta estabilidade */}
       {result.alertaEstabilidade && (
         <div className="p-4 bg-red-900/30 border border-red-600/50 rounded-lg flex items-start gap-3">
@@ -224,7 +230,7 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
         {nome && (
           <div className="mb-4 p-3 bg-gray-800/50 rounded-lg border border-gray-700/50">
             <div className="text-xs text-gray-400 mb-0.5">Funcionário(a)</div>
-            <div className="text-white font-medium">{nome}</div>
+            <div className="text-white font-medium truncate">{nomeExibido}</div>
           </div>
         )}
 

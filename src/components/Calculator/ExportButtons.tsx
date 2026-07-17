@@ -14,6 +14,12 @@ interface ExportButtonsProps {
 
 export const ExportButtons = ({ formData, result }: ExportButtonsProps) => {
   const [loading, setLoading] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ tipo: 'ok' | 'erro'; msg: string } | null>(null);
+
+  const mostrarFeedback = (tipo: 'ok' | 'erro', msg: string) => {
+    setFeedback({ tipo, msg });
+    setTimeout(() => setFeedback(null), 4000);
+  };
 
   if (!formData || !result) return null;
 
@@ -52,7 +58,7 @@ _Rescisão ${new Date().getFullYear()} - Calculadora Trabalhista_
       await generatePDF({ formData, result });
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
-      alert('Erro ao gerar PDF. Tentando formato alternativo...');
+      mostrarFeedback('erro', 'Não foi possível gerar o PDF — baixamos o resultado em TXT no lugar.');
       generateTextFile({ formData, result });
     } finally {
       setLoading(null);
@@ -65,7 +71,7 @@ _Rescisão ${new Date().getFullYear()} - Calculadora Trabalhista_
       generateTextFile({ formData, result });
     } catch (error) {
       console.error('Erro ao gerar arquivo:', error);
-      alert('Erro ao gerar arquivo. Tente copiar o texto.');
+      mostrarFeedback('erro', 'Não foi possível gerar o arquivo. Tente "Copiar Texto".');
     } finally {
       setLoading(null);
     }
@@ -79,7 +85,7 @@ _Rescisão ${new Date().getFullYear()} - Calculadora Trabalhista_
       window.open(url, '_blank');
     } catch (error) {
       console.error('Erro ao compartilhar:', error);
-      alert('Erro ao abrir WhatsApp.');
+      mostrarFeedback('erro', 'Não foi possível abrir o WhatsApp. Use "Copiar Texto" e cole na conversa.');
     } finally {
       setLoading(null);
     }
@@ -89,7 +95,7 @@ _Rescisão ${new Date().getFullYear()} - Calculadora Trabalhista_
     setLoading('copy');
     try {
       await navigator.clipboard.writeText(generateWhatsAppText());
-      alert('Cálculo copiado para a área de transferência!');
+      mostrarFeedback('ok', 'Cálculo copiado para a área de transferência.');
     } catch (err) {
       console.error('Erro ao copiar:', err);
       // Fallback para dispositivos que não suportam clipboard API
@@ -99,7 +105,7 @@ _Rescisão ${new Date().getFullYear()} - Calculadora Trabalhista_
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
-      alert('Cálculo copiado!');
+      mostrarFeedback('ok', 'Cálculo copiado.');
     } finally {
       setLoading(null);
     }
@@ -154,6 +160,21 @@ _Rescisão ${new Date().getFullYear()} - Calculadora Trabalhista_
           {loading === 'copy' ? 'Copiando...' : 'Copiar Texto'}
         </Button>
       </div>
+
+      {/* Feedback de exportação */}
+      {feedback && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`text-sm p-3 rounded-lg border animate-fade-in ${
+            feedback.tipo === 'ok'
+              ? 'bg-emerald-900/20 border-emerald-700/40 text-emerald-300'
+              : 'bg-red-900/30 border-red-700/50 text-red-300'
+          }`}
+        >
+          {feedback.msg}
+        </div>
+      )}
 
       {/* Info adicional */}
       <div className="flex items-start gap-2 text-xs text-gray-400 mt-4 p-3 bg-gray-800 rounded-lg border border-gray-700">

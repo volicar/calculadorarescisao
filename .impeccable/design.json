@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-17T00:00:00Z",
+  "title": "Design System: Rescisão Online",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Verde Esmeralda", "canonical": "#22c55e", "tonalRamp": ["#14532d", "#166534", "#15803d", "#16a34a", "#22c55e", "#4ade80", "#86efac", "#dcfce7"] },
+      "ink-dark-bg": { "role": "neutral", "displayName": "Grafite Profundo", "canonical": "#111827", "tonalRamp": ["#030712", "#111827", "#1f2937", "#374151", "#4b5563", "#6b7280", "#9ca3af", "#e5e7eb"] },
+      "surface-dark": { "role": "neutral", "displayName": "Grafite Superfície", "canonical": "#1f2937", "tonalRamp": ["#111827", "#1f2937", "#374151", "#4b5563", "#6b7280", "#9ca3af", "#d1d5db", "#f3f4f6"] },
+      "alert-warning": { "role": "tertiary", "displayName": "Amarelo Alerta", "canonical": "#facc15", "tonalRamp": ["#713f12", "#854d0e", "#a16207", "#ca8a04", "#eab308", "#facc15", "#fde047", "#fef9c3"] },
+      "alert-danger": { "role": "tertiary", "displayName": "Vermelho Perigo", "canonical": "#f87171", "tonalRamp": ["#7f1d1d", "#991b1b", "#b91c1c", "#dc2626", "#ef4444", "#f87171", "#fca5a5", "#fee2e2"] },
+      "info-blue": { "role": "tertiary", "displayName": "Azul Info", "canonical": "#60a5fa", "tonalRamp": ["#1e3a8a", "#1e40af", "#1d4ed8", "#2563eb", "#3b82f6", "#60a5fa", "#93c5fd", "#dbeafe"] },
+      "verba-fgts": { "role": "tertiary", "displayName": "Roxo FGTS", "canonical": "#c084fc", "tonalRamp": ["#581c87", "#6b21a8", "#7e22ce", "#9333ea", "#a855f7", "#c084fc", "#d8b4fe", "#f3e8ff"] },
+      "verba-aviso": { "role": "tertiary", "displayName": "Laranja Aviso Prévio", "canonical": "#fb923c", "tonalRamp": ["#7c2d12", "#9a3412", "#c2410c", "#ea580c", "#f97316", "#fb923c", "#fdba74", "#ffedd5"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Só o h1 do hero." },
+      "label": { "displayName": "Label", "purpose": "Cabeçalhos de seção do form e do resultado, uppercase tracked." }
+    },
+    "shadows": [
+      { "name": "form-glow", "value": "0 0 0 1px rgba(34,197,94,0.15), 0 24px 64px -24px rgba(34,197,94,0.25)", "purpose": "Exclusivo do card do formulário no hero (Regra do Brilho Único)." },
+      { "name": "card-lift-hover", "value": "0 12px 32px -12px rgba(34,197,94,0.25)", "purpose": "Hover de cards clicáveis, com translateY(-4px)." }
+    ],
+    "motion": [
+      { "name": "fade-up", "value": "fadeUp 0.5s ease-out both", "purpose": "Entrada do hero, escalonada com delays de 100-300ms." },
+      { "name": "fade-in", "value": "fadeIn 0.25s ease-in-out", "purpose": "Aparição de blocos condicionais do form e resultado." },
+      { "name": "transition-default", "value": "all 0.2s ease", "purpose": "Estados de botões, links e inputs." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botão Primário",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ação principal (Calcular Rescisão); esmeralda sólido.",
+      "html": "<button class=\"ds-btn-primary\">Calcular Rescisão</button>",
+      "css": ".ds-btn-primary { background: #22c55e; color: #fff; font-weight: 500; font-size: 1.125rem; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; transition: background 0.2s ease; } .ds-btn-primary:hover { background: #16a34a; } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px #111827, 0 0 0 4px #22c55e; } .ds-btn-primary:active { background: #15803d; }"
+    },
+    {
+      "name": "Botão Outline",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Ação secundária (Ver artigos, exportar TXT).",
+      "html": "<button class=\"ds-btn-outline\">Ver Todos os Artigos</button>",
+      "css": ".ds-btn-outline { background: transparent; color: #d1d5db; font-weight: 500; padding: 8px 16px; border: 1px solid #4b5563; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; } .ds-btn-outline:hover { background: rgba(55,65,81,0.5); color: #fff; } .ds-btn-outline:focus-visible { outline: none; box-shadow: 0 0 0 2px #111827, 0 0 0 4px #22c55e; }"
+    },
+    {
+      "name": "Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo do formulário; foco esmeralda, erro vermelho.",
+      "html": "<input class=\"ds-input\" placeholder=\"R$ 0,00\" />",
+      "css": ".ds-input { width: 100%; padding: 12px; background: #1f2937; border: 1px solid #4b5563; border-radius: 8px; color: #fff; font-size: 1rem; transition: all 0.2s ease; } .ds-input::placeholder { color: #9ca3af; } .ds-input:focus { outline: none; border-color: transparent; box-shadow: 0 0 0 2px #22c55e; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Container padrão de conteúdo.",
+      "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">Resultado da Rescisão</h3><p class=\"ds-card-body\">Conteúdo do card.</p></div>",
+      "css": ".ds-card { background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 24px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); } .ds-card-title { color: #fff; font-weight: 600; font-size: 1.125rem; margin: 0 0 16px; text-align: center; } .ds-card-body { color: #d1d5db; font-size: 0.875rem; margin: 0; }"
+    },
+    {
+      "name": "Badge do Hero",
+      "kind": "chip",
+      "refersTo": "primary",
+      "description": "Selo de confiança com pulso; assinatura do hero.",
+      "html": "<span class=\"ds-badge\"><span class=\"ds-badge-dot\"></span>Tabelas oficiais 2026 — Lei 15.270/2025</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid rgba(34,197,94,0.3); background: rgba(34,197,94,0.1); color: #4ade80; font-size: 0.75rem; font-weight: 500; border-radius: 9999px; } .ds-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: ds-pulse 2s infinite; } @keyframes ds-pulse { 50% { opacity: 0.4; } }"
+    },
+    {
+      "name": "Linha de Verba",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Rubrica do resultado: rótulo + valor com cor semântica fixa.",
+      "html": "<div class=\"ds-verba\"><span class=\"ds-verba-label\">FGTS + Multa</span><span class=\"ds-verba-valor\">R$ 14.744,80</span></div>",
+      "css": ".ds-verba { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(55,65,81,0.6); } .ds-verba-label { color: #d1d5db; font-size: 0.875rem; } .ds-verba-valor { color: #c084fc; font-weight: 500; font-size: 0.875rem; }"
+    },
+    {
+      "name": "Alerta de Proteção",
+      "kind": "custom",
+      "refersTo": "alert-warning",
+      "description": "Banner de aviso (estabilidade, prazo); borda completa + fundo tingido.",
+      "html": "<div class=\"ds-alerta\"><svg class=\"ds-alerta-icone\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z\"/><line x1=\"12\" y1=\"9\" x2=\"12\" y2=\"13\"/><line x1=\"12\" y1=\"17\" x2=\"12.01\" y2=\"17\"/></svg><p class=\"ds-alerta-texto\">Gestantes têm estabilidade provisória desde a confirmação da gravidez (Súmula 244 TST).</p></div>",
+      "css": ".ds-alerta { display: flex; gap: 12px; align-items: flex-start; padding: 16px; background: rgba(113,63,18,0.2); border: 1px solid rgba(161,98,7,0.4); border-radius: 8px; } .ds-alerta-icone { width: 20px; height: 20px; color: #facc15; flex-shrink: 0; } .ds-alerta-texto { color: #fde047; font-size: 0.875rem; line-height: 1.5; margin: 0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "A Folha Aberta",
+    "overview": "O sistema visual encena uma folha de rescisão aberta sobre a mesa — todo número visível, toda regra citada, nada escondido do trabalhador. Tema escuro padrão com grid de papel milimetrado de contador; o verde esmeralda é a caneta que destaca o que importa: o dinheiro dele. Ferramenta com voz de aliado: sério, claro, protetor.",
+    "keyCharacteristics": [
+      "Dark-first com light mode completo via overrides html.light",
+      "Grid quadriculado .grid-canvas como assinatura em todas as páginas",
+      "Verde esmeralda = dinheiro/ação; cores semânticas fixas por verba",
+      "Base legal citada ao lado de cada número",
+      "Mobile-first: inputs ≥16px, alvos ≥44px"
+    ],
+    "rules": [
+      { "name": "A Regra do Semáforo de Verbas", "body": "Cada rubrica do resultado tem cor fixa e imutável: verde = salário, azul = férias, amarelo = 13º, roxo = FGTS, laranja = aviso.", "section": "colors" },
+      { "name": "A Regra do Override Claro", "body": "Nenhuma cor clara (-300/-400) toca o light mode sem override html.light correspondente. Contraste mínimo 4.5:1 no corpo.", "section": "colors" },
+      { "name": "A Regra do Número Herói", "body": "Valores monetários são sempre mais pesados que seus rótulos; o Total é o maior texto do card.", "section": "typography" },
+      { "name": "A Regra do Brilho Único", "body": "O glow esmeralda existe em um lugar por viewport: o formulário no hero.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do citar a base legal ao lado de cada número ou regra exibida.",
+      "Do usar ícones lucide-react para todo pictograma de UI; emojis só em conteúdo exportado.",
+      "Do manter o grid .grid-canvas e os glows do hero em páginas novas.",
+      "Do adicionar override html.light para qualquer cor -300/-400 nova usada como texto.",
+      "Do manter inputs com fonte ≥16px e alvos ≥44px no mobile."
+    ],
+    "donts": [
+      "Don't parecer portal de calculadora entupido de AdSense: nunca anúncio entre campos ou rubricas.",
+      "Don't parecer site jurídico engessado: nada de juridiquês sem tooltip ou tom intimidador.",
+      "Don't parecer template de SaaS genérico: sem novos gradientes decorativos; o gradiente de texto é restrito ao h1 do hero.",
+      "Don't usar border-left/right colorida >1px como accent.",
+      "Don't trocar as cores fixas das rubricas do resultado.",
+      "Don't usar cinza claro sobre fundo tingido; contraste ≥4.5:1 nos dois temas."
+    ]
+  }
+}

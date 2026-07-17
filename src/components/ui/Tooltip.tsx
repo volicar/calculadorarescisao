@@ -29,8 +29,14 @@ export const Tooltip = ({ content, className = '' }: TooltipProps) => {
         onClick={() => setVisible(!visible)}
         onMouseEnter={() => setVisible(true)}
         onMouseLeave={() => setVisible(false)}
+        onFocus={() => setVisible(true)}
+        onBlur={() => setVisible(false)}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') setVisible(false);
+        }}
         className="text-gray-400 hover:text-emerald-400 transition-colors ml-1.5 flex-shrink-0"
         aria-label="Mais informações"
+        aria-expanded={visible}
       >
         <HelpCircle className="w-4 h-4" />
       </button>

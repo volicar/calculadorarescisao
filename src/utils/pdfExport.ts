@@ -190,7 +190,7 @@ export const generatePDF = async ({ formData, result }: PDFExportData): Promise<
     addText('rescisaonline.com.br', pageWidth - margin, footerY + 8, { fontSize: 7, align: 'right', color: [34, 197, 94] });
 
     const nomeArquivo = formData.nome?.trim()
-      ? `rescisao-${formData.nome.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`
+      ? `rescisao-${formData.nome.toLowerCase().replace(/\s+/g, '-').slice(0, 60)}-${new Date().toISOString().split('T')[0]}.pdf`
       : `rescisao-trabalhista-${new Date().toISOString().split('T')[0]}.pdf`;
 
     pdf.save(nomeArquivo);
@@ -272,7 +272,7 @@ Rescisão Online - www.rescisaonline.com.br`;
   const file = new Blob([content.trim()], { type: 'text/plain;charset=utf-8' });
   element.href = URL.createObjectURL(file);
   element.download = formData.nome?.trim()
-    ? `rescisao-${formData.nome.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.txt`
+    ? `rescisao-${formData.nome.toLowerCase().replace(/\s+/g, '-').slice(0, 60)}-${new Date().toISOString().split('T')[0]}.txt`
     : `rescisao-trabalhista-${new Date().toISOString().split('T')[0]}.txt`;
   document.body.appendChild(element);
   element.click();

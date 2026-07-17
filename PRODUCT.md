@@ -24,10 +24,10 @@ A única calculadora de rescisão que calcula como a folha de verdade: tabelas o
 
 ## Conversion & proof
 
-- CTA primário: calcular a rescisão agora (form direto no hero, sem cadastro). *(inferido — confirmar)*
-- CTA secundário: ler os guias do blog para entender os direitos. *(inferido — confirmar)*
-- A linha que o visitante lembra após 10 segundos: "Saiba exatamente quanto você vai receber na rescisão." *(inferido do hero atual — confirmar)*
-- Belief ladder: 1) está atualizada com as leis vigentes (2026, Lei 15.270); 2) o cálculo é correto e detalhado como a folha oficial; 3) é grátis, sem cadastro e sem pegadinha. *(inferido — confirmar)*
+- CTA primário: calcular a rescisão agora (form direto no hero, sem cadastro).
+- CTA secundário: ler os guias do blog para entender os direitos.
+- A linha que o visitante lembra após 10 segundos: "Saiba exatamente quanto você vai receber na rescisão."
+- Belief ladder: 1) está atualizada com as leis vigentes (2026, Lei 15.270); 2) o cálculo é correto e detalhado como a folha oficial; 3) é grátis, sem cadastro e sem pegadinha.
 - Proof on hand: sem depoimentos ou logos por enquanto. A prova é técnica: base legal citada em cada verba (leis, súmulas, portarias), tabelas oficiais nomeadas no badge do hero, memória de cálculo aberta.
 
 ## Brand Personality
@@ -36,7 +36,6 @@ Confiável, claro, protetor. Tom de aliado que defende o direito do trabalhador:
 
 ## Anti-references
 
-*(inferidos — confirmar)*
 - Portais de calculadora entupidos de AdSense: popups, anúncios entre cada campo, conteúdo raso feito pra SEO.
 - Site jurídico engessado: cara de escritório de advocacia ou órgão público, denso e intimidador.
 - Template de SaaS genérico: gradientes decorativos, cards idênticos, jargão de startup.
@@ -51,4 +50,4 @@ Confiável, claro, protetor. Tom de aliado que defende o direito do trabalhador:
 
 ## Accessibility & Inclusion
 
-Nível formal não definido pelo usuário. Prática atual do projeto: contraste verificado nos temas claro e escuro, inputs com fonte ≥16px no mobile (anti-zoom iOS), tooltips em todos os campos técnicos. Público leigo e ansioso exige leitura fácil e mensagens de erro claras. *(WCAG alvo a confirmar)*
+Alvo: WCAG 2.1 AA. Prática atual: contraste ≥4.5:1 verificado nos temas claro e escuro, inputs com fonte ≥16px no mobile (anti-zoom iOS), navegação por teclado nos tooltips, prefers-reduced-motion, resultado anunciado por aria-live, tooltips em todos os campos técnicos. Público leigo e ansioso exige leitura fácil e mensagens de erro claras.

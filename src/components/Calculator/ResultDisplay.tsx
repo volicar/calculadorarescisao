@@ -317,13 +317,10 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
               </div>
             )}
 
-            {/* Total líquido */}
-            <div className="flex justify-between items-center py-3 px-3 bg-emerald-900/20 border border-emerald-700/30 rounded-lg">
-              <div>
-                <span className="text-white font-bold text-base">Estimativa Líquida</span>
-                <p className="text-xs text-gray-400 mt-0.5">Após INSS e IRRF estimados</p>
-              </div>
-              <span className="text-emerald-400 font-bold text-xl">{formatCurrency(result.totalLiquido)}</span>
+            {/* Fecha a conta das deduções; o valor em destaque é o do topo do card */}
+            <div className="flex justify-between items-center pt-2 mt-1 border-t border-gray-700/60">
+              <span className="text-sm text-gray-300">Bruto − deduções = líquido</span>
+              <span className="text-emerald-400 font-semibold text-sm">{formatCurrency(result.totalLiquido)}</span>
             </div>
           </div>
         )}

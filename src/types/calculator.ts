@@ -5,6 +5,9 @@ export interface CalculatorFormData {
   salarioMensal: number;
   comissoes?: number;
   adicionaisHabituais?: number;
+  mediaHorasExtras?: number;
+  temFeriasVencidas?: boolean;
+  saldoFGTSReal?: number;
   dataAdmissao: string;
   dataDemissao: string;
   tipoContrato: 'normal' | 'experiencia';
@@ -27,6 +30,7 @@ export interface SeguroDesempregoResult {
 
 export interface CalculationResult {
   saldoSalario: number;
+  feriasVencidas: number;
   feriasPROPorcionais: number;
   decimoTerceiroProporcional: number;
   fgtsMulta: number;
@@ -46,6 +50,10 @@ export interface CalculationResult {
   // Prazo de pagamento
   prazoLimitePagamento: string;
   diasParaPagamento: number;
+
+  // Projeção do aviso prévio indenizado (Lei 12.506 + OJ 82 SDI-1 TST)
+  diasAvisoPrevio: number;
+  dataTerminoProjetada?: string;
 
   // Seguro desemprego
   seguroDesemprego: SeguroDesempregoResult;

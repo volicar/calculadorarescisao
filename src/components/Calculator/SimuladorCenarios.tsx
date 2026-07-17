@@ -57,6 +57,7 @@ export const SimuladorCenarios = ({ formData }: SimuladorCenariosProps) => {
   const linhas: LinhaComparacao[] = calculado
     ? [
         { label: 'Saldo de Salário', valores: resultados.map(r => r?.saldoSalario ?? null), tipo: 'money' },
+        { label: 'Férias Vencidas', valores: resultados.map(r => r?.feriasVencidas ?? null), tipo: 'money' },
         { label: 'Férias Proporcionais', valores: resultados.map(r => r?.feriasPROPorcionais ?? null), tipo: 'money' },
         { label: '13° Proporcional', valores: resultados.map(r => r?.decimoTerceiroProporcional ?? null), tipo: 'money' },
         { label: 'FGTS + Multa', valores: resultados.map(r => r?.fgtsMulta ?? null), tipo: 'money' },

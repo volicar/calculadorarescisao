@@ -154,6 +154,9 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
 
   const resultItems = [
     { label: 'Saldo de Salário', value: result.saldoSalario, color: 'text-green-400' },
+    ...(result.feriasVencidas > 0
+      ? [{ label: 'Férias Vencidas + 1/3', value: result.feriasVencidas, color: 'text-cyan-400' }]
+      : []),
     { label: 'Férias Proporcionais + 1/3', value: result.feriasPROPorcionais, color: 'text-blue-400' },
     { label: '13º Proporcional', value: result.decimoTerceiroProporcional, color: 'text-yellow-400' },
     { label: 'FGTS + Multa', value: result.fgtsMulta, color: 'text-purple-400' },
@@ -194,6 +197,21 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
                 : result.diasParaPagamento === 0
                   ? 'Prazo vence hoje! Verifique se o pagamento foi realizado.'
                   : `${result.diasParaPagamento} dia(s) restantes — Art. 477 §6° CLT (10 dias corridos)`}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Projeção do aviso prévio indenizado */}
+      {result.dataTerminoProjetada && (
+        <div className="p-4 bg-emerald-900/20 border border-emerald-700/40 rounded-lg flex items-start gap-3">
+          <Info className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-emerald-300">
+              Aviso prévio de {result.diasAvisoPrevio} dias projeta o contrato até {formatDate(result.dataTerminoProjetada)}
+            </p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              O período do aviso indenizado conta como tempo de serviço para férias e 13º (Lei 12.506/2011 + OJ 82 SDI-1 TST).
             </p>
           </div>
         </div>

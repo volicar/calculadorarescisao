@@ -105,6 +105,7 @@ export const generatePDF = async ({ formData, result }: PDFExportData): Promise<
 
     const verbas: [string, number][] = [
       ['Saldo de Salário', result.saldoSalario],
+      ...(result.feriasVencidas > 0 ? [['Férias Vencidas + 1/3', result.feriasVencidas] as [string, number]] : []),
       ['Férias Proporcionais + 1/3', result.feriasPROPorcionais],
       ['13° Proporcional', result.decimoTerceiroProporcional],
       ['FGTS + Multa', result.fgtsMulta],
@@ -234,7 +235,7 @@ Data de Demissão: ${formatDate(formData.dataDemissao)}`;
   content += `
 
 VERBAS RESCISÓRIAS (BRUTO):
-Saldo de Salário: ${formatCurrency(result.saldoSalario)}
+Saldo de Salário: ${formatCurrency(result.saldoSalario)}${result.feriasVencidas > 0 ? `\nFérias Vencidas + 1/3: ${formatCurrency(result.feriasVencidas)}` : ''}
 Férias Proporcionais + 1/3: ${formatCurrency(result.feriasPROPorcionais)}
 13° Proporcional: ${formatCurrency(result.decimoTerceiroProporcional)}
 FGTS + Multa: ${formatCurrency(result.fgtsMulta)}`;
@@ -293,6 +294,7 @@ export const generateWhatsAppMessage = ({ formData, result }: PDFExportData): st
 
   msg += `\n💰 *VALORES A RECEBER:*\n`;
   msg += `• Saldo de Salário: ${formatCurrency(result.saldoSalario)}\n`;
+  if (result.feriasVencidas > 0) msg += `• Férias Vencidas + 1/3: ${formatCurrency(result.feriasVencidas)}\n`;
   msg += `• Férias + 1/3: ${formatCurrency(result.feriasPROPorcionais)}\n`;
   msg += `• 13° Proporcional: ${formatCurrency(result.decimoTerceiroProporcional)}\n`;
   msg += `• FGTS + Multa: ${formatCurrency(result.fgtsMulta)}\n`;

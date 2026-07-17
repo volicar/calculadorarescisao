@@ -2,32 +2,29 @@ import { CalculatorFormData, CalculationResult } from '@/types/calculator';
 import { calcularDeducoesRescisao } from '@/utils/deductions';
 import { calcularSeguroDesemprego } from '@/utils/seguroDesemprego';
 
+// Interpreta 'YYYY-MM-DD' como data LOCAL — new Date(string) parseia em UTC e
+// desloca um dia para trás em fusos negativos como o do Brasil
+const parseDate = (iso: string): Date => {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d);
+};
+
+const toISODate = (date: Date): string => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
 export const validateDates = (admissao: string, demissao: string): boolean => {
-  const dataAdmissao = new Date(admissao);
-  const dataDemissao = new Date(demissao);
+  const dataAdmissao = parseDate(admissao);
+  const dataDemissao = parseDate(demissao);
   return dataDemissao >= dataAdmissao;
 };
 
-export const calculateWorkingDays = (startDate: string, endDate: string): number => {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  let count = 0;
-  const current = new Date(start);
-
-  while (current <= end) {
-    const dayOfWeek = current.getDay();
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-      count++;
-    }
-    current.setDate(current.getDate() + 1);
-  }
-
-  return count;
-};
-
 export const calculateMonthsDifference = (startDate: string, endDate: string): number => {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  const start = parseDate(startDate);
+  const end = parseDate(endDate);
 
   let months = (end.getFullYear() - start.getFullYear()) * 12;
   months += end.getMonth() - start.getMonth();
@@ -40,8 +37,8 @@ export const calculateMonthsDifference = (startDate: string, endDate: string): n
 };
 
 export const calculateProportionalDays = (startDate: string, endDate: string): number => {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  const start = parseDate(startDate);
+  const end = parseDate(endDate);
 
   const monthStart = new Date(end.getFullYear(), end.getMonth(), 1);
   const daysInMonth = new Date(end.getFullYear(), end.getMonth() + 1, 0).getDate();
@@ -54,6 +51,29 @@ export const calculateProportionalDays = (startDate: string, endDate: string): n
   }
 
   return Math.min(workedDays, daysInMonth);
+};
+
+// Meses para o 13º proporcional: meses trabalhados NO ANO da rescisão,
+// contando o mês em que houve 15 dias ou mais de trabalho (Lei 4.090/62)
+export const calcularMeses13 = (dataAdmissao: string, dataFim: string): number => {
+  const admissao = parseDate(dataAdmissao);
+  const fim = parseDate(dataFim);
+
+  const inicioAno = new Date(fim.getFullYear(), 0, 1);
+  const inicio = admissao > inicioAno ? admissao : inicioAno;
+  if (inicio > fim) return 0;
+
+  let meses = 0;
+  for (let m = inicio.getMonth(); m <= fim.getMonth(); m++) {
+    const primeiroDia = m === inicio.getMonth() ? inicio.getDate() : 1;
+    const ultimoDiaMes = new Date(fim.getFullYear(), m + 1, 0).getDate();
+    const ultimoDia = m === fim.getMonth() ? fim.getDate() : ultimoDiaMes;
+    if (ultimoDia - primeiroDia + 1 >= 15) {
+      meses++;
+    }
+  }
+
+  return Math.min(meses, 12);
 };
 
 const getMotivoRescisaoInfo = (motivo: string) => {
@@ -121,8 +141,8 @@ const getMotivoRescisaoInfo = (motivo: string) => {
 };
 
 const calculateYearsWorked = (startDate: string, endDate: string): number => {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  const start = parseDate(startDate);
+  const end = parseDate(endDate);
 
   let years = end.getFullYear() - start.getFullYear();
   if (
@@ -135,12 +155,18 @@ const calculateYearsWorked = (startDate: string, endDate: string): number => {
   return Math.max(0, years);
 };
 
-// Calcula prazo limite de pagamento (10 dias corridos após a demissão - Art. 477 §6° CLT)
-const calcularPrazoPagamento = (dataDemissao: string, avisoPrevio?: string): { prazo: string; dias: number } => {
-  const demissao = new Date(dataDemissao);
-  // Com aviso prévio indenizado: 10 dias após a data do aviso
-  // Com aviso prévio trabalhado: 1° dia útil após o término
-  // Sem aviso prévio: 10 dias corridos
+// Projeta a data de término do contrato somando os dias do aviso prévio indenizado
+// (Lei 12.506/2011 + OJ 82 SDI-1 TST: o período do aviso indenizado integra o
+// tempo de serviço para férias, 13º e demais direitos)
+const projetarDataTermino = (dataDemissao: string, diasAviso: number): string => {
+  const data = parseDate(dataDemissao);
+  data.setDate(data.getDate() + diasAviso);
+  return toISODate(data);
+};
+
+// Calcula prazo limite de pagamento (10 dias corridos após o término do contrato - Art. 477 §6° CLT)
+const calcularPrazoPagamento = (dataDemissao: string): { prazo: string; dias: number } => {
+  const demissao = parseDate(dataDemissao);
   const prazoData = new Date(demissao);
   prazoData.setDate(prazoData.getDate() + 10);
 
@@ -149,7 +175,7 @@ const calcularPrazoPagamento = (dataDemissao: string, avisoPrevio?: string): { p
   const diffDias = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
   return {
-    prazo: prazoData.toISOString().split('T')[0],
+    prazo: toISODate(prazoData),
     dias: diffDias,
   };
 };
@@ -178,6 +204,9 @@ export const calculateRescisao = (data: CalculatorFormData): CalculationResult =
     salarioMensal,
     comissoes = 0,
     adicionaisHabituais = 0,
+    mediaHorasExtras = 0,
+    temFeriasVencidas = false,
+    saldoFGTSReal = 0,
     dataAdmissao,
     dataDemissao,
     temFGTS,
@@ -190,13 +219,14 @@ export const calculateRescisao = (data: CalculatorFormData): CalculationResult =
     numeroDependentesIR = 0,
   } = data;
 
-  // Salário base para cálculos (inclui comissões e adicionais habituais)
-  const salarioBase = salarioMensal + comissoes + adicionaisHabituais;
+  // Salário base para cálculos (inclui comissões, adicionais habituais e média de horas extras)
+  const salarioBase = salarioMensal + comissoes + adicionaisHabituais + mediaHorasExtras;
 
   const motivoFinal = motivoRescisao || 'dispensa_sem_justa_causa';
   const direitos = getMotivoRescisaoInfo(motivoFinal);
 
   let saldoSalario = 0;
+  let feriasVencidas = 0;
   let feriasPROPorcionais = 0;
   let decimoTerceiroProporcional = 0;
   let saldoFGTS = 0;
@@ -204,9 +234,16 @@ export const calculateRescisao = (data: CalculatorFormData): CalculationResult =
   let fgtsMulta = 0;
   let avisoPrevioIndenizado = 0;
   let indenizacaoExperiencia = 0;
-  let baseFeriasParaINSS = 0;
+  let diasAvisoPrevio = 0;
+  let dataTerminoProjetada: string | undefined;
 
   const salarioDiario = salarioBase / 30;
+
+  // Férias vencidas: período aquisitivo completo não gozado — devidas em QUALQUER
+  // modalidade de rescisão, inclusive justa causa (Súmula 171 TST a contrario sensu)
+  if (temFeriasVencidas && tipoContrato === 'normal') {
+    feriasVencidas = salarioBase + salarioBase / 3;
+  }
 
   if (tipoContrato === 'experiencia') {
     const diasTrabalhados = tempoContrato || 0;
@@ -222,7 +259,6 @@ export const calculateRescisao = (data: CalculatorFormData): CalculationResult =
       const baseFerias = (diasTrabalhados / 360) * salarioBase;
       const umTerco = baseFerias / 3;
       feriasPROPorcionais = baseFerias + umTerco;
-      baseFeriasParaINSS = baseFerias;
     }
 
     if (direitos.temDireito13 && diasTrabalhados >= 15) {
@@ -237,45 +273,21 @@ export const calculateRescisao = (data: CalculatorFormData): CalculationResult =
       saldoFGTS += decimoTerceiroProporcional * 0.08;
       saldoFGTS = Number(saldoFGTS.toFixed(2));
 
+      // Se o usuário informou o saldo real da conta do FGTS, a multa incide sobre ele
+      const baseMulta = saldoFGTSReal > 0 ? saldoFGTSReal : saldoFGTS;
+
       if (direitos.temDireitoMultaFGTS && direitos.percentualMultaFGTS > 0) {
-        multaFGTS = Number((saldoFGTS * (direitos.percentualMultaFGTS / 100)).toFixed(2));
+        multaFGTS = Number((baseMulta * (direitos.percentualMultaFGTS / 100)).toFixed(2));
       }
-      fgtsMulta = saldoFGTS + multaFGTS;
+      fgtsMulta = Number((saldoFGTS + multaFGTS).toFixed(2));
     }
   } else {
-    const mesesTrabalhados = calculateMonthsDifference(dataAdmissao, dataDemissao);
-    const diasProporcionais = calculateProportionalDays(dataAdmissao, dataDemissao);
-    const anosTrabalhados = calculateYearsWorked(dataAdmissao, dataDemissao);
-
-    saldoSalario = diasProporcionais * salarioDiario;
-
-    if (direitos.temDireitoFerias) {
-      const mesesParaFerias = mesesTrabalhados + (diasProporcionais > 14 ? 1 : 0);
-      if (mesesParaFerias > 0) {
-        const baseFerias = (mesesParaFerias / 12) * salarioBase;
-        const umTerco = baseFerias / 3;
-        feriasPROPorcionais = baseFerias + umTerco;
-        baseFeriasParaINSS = baseFerias;
-      }
-    } else if (motivoFinal === 'dispensa_com_justa_causa') {
-      const periodosCompletos = Math.floor(mesesTrabalhados / 12);
-      if (periodosCompletos > 0) {
-        const feriasVencidas = periodosCompletos * salarioBase;
-        const umTercoVencidas = feriasVencidas / 3;
-        feriasPROPorcionais = feriasVencidas + umTercoVencidas;
-        baseFeriasParaINSS = feriasVencidas;
-      }
-    }
-
-    if (direitos.temDireito13) {
-      const mesesPara13 = mesesTrabalhados + (diasProporcionais > 14 ? 1 : 0);
-      if (mesesPara13 > 0) {
-        decimoTerceiroProporcional = (mesesPara13 / 12) * salarioBase;
-      }
-    }
+    // Aviso prévio indenizado: calcula dias e projeta a data de término
+    // (Lei 12.506/2011: 30 dias + 3 por ano completo, máx. 90)
+    const anosParaAviso = calculateYearsWorked(dataAdmissao, dataDemissao);
 
     if (direitos.temDireitoAvisoPrevio && avisoPrevio === 'indenizado') {
-      const diasAvisoPrevio = Math.min(30 + anosTrabalhados * 3, 90);
+      diasAvisoPrevio = Math.min(30 + anosParaAviso * 3, 90);
       let valorAvisoPrevio = (diasAvisoPrevio / 30) * salarioBase;
 
       if (motivoFinal === 'comum_acordo') {
@@ -283,14 +295,47 @@ export const calculateRescisao = (data: CalculatorFormData): CalculationResult =
       }
 
       avisoPrevioIndenizado = valorAvisoPrevio;
+      dataTerminoProjetada = projetarDataTermino(dataDemissao, diasAvisoPrevio);
+    }
+
+    // OJ 82 SDI-1 TST: o aviso indenizado projeta o contrato para frente —
+    // férias e 13º são contados até a data projetada
+    const dataFimContrato = dataTerminoProjetada || dataDemissao;
+
+    const mesesTrabalhados = calculateMonthsDifference(dataAdmissao, dataFimContrato);
+    const diasProporcionais = calculateProportionalDays(dataAdmissao, dataFimContrato);
+
+    // Saldo de salário: dias efetivamente trabalhados no mês da demissão (sem projeção)
+    saldoSalario = calculateProportionalDays(dataAdmissao, dataDemissao) * salarioDiario;
+
+    if (direitos.temDireitoFerias) {
+      // Férias proporcionais: apenas os meses do período aquisitivo EM CURSO (meses % 12).
+      // Períodos completos anteriores entram como férias vencidas somente se não gozadas
+      // (checkbox "férias vencidas").
+      const mesesPeriodoAtual = mesesTrabalhados % 12;
+      const mesesParaFerias = Math.min(12, mesesPeriodoAtual + (diasProporcionais > 14 ? 1 : 0));
+      if (mesesParaFerias > 0) {
+        const baseFerias = (mesesParaFerias / 12) * salarioBase;
+        const umTerco = baseFerias / 3;
+        feriasPROPorcionais = baseFerias + umTerco;
+      }
+    }
+
+    if (direitos.temDireito13) {
+      // 13º proporcional: meses trabalhados no ANO da rescisão (com projeção do aviso)
+      const meses13 = calcularMeses13(dataAdmissao, dataFimContrato);
+      if (meses13 > 0) {
+        decimoTerceiroProporcional = (meses13 / 12) * salarioBase;
+      }
     }
 
     if (temFGTS) {
-      const mesesCompletos = mesesTrabalhados;
-      const fracaoMes = diasProporcionais > 14 ? 1 : diasProporcionais / 30;
-      const totalMesesFGTS = mesesCompletos + fracaoMes;
+      const mesesReais = calculateMonthsDifference(dataAdmissao, dataDemissao);
+      const diasReais = calculateProportionalDays(dataAdmissao, dataDemissao);
+      const fracaoMes = diasReais > 14 ? 1 : diasReais / 30;
+      const totalMesesFGTS = mesesReais + fracaoMes;
 
-      // FGTS base: 8% sobre salário mensal × meses
+      // FGTS base: 8% sobre salário mensal × meses (estimativa de depósitos)
       saldoFGTS = totalMesesFGTS * (salarioBase * 0.08);
       // FGTS sobre 13° proporcional
       saldoFGTS += decimoTerceiroProporcional * 0.08;
@@ -300,30 +345,43 @@ export const calculateRescisao = (data: CalculatorFormData): CalculationResult =
       }
       saldoFGTS = Number(saldoFGTS.toFixed(2));
 
+      // Se o usuário informou o saldo real da conta do FGTS, usa como base da multa
+      // (a multa de 40%/20% incide sobre o saldo efetivo, não sobre a estimativa)
+      const baseMulta = saldoFGTSReal > 0 ? saldoFGTSReal : saldoFGTS;
+      const saldoExibido = saldoFGTSReal > 0 ? saldoFGTSReal : saldoFGTS;
+
       if (direitos.temDireitoMultaFGTS && direitos.percentualMultaFGTS > 0) {
-        multaFGTS = Number((saldoFGTS * (direitos.percentualMultaFGTS / 100)).toFixed(2));
+        multaFGTS = Number((baseMulta * (direitos.percentualMultaFGTS / 100)).toFixed(2));
       }
-      fgtsMulta = Number((saldoFGTS + multaFGTS).toFixed(2));
+      saldoFGTS = saldoExibido;
+      fgtsMulta = Number((saldoExibido + multaFGTS).toFixed(2));
     }
   }
 
   const total = Number(
-    (saldoSalario + feriasPROPorcionais + decimoTerceiroProporcional + fgtsMulta + avisoPrevioIndenizado + indenizacaoExperiencia).toFixed(2)
+    (
+      saldoSalario +
+      feriasVencidas +
+      feriasPROPorcionais +
+      decimoTerceiroProporcional +
+      fgtsMulta +
+      avisoPrevioIndenizado +
+      indenizacaoExperiencia
+    ).toFixed(2)
   );
 
-  // Deduções (INSS + IRRF sobre as verbas tributáveis)
+  // Deduções: INSS + IRRF apenas sobre verbas tributáveis (saldo de salário e 13º).
+  // Aviso indenizado e férias indenizadas (+1/3) são isentos.
   const deducoes = calcularDeducoesRescisao({
     saldoSalario: Math.max(0, saldoSalario),
     decimoTerceiro: Math.max(0, decimoTerceiroProporcional),
-    avisoPrevioIndenizado: Math.max(0, avisoPrevioIndenizado),
-    baseFeriasParaINSS: Math.max(0, baseFeriasParaINSS),
     numeroDependentes: numeroDependentesIR,
   });
 
   const totalLiquido = Number(Math.max(0, total - deducoes.totalDeducoes).toFixed(2));
 
-  // Prazo de pagamento
-  const { prazo: prazoLimitePagamento, dias: diasParaPagamento } = calcularPrazoPagamento(dataDemissao, avisoPrevio);
+  // Prazo de pagamento: 10 dias corridos a partir do término do contrato (Art. 477 §6º CLT)
+  const { prazo: prazoLimitePagamento, dias: diasParaPagamento } = calcularPrazoPagamento(dataDemissao);
 
   // Seguro desemprego
   const mesesParaSeguro = tipoContrato === 'experiencia'
@@ -342,6 +400,7 @@ export const calculateRescisao = (data: CalculatorFormData): CalculationResult =
 
   return {
     saldoSalario: Math.max(0, Number(saldoSalario.toFixed(2))),
+    feriasVencidas: Math.max(0, Number(feriasVencidas.toFixed(2))),
     feriasPROPorcionais: Math.max(0, Number(feriasPROPorcionais.toFixed(2))),
     decimoTerceiroProporcional: Math.max(0, Number(decimoTerceiroProporcional.toFixed(2))),
     fgtsMulta: Math.max(0, Number(fgtsMulta.toFixed(2))),
@@ -355,36 +414,9 @@ export const calculateRescisao = (data: CalculatorFormData): CalculationResult =
     totalLiquido,
     prazoLimitePagamento,
     diasParaPagamento,
+    diasAvisoPrevio,
+    dataTerminoProjetada,
     seguroDesemprego,
     alertaEstabilidade,
   };
 };
-
-export function calculateFerias(
-  mesesTrabalhados: number,
-  diasProporcionais: number,
-  salarioMensal: number,
-  motivoRescisao: string
-): number {
-  let totalFerias = 0;
-
-  const periodosCompletos = Math.floor(mesesTrabalhados / 12);
-  if (periodosCompletos > 0) {
-    const feriasVencidas = periodosCompletos * salarioMensal;
-    const umTercoVencidas = feriasVencidas / 3;
-    totalFerias += feriasVencidas + umTercoVencidas;
-  }
-
-  if (motivoRescisao !== 'dispensa_com_justa_causa') {
-    const mesesProporcional = mesesTrabalhados % 12;
-    const mesesParaCalculo = mesesProporcional + (diasProporcionais > 14 ? 1 : 0);
-
-    if (mesesParaCalculo > 0) {
-      const feriasProporcionais = (mesesParaCalculo / 12) * salarioMensal;
-      const umTercoProporcionais = feriasProporcionais / 3;
-      totalFerias += feriasProporcionais + umTercoProporcionais;
-    }
-  }
-
-  return Number(totalFerias.toFixed(2));
-}

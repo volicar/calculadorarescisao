@@ -1,17 +1,17 @@
 // Seguro Desemprego - Lei 7.998/90 atualizada
-// Valores de referência 2025
+// Valores de referência 2026 (reajuste MTE vigente desde 11/01/2026, INPC 3,90%)
 
 import { SeguroDesempregoResult } from '@/types/calculator';
 
-const SALARIO_MINIMO_2025 = 1518.00;
+const SALARIO_MINIMO_2026 = 1621.0;
 
-// Faixas para cálculo do valor da parcela (2025)
+// Faixas para cálculo do valor da parcela (2026)
 const FAIXAS_SEGURO = [
-  { limite: 2041.35, multiplicador: 0.8 },
-  { limite: 3402.24, multiplicador: 0.5 },
+  { limite: 2222.17, multiplicador: 0.8 },
+  { limite: 3703.99, multiplicador: 0.5 },
 ];
 
-const VALOR_MAXIMO_PARCELA = 2230.97;
+const VALOR_MAXIMO_PARCELA = 2518.65;
 
 const calcularValorParcela = (mediaUltimosSalarios: number): number => {
   let valor = 0;
@@ -23,26 +23,19 @@ const calcularValorParcela = (mediaUltimosSalarios: number): number => {
       FAIXAS_SEGURO[0].limite * FAIXAS_SEGURO[0].multiplicador +
       (mediaUltimosSalarios - FAIXAS_SEGURO[0].limite) * FAIXAS_SEGURO[1].multiplicador;
   } else {
-    valor =
-      FAIXAS_SEGURO[0].limite * FAIXAS_SEGURO[0].multiplicador +
-      (FAIXAS_SEGURO[1].limite - FAIXAS_SEGURO[0].limite) * FAIXAS_SEGURO[1].multiplicador;
+    valor = VALOR_MAXIMO_PARCELA;
   }
 
-  // Mínimo: salário mínimo / Máximo: teto 2025
-  return Math.min(Math.max(valor, SALARIO_MINIMO_2025), VALOR_MAXIMO_PARCELA);
+  // Mínimo: salário mínimo / Máximo: teto 2026
+  return Math.min(Math.max(valor, SALARIO_MINIMO_2026), VALOR_MAXIMO_PARCELA);
 };
 
-const calcularNumeroParcelas = (mesesTrabalhados: number, primeiraRequisicao: boolean = true): number => {
-  if (primeiraRequisicao) {
-    if (mesesTrabalhados >= 24) return 5;
-    if (mesesTrabalhados >= 12) return 4;
-    return 3;
-  } else {
-    // Segunda requisição em diante: regras diferentes
-    if (mesesTrabalhados >= 24) return 5;
-    if (mesesTrabalhados >= 12) return 4;
-    return 3;
-  }
+// Nº de parcelas na 1ª solicitação (Lei 7.998/90, art. 4º):
+// 12 a 23 meses trabalhados nos últimos 36 meses = 4 parcelas; 24+ = 5 parcelas.
+// Mínimo de 12 meses nos últimos 18 para ter direito.
+const calcularNumeroParcelas = (mesesTrabalhados: number): number => {
+  if (mesesTrabalhados >= 24) return 5;
+  return 4;
 };
 
 export const calcularSeguroDesemprego = (params: {
@@ -72,25 +65,25 @@ export const calcularSeguroDesemprego = (params: {
     };
   }
 
-  // Contrato de experiência rescindido: geralmente não tem direito, mas depende
-  if (tipoContrato === 'experiencia' && mesesTrabalhados < 6) {
+  // Contrato de experiência: máximo 90 dias, nunca atinge os 12 meses exigidos
+  if (tipoContrato === 'experiencia') {
     return {
       temDireito: false,
       numeroParcelas: 0,
       valorEstimadoParcela: 0,
       totalEstimado: 0,
-      motivoNaoDireito: 'Contrato de experiência com menos de 6 meses geralmente não dá direito',
+      motivoNaoDireito: 'Contrato de experiência não atinge os 12 meses mínimos exigidos na 1ª solicitação',
     };
   }
 
-  // Mínimo de 3 meses trabalhados na 1ª solicitação
-  if (mesesTrabalhados < 3) {
+  // 1ª solicitação: mínimo de 12 meses trabalhados nos últimos 18 (Lei 7.998/90, art. 3º, I)
+  if (mesesTrabalhados < 12) {
     return {
       temDireito: false,
       numeroParcelas: 0,
       valorEstimadoParcela: 0,
       totalEstimado: 0,
-      motivoNaoDireito: 'São necessários no mínimo 3 meses de trabalho para ter direito ao seguro desemprego',
+      motivoNaoDireito: 'Na 1ª solicitação são necessários no mínimo 12 meses de trabalho nos últimos 18 meses (na 2ª solicitação o mínimo cai para 9 meses e da 3ª em diante, 6 meses)',
     };
   }
 

@@ -34,14 +34,14 @@ const generateWhatsAppText = () => {
 
 *💰 VALORES A RECEBER:*
 • Saldo de Salário: ${formatCurrency(result.saldoSalario)}
-• Férias Proporcionais: ${formatCurrency(result.feriasPROPorcionais)}
+${result.feriasVencidas > 0 ? `• Férias Vencidas + 1/3: ${formatCurrency(result.feriasVencidas)}\n` : ''}• Férias Proporcionais: ${formatCurrency(result.feriasPROPorcionais)}
 • 13º Proporcional: ${formatCurrency(result.decimoTerceiroProporcional)}
 • FGTS + Multa: ${formatCurrency(result.fgtsMulta)}
 
 *🎯 TOTAL: ${formatCurrency(result.total)}*
 
 _Calculado em: ${new Date().toLocaleString("pt-BR")}_
-_Rescisão 2025 - Calculadora Trabalhista_
+_Rescisão ${new Date().getFullYear()} - Calculadora Trabalhista_
 
 👉 Acesse: https://www.rescisaonline.com.br`;
 };

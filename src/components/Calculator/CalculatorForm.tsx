@@ -27,6 +27,9 @@ const TOOLTIPS = {
   dependentesIR: 'Cada dependente reduz a base de cálculo do IRRF em R$ 189,59/mês. Incluindo filhos menores de 21 anos, cônjuge sem renda, pais e outros previstos na legislação.',
   comissoes: 'Inclua aqui a média das comissões recebidas nos últimos 12 meses. Comissões habituais integram a remuneração e devem compor a base de cálculo das verbas rescisórias.',
   adicionais: 'Adicionais pagos de forma habitual (noturno, insalubridade, periculosidade) integram a remuneração para fins de rescisão. Inclua a média mensal recebida.',
+  horasExtras: 'Horas extras habituais integram a remuneração para fins rescisórios (Súmula 45 e 172 TST). Informe a média mensal recebida nos últimos 12 meses.',
+  feriasVencidas: 'Marque se você tem um período aquisitivo completo (12 meses) de férias que ainda não foi gozado. Férias vencidas são devidas em qualquer tipo de rescisão, inclusive justa causa, acrescidas de 1/3.',
+  saldoFGTS: 'Consulte o saldo real da sua conta do FGTS no app FGTS ou site da Caixa. A multa de 40% (ou 20% no comum acordo) incide sobre o saldo total depositado, com juros e correção — informar o valor real deixa o cálculo mais preciso.',
 };
 
 export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProps) => {
@@ -45,6 +48,9 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
       salarioMensal: 0,
       comissoes: 0,
       adicionaisHabituais: 0,
+      mediaHorasExtras: 0,
+      temFeriasVencidas: false,
+      saldoFGTSReal: 0,
       dataAdmissao: '',
       dataDemissao: '',
       avisoPrevio: 'indenizado',
@@ -79,7 +85,7 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
   const avisoPrevioOptions = [
     { value: 'indenizado', label: 'Indenizado (empresa paga sem trabalhar)' },
     { value: 'trabalhado', label: 'Trabalhado (continua trabalhando)' },
-    { value: 'nao_aplicavel', label: 'Não Aplicável' },
+    { value: 'nao_aplicavel', label: 'Dispensado / Não Aplicável' },
   ];
 
   const tipoContratoOptions = [
@@ -279,9 +285,39 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
                   error={errors.adicionaisHabituais?.message}
                 />
               </div>
+              <div>
+                <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
+                  Média mensal de horas extras
+                  <Tooltip content={TOOLTIPS.horasExtras} />
+                </label>
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  {...register('mediaHorasExtras', { min: 0, valueAsNumber: true })}
+                  placeholder="R$ 0,00"
+                  error={errors.mediaHorasExtras?.message}
+                />
+              </div>
             </div>
           )}
         </div>
+
+        {/* Férias vencidas */}
+        {tipoContrato === 'normal' && (
+          <div className="flex items-center p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
+            <input
+              type="checkbox"
+              {...register('temFeriasVencidas')}
+              id="ferias-vencidas-checkbox"
+              className="h-5 w-5 rounded border-gray-600 bg-gray-700/50 accent-emerald-500 cursor-pointer"
+            />
+            <label htmlFor="ferias-vencidas-checkbox" className="ml-3 text-sm font-medium text-gray-200 cursor-pointer flex items-center">
+              Possui férias vencidas (não gozadas)
+              <Tooltip content={TOOLTIPS.feriasVencidas} />
+            </label>
+          </div>
+        )}
 
         {/* Datas */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -328,17 +364,37 @@ export const CalculatorForm = ({ onSubmit, loading = false }: CalculatorFormProp
         </div>
 
         {/* FGTS */}
-        <div className="flex items-center p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
-          <input
-            type="checkbox"
-            {...register('temFGTS')}
-            id="fgts-checkbox"
-            className="h-5 w-5 rounded border-gray-600 bg-gray-700/50 accent-emerald-500 cursor-pointer"
-          />
-          <label htmlFor="fgts-checkbox" className="ml-3 text-sm font-medium text-gray-200 cursor-pointer flex items-center">
-            Possui FGTS depositado
-            <Tooltip content={TOOLTIPS.fgts} />
-          </label>
+        <div className="border border-gray-700/50 rounded-lg overflow-hidden">
+          <div className="flex items-center p-4 bg-gray-800/50">
+            <input
+              type="checkbox"
+              {...register('temFGTS')}
+              id="fgts-checkbox"
+              className="h-5 w-5 rounded border-gray-600 bg-gray-700/50 accent-emerald-500 cursor-pointer"
+            />
+            <label htmlFor="fgts-checkbox" className="ml-3 text-sm font-medium text-gray-200 cursor-pointer flex items-center">
+              Possui FGTS depositado
+              <Tooltip content={TOOLTIPS.fgts} />
+            </label>
+          </div>
+
+          {watch('temFGTS') && (
+            <div className="p-4 bg-gray-800/20">
+              <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
+                Saldo atual da conta do FGTS
+                <Tooltip content={TOOLTIPS.saldoFGTS} />
+                <span className="ml-1.5 text-gray-500 font-normal">(opcional — melhora a precisão)</span>
+              </label>
+              <Input
+                type="number"
+                min={0}
+                step={0.01}
+                {...register('saldoFGTSReal', { min: 0, valueAsNumber: true })}
+                placeholder="Deixe em branco para estimar automaticamente"
+                error={errors.saldoFGTSReal?.message}
+              />
+            </div>
+          )}
         </div>
 
         {/* Aviso Prévio (contrato normal) */}

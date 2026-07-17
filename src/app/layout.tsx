@@ -8,6 +8,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-jakarta', display: 'swap' });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://www.rescisaonline.com.br'),
   title: 'Rescisão Online | Calculadora de Rescisão Trabalhista',
   description: 'Calcule sua rescisão trabalhista online com precisão, incluindo férias, 13º, FGTS e aviso prévio. Simples, rápido e gratuito!',
   verification: {

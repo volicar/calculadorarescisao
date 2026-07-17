@@ -1,92 +1,104 @@
-'use client';
-
-import { useParams } from 'next/navigation';
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getBlogPost, getRelatedPosts } from '@/data/blogPosts';
+import { blogPosts, getBlogPost, getRelatedPosts } from '@/data/blogPosts';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { ArrowLeft, Calendar, Clock, Tag, Share2, Copy } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Tag } from 'lucide-react';
 import { GoogleAd } from '@/components/GoogleAd';
 import { LeadGenCard } from '@/components/LeadGenCard';
-import { useState } from 'react';
+import { JsonLd } from '@/components/JsonLd';
+import { ShareButtons } from './ShareButtons';
 
-export default function BlogPostPage() {
-  const params = useParams();
-  const slug = params.slug as string;
+const BASE_URL = 'https://www.rescisaonline.com.br';
+
+// Gera todas as páginas de post estaticamente
+export function generateStaticParams() {
+  return blogPosts.map((post) => ({ slug: post.id }));
+}
+
+// Metadata por post (title, description, OG, canonical) — antes o layout raiz servia
+// o mesmo title para todos os artigos, prejudicando o SEO
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
   const post = getBlogPost(slug);
+  if (!post) return { title: 'Artigo não encontrado | Rescisão Online' };
+
+  const url = `${BASE_URL}/blog/${post.id}`;
+  return {
+    title: `${post.title} | Rescisão Online`,
+    description: post.description,
+    keywords: post.tags.join(', '),
+    alternates: { canonical: url },
+    openGraph: {
+      title: post.title,
+      description: post.description,
+      url,
+      siteName: 'Rescisão Online',
+      locale: 'pt_BR',
+      type: 'article',
+      publishedTime: new Date(post.date).toISOString(),
+      authors: [post.author],
+    },
+  };
+}
+
+// Renderiza markdown simples do conteúdo do post
+const renderContent = (content: string) =>
+  content.split('\n').map((raw, index) => {
+    const line = raw.trim();
+    if (line.startsWith('# ')) return <h1 key={index} className="text-3xl font-bold text-white mt-8 mb-4">{line.slice(2)}</h1>;
+    if (line.startsWith('## ')) return <h2 key={index} className="text-2xl font-bold text-white mt-6 mb-3">{line.slice(3)}</h2>;
+    if (line.startsWith('### ')) return <h3 key={index} className="text-xl font-semibold text-white mt-4 mb-2">{line.slice(4)}</h3>;
+    if (line.startsWith('```')) return null;
+    if (line.startsWith('> ')) return <p key={index} className="text-gray-300 border-l-2 border-primary-500/40 pl-4 italic my-3">{line.slice(2)}</p>;
+    if (line.startsWith('- ') || line.startsWith('* ')) return <li key={index} className="text-gray-300 ml-4 mb-1">{line.slice(2)}</li>;
+    if (line.match(/^\d+\. /)) return <li key={index} className="text-gray-300 ml-4 mb-1 list-decimal">{line.replace(/^\d+\. /, '')}</li>;
+    if (line.includes('**')) {
+      const parts = line.split('**');
+      return (
+        <p key={index} className="text-gray-300 mb-3 leading-relaxed">
+          {parts.map((part, i) => (i % 2 === 1 ? <strong key={i} className="text-white font-semibold">{part}</strong> : part))}
+        </p>
+      );
+    }
+    if (line.length > 0) return <p key={index} className="text-gray-300 mb-3 leading-relaxed">{line}</p>;
+    return <br key={index} />;
+  });
+
+export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = getBlogPost(slug);
+  if (!post) notFound();
+
   const relatedPosts = getRelatedPosts(slug);
-  const [copied, setCopied] = useState(false);
+  const url = `${BASE_URL}/blog/${post.id}`;
 
-  if (!post) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-4">Artigo não encontrado</h1>
-          <Link href="/blog">
-            <Button variant="outline">Voltar ao Blog</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  const handleShare = async () => {
-    try {
-      await navigator.share({
-        title: post.title,
-        text: post.description,
-        url: window.location.href,
-      });
-    } catch (err) {
-      handleCopy();
-    }
-  };
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Erro ao copiar:', err);
-    }
-  };
-
-  // Renderizar markdown simples
-  const renderContent = (content: string) => {
-    return content.split('\n').map((line, index) => {
-      line = line.trim();
-      
-      if (line.startsWith('# ')) {
-        return <h1 key={index} className="text-3xl font-bold text-white mt-8 mb-4">{line.slice(2)}</h1>;
-      } else if (line.startsWith('## ')) {
-        return <h2 key={index} className="text-2xl font-bold text-white mt-6 mb-3">{line.slice(3)}</h2>;
-      } else if (line.startsWith('### ')) {
-        return <h3 key={index} className="text-xl font-semibold text-white mt-4 mb-2">{line.slice(4)}</h3>;
-      } else if (line.startsWith('```')) {
-        return null; // Ignorar por simplicidade
-      } else if (line.startsWith('- ') || line.startsWith('* ')) {
-        return <li key={index} className="text-gray-300 ml-4 mb-1">{line.slice(2)}</li>;
-      } else if (line.startsWith('1. ') || line.match(/^\d+\. /)) {
-        return <li key={index} className="text-gray-300 ml-4 mb-1 list-decimal">{line.replace(/^\d+\. /, '')}</li>;
-      } else if (line.includes('**')) {
-        const parts = line.split('**');
-        return (
-          <p key={index} className="text-gray-300 mb-3 leading-relaxed">
-            {parts.map((part, i) => 
-              i % 2 === 1 ? <strong key={i} className="text-white font-semibold">{part}</strong> : part
-            )}
-          </p>
-        );
-      } else if (line.length > 0) {
-        return <p key={index} className="text-gray-300 mb-3 leading-relaxed">{line}</p>;
-      }
-      return <br key={index} />;
-    });
+  const articleSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.title,
+    description: post.description,
+    datePublished: new Date(post.date).toISOString(),
+    dateModified: new Date(post.date).toISOString(),
+    author: { '@type': 'Organization', name: post.author },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Rescisão Online',
+      logo: { '@type': 'ImageObject', url: `${BASE_URL}/metadata_og.png` },
+    },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    image: `${BASE_URL}/metadata_og.png`,
+    inLanguage: 'pt-BR',
   };
 
   return (
     <div className="grid-canvas min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <JsonLd data={articleSchema} />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Navegação */}
         <div className="mb-8">
@@ -115,13 +127,9 @@ export default function BlogPostPage() {
                 </div>
               </div>
 
-              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-                {post.title}
-              </h1>
+              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">{post.title}</h1>
 
-              <p className="text-xl text-gray-300 leading-relaxed mb-6">
-                {post.description}
-              </p>
+              <p className="text-xl text-gray-300 leading-relaxed mb-6">{post.description}</p>
 
               {/* Tags */}
               <div className="flex flex-wrap gap-2 mb-6">
@@ -133,36 +141,13 @@ export default function BlogPostPage() {
                 ))}
               </div>
 
-              {/* Botões de Compartilhar */}
-              <div className="flex items-center space-x-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleShare}
-                  className="flex items-center gap-2"
-                >
-                  <Share2 className="w-4 h-4" />
-                  Compartilhar
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCopy}
-                  className="flex items-center gap-2"
-                >
-                  <Copy className="w-4 h-4" />
-                  {copied ? 'Copiado!' : 'Copiar Link'}
-                </Button>
-              </div>
+              <ShareButtons title={post.title} description={post.description} />
             </div>
 
             {/* Conteúdo do Artigo */}
-            <div className="prose prose-gray prose-lg max-w-none">
-              {renderContent(post.content)}
-            </div>
+            <div className="prose prose-gray prose-lg max-w-none">{renderContent(post.content)}</div>
 
-            {/* Anúncio no meio do artigo — alta visibilidade */}
+            {/* Anúncio no meio do artigo */}
             <div className="my-8">
               <GoogleAd slot="blogArtigo" format="rectangle" />
             </div>
@@ -171,9 +156,7 @@ export default function BlogPostPage() {
             <div className="border-t border-gray-700 pt-6 mt-8">
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-primary-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">
-                    {post.author.charAt(0)}
-                  </span>
+                  <span className="text-gray-900 font-bold text-lg">{post.author.charAt(0)}</span>
                 </div>
                 <div>
                   <div className="text-white font-semibold">{post.author}</div>
@@ -197,18 +180,9 @@ export default function BlogPostPage() {
                         <span>{relatedPost.date.split('-').reverse().join('/')}</span>
                         <span>{relatedPost.readTime}</span>
                       </div>
-                      
-                      <h3 className="text-lg font-semibold text-white group-hover:text-primary-400 transition-colors">
-                        {relatedPost.title}
-                      </h3>
-                      
-                      <p className="text-gray-300 text-sm">
-                        {relatedPost.description}
-                      </p>
-                      
-                      <div className="text-primary-400 text-sm font-medium group-hover:text-primary-300 transition-colors">
-                        Ler artigo →
-                      </div>
+                      <h3 className="text-lg font-semibold text-white group-hover:text-primary-400 transition-colors">{relatedPost.title}</h3>
+                      <p className="text-gray-300 text-sm">{relatedPost.description}</p>
+                      <div className="text-primary-400 text-sm font-medium group-hover:text-primary-300 transition-colors">Ler artigo →</div>
                     </div>
                   </Link>
                 </Card>
@@ -217,21 +191,15 @@ export default function BlogPostPage() {
           </section>
         )}
 
-        {/* Lead Gen no blog — usuário lendo sobre direitos é lead quente */}
+        {/* Lead Gen no blog */}
         <LeadGenCard className="mt-8" />
 
         {/* CTA Final */}
         <div className="mt-8 text-center bg-gradient-to-r from-primary-500/10 to-primary-600/10 border border-primary-500/20 rounded-lg p-8">
-          <h2 className="text-2xl font-bold text-white mb-4">
-            Gostou do Artigo? Calcule sua Rescisão!
-          </h2>
-          <p className="text-gray-300 mb-6">
-            Use nossa calculadora gratuita e descubra exatamente quanto você tem direito a receber.
-          </p>
+          <h2 className="text-2xl font-bold text-white mb-4">Gostou do Artigo? Calcule sua Rescisão!</h2>
+          <p className="text-gray-300 mb-6">Use nossa calculadora gratuita e descubra exatamente quanto você tem direito a receber.</p>
           <Link href="/">
-            <Button size="lg" className="bg-primary-500 hover:bg-primary-600">
-              Calcular Rescisão Agora
-            </Button>
+            <Button size="lg">Calcular Rescisão Agora</Button>
           </Link>
         </div>
       </div>

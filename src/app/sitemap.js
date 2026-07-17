@@ -1,18 +1,22 @@
 // app/sitemap.js
-export default async function sitemap() {
-  const baseUrl = "https://www.rescisaonline.com.br";
+import { blogPosts } from '@/data/blogPosts';
 
-  // Páginas estáticas
-  const staticRoutes = [
-    "",
-    "/blog",
-    "/sobre" // 👈 aqui entra a listagem do blog
-  ].map((path) => ({
+export default function sitemap() {
+  const baseUrl = 'https://www.rescisaonline.com.br';
+
+  const staticRoutes = ['', '/blog', '/sobre'].map((path) => ({
     url: `${baseUrl}${path}`,
     lastModified: new Date().toISOString(),
-    changeFrequency: "weekly",
-    priority: 0.8,
+    changeFrequency: 'weekly',
+    priority: path === '' ? 1 : 0.8,
   }));
 
-  return staticRoutes;
+  const blogRoutes = blogPosts.map((post) => ({
+    url: `${baseUrl}/blog/${post.id}`,
+    lastModified: new Date(post.date).toISOString(),
+    changeFrequency: 'monthly',
+    priority: 0.6,
+  }));
+
+  return [...staticRoutes, ...blogRoutes];
 }

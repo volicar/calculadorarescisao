@@ -11,8 +11,35 @@ import { CalculatorFormData, CalculationResult } from '@/types/calculator';
 import { calculateRescisao } from '@/utils/calculations';
 import { Button } from '@/components/ui/Button';
 import { GoogleAd } from '@/components/GoogleAd';
+import { JsonLd } from '@/components/JsonLd';
 import { blogPosts } from '@/data/blogPosts';
-import { RotateCcw, BarChart3, Sparkles, AlertTriangle, Check } from 'lucide-react';
+import { faqItems } from '@/data/faq';
+import { RotateCcw, BarChart3, Sparkles, AlertTriangle, Check, ChevronDown } from 'lucide-react';
+
+const BASE_URL = 'https://www.rescisaonline.com.br';
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Calculadora de Rescisão Online',
+  url: BASE_URL,
+  applicationCategory: 'FinanceApplication',
+  operatingSystem: 'Web',
+  inLanguage: 'pt-BR',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'BRL' },
+  description:
+    'Calculadora gratuita de rescisão trabalhista com tabelas de INSS e IRRF de 2026, Lei 15.270/2025, FGTS, aviso prévio e seguro-desemprego.',
+};
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqItems.map((item) => ({
+    '@type': 'Question',
+    name: item.pergunta,
+    acceptedAnswer: { '@type': 'Answer', text: item.resposta },
+  })),
+};
 
 const MESES_ABREV = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 const formatarDataBlog = (iso: string) => {
@@ -73,6 +100,8 @@ export default function HomePage() {
 
   return (
     <div className="grid-canvas min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <JsonLd data={softwareSchema} />
+      <JsonLd data={faqSchema} />
       {/* Hero */}
       <section id="home" className="hero-bg">
         <div className="container mx-auto px-4 pt-10 pb-12 lg:pt-16 lg:pb-16 max-w-6xl">
@@ -284,6 +313,33 @@ export default function HomePage() {
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         <GoogleAd slot="homepageMeio" format="horizontal" />
       </div>
+
+      {/* FAQ */}
+      <section id="faq" className="py-16">
+        <div className="container mx-auto px-4 max-w-3xl">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Perguntas Frequentes</h2>
+            <p className="text-gray-300 text-lg">Tudo que o trabalhador costuma perguntar sobre a rescisão</p>
+          </div>
+
+          <div className="space-y-3">
+            {faqItems.map((item) => (
+              <details
+                key={item.pergunta}
+                className="group bg-gray-800 border border-gray-700 rounded-xl overflow-hidden [&_svg]:open:rotate-180"
+              >
+                <summary className="flex items-center justify-between gap-4 cursor-pointer list-none px-5 py-4 text-white font-medium hover:bg-gray-800/60 transition-colors">
+                  {item.pergunta}
+                  <ChevronDown className="w-5 h-5 text-primary-400 flex-shrink-0 transition-transform" />
+                </summary>
+                <div className="px-5 pb-4 text-sm text-gray-300 leading-relaxed">
+                  {item.resposta}
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Blog */}
       <section id="blog" className="py-16">

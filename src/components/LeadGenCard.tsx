@@ -36,7 +36,7 @@ export const LeadGenCard = ({ motivo, className = '' }: LeadGenCardProps) => {
           {mensagem ? (
             <p className="text-xs text-emerald-300 mb-3">{mensagem}</p>
           ) : (
-            <p className="text-xs text-gray-400 mb-3">
+            <p className="text-xs text-gray-300 mb-3">
               Cada situação é única. Um advogado trabalhista pode revisar seus valores, contestar irregularidades e garantir que você receba tudo que tem direito.
             </p>
           )}
@@ -44,7 +44,7 @@ export const LeadGenCard = ({ motivo, className = '' }: LeadGenCardProps) => {
             href={LINK_ADVOGADO}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-gray-900 text-xs font-semibold rounded-lg transition-colors"
           >
             <MessageCircle className="w-3.5 h-3.5" />
             Falar com Advogado Trabalhista

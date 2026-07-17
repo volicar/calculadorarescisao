@@ -352,7 +352,7 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
             </div>
           ) : (
             <div className="p-3 bg-gray-800/30 border border-gray-700/50 rounded-lg flex items-start gap-2">
-              <XCircle className="w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5" />
+              <XCircle className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
               <p className="text-xs text-gray-400">{result.seguroDesemprego.motivoNaoDireito || 'Sem direito ao seguro desemprego neste tipo de rescisão.'}</p>
             </div>
           )}

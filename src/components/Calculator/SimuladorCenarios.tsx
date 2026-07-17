@@ -81,7 +81,7 @@ export const SimuladorCenarios = ({ formData }: SimuladorCenariosProps) => {
           </div>
           <div>
             <p className="text-sm font-semibold text-white">Simulador de Cenários</p>
-            <p className="text-xs text-gray-400 mt-0.5">Compare o que você receberia em cada tipo de rescisão com os mesmos dados</p>
+            <p className="text-xs text-gray-300 mt-0.5">Compare o que você receberia em cada tipo de rescisão com os mesmos dados</p>
           </div>
         </div>
         {expandido ? <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />}
@@ -108,7 +108,7 @@ export const SimuladorCenarios = ({ formData }: SimuladorCenariosProps) => {
                         {linha.tipo === 'bool' ? (
                           linha.valores[i]
                             ? <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-                            : <XCircle className="w-3.5 h-3.5 text-gray-600" />
+                            : <XCircle className="w-3.5 h-3.5 text-gray-400" />
                         ) : (
                           <span className={`font-medium ${linha.label.includes('Líquida') || linha.label.includes('Bruto') ? 'text-white' : 'text-gray-300'}`}>
                             {(linha.valores[i] as number) > 0 ? formatCurrency(linha.valores[i] as number) : '—'}
@@ -149,9 +149,9 @@ export const SimuladorCenarios = ({ formData }: SimuladorCenariosProps) => {
                       {linha.tipo === 'bool' ? (
                         val
                           ? <><CheckCircle aria-hidden className="w-4 h-4 text-emerald-400 mx-auto" /><span className="sr-only">Tem direito</span></>
-                          : <><XCircle aria-hidden className="w-4 h-4 text-gray-600 mx-auto" /><span className="sr-only">Não tem direito</span></>
+                          : <><XCircle aria-hidden className="w-4 h-4 text-gray-400 mx-auto" /><span className="sr-only">Não tem direito</span></>
                       ) : (
-                        <span className={`text-xs ${(val as number) > 0 ? 'text-gray-300' : 'text-gray-600'}`}>
+                        <span className={`text-xs ${(val as number) > 0 ? 'text-gray-300' : 'text-gray-400'}`}>
                           {(val as number) > 0 ? formatCurrency(val as number) : '—'}
                         </span>
                       )}

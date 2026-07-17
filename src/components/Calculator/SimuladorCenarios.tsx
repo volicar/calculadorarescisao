@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CalculatorFormData, CalculationResult } from '@/types/calculator';
 import { calculateRescisao } from '@/utils/calculations';
 import { formatCurrency } from '@/utils/formatters';
@@ -31,11 +31,12 @@ interface SimuladorCenariosProps {
 }
 
 export const SimuladorCenarios = ({ formData }: SimuladorCenariosProps) => {
-  const [expandido, setExpandido] = useState(false);
+  // Recurso mais diferenciado do site: abre já calculado junto com o resultado
+  const [expandido, setExpandido] = useState(true);
   const [resultados, setResultados] = useState<(CalculationResult | null)[]>([]);
   const [calculado, setCalculado] = useState(false);
 
-  const calcularTodos = () => {
+  useEffect(() => {
     const res = CENARIOS.map(cenario =>
       calculateRescisao({
         ...formData,
@@ -45,12 +46,9 @@ export const SimuladorCenarios = ({ formData }: SimuladorCenariosProps) => {
     );
     setResultados(res);
     setCalculado(true);
-  };
+  }, [formData]);
 
   const handleToggle = () => {
-    if (!expandido && !calculado) {
-      calcularTodos();
-    }
     setExpandido(!expandido);
   };
 
@@ -71,13 +69,15 @@ export const SimuladorCenarios = ({ formData }: SimuladorCenariosProps) => {
   const melhorTotal = calculado ? Math.max(...resultados.map(r => r?.total ?? 0)) : 0;
 
   return (
-    <div className="mt-6 border border-gray-700/60 rounded-lg overflow-hidden">
+    <div id="simulador-cenarios" className="mt-6 border border-emerald-700/40 rounded-xl overflow-hidden scroll-mt-24">
       <button
         onClick={handleToggle}
-        className="w-full flex items-center justify-between px-4 py-4 bg-gray-800/50 hover:bg-gray-800/80 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-4 bg-emerald-900/15 hover:bg-emerald-900/25 transition-colors"
       >
         <div className="flex items-start gap-3 text-left">
-          <GitCompare className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+          <div className="w-9 h-9 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
+            <GitCompare className="w-5 h-5 text-emerald-400" />
+          </div>
           <div>
             <p className="text-sm font-semibold text-white">Simulador de Cenários</p>
             <p className="text-xs text-gray-400 mt-0.5">Compare o que você receberia em cada tipo de rescisão com os mesmos dados</p>

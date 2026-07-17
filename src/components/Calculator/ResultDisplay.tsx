@@ -234,6 +234,27 @@ export const ResultDisplay = ({ result, nome, dadosOriginais }: ResultDisplayPro
           </div>
         )}
 
+        {/* Número herói: a estimativa líquida lidera o card */}
+        <div className="mb-5 p-5 bg-emerald-900/20 border border-emerald-700/40 rounded-xl text-center">
+          <p className="text-xs text-gray-400 uppercase tracking-wide mb-1.5">Estimativa líquida a receber</p>
+          <p className="text-4xl sm:text-[2.75rem] leading-tight font-bold text-emerald-400">
+            {formatCurrency(result.totalLiquido)}
+          </p>
+          <p className="text-xs text-gray-400 mt-2">
+            Bruto {formatCurrency(result.total)}
+            {result.deducaoINSS + result.deducaoIRRF > 0 && (
+              <> − {formatCurrency(result.deducaoINSS + result.deducaoIRRF)} de INSS e IRRF estimados</>
+            )}
+          </p>
+          <button
+            onClick={() => document.getElementById('simulador-cenarios')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+            className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-400 hover:text-emerald-300 transition-colors"
+          >
+            <BarChart2 className="w-3.5 h-3.5" />
+            E nos outros tipos de rescisão? Compare os cenários
+          </button>
+        </div>
+
         {/* Verbas brutas */}
         <div className="space-y-1">
           <p className="text-xs text-gray-400 uppercase tracking-wide mb-3">Verbas rescisórias (bruto)</p>

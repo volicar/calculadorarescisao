@@ -7,6 +7,7 @@ import { ResultDisplay } from '@/components/Calculator/ResultDisplay';
 import { ExportButtons } from '@/components/Calculator/ExportButtons';
 import { HistoricoCalculos, salvarNoHistorico } from '@/components/Calculator/HistoricoCalculos';
 import { SimuladorCenarios } from '@/components/Calculator/SimuladorCenarios';
+import { LoadingCalculo } from '@/components/Calculator/LoadingCalculo';
 import { CalculatorFormData, CalculationResult } from '@/types/calculator';
 import { calculateRescisao } from '@/utils/calculations';
 import { Button } from '@/components/ui/Button';
@@ -54,22 +55,30 @@ const artigosRecentes = [...blogPosts]
 export default function HomePage() {
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [formData, setFormData] = useState<CalculatorFormData | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [calculando, setCalculando] = useState(false);
+  const [dadosCalculo, setDadosCalculo] = useState<CalculatorFormData | null>(null);
+  const [modoRapido, setModoRapido] = useState(false);
   const [erroCalculo, setErroCalculo] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
-  const handleCalculate = async (data: CalculatorFormData) => {
-    setLoading(true);
+  // Submeter só guarda os dados e dispara a tela de cálculo; o resultado aparece quando ela termina
+  const handleCalculate = (data: CalculatorFormData) => {
     setErroCalculo(null);
-    await new Promise(resolve => setTimeout(resolve, 150));
+    setDadosCalculo(data);
+    setCalculando(true);
+  };
+
+  // Chamado pela LoadingCalculo ao concluir a animação de passos
+  const finalizarCalculo = () => {
+    const data = dadosCalculo;
+    setCalculando(false);
+    if (!data) return;
 
     try {
       const calculationResult = calculateRescisao(data);
       setResult(calculationResult);
       setFormData(data);
-
       salvarNoHistorico(data, calculationResult);
-
       setTimeout(() => {
         resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
@@ -77,10 +86,20 @@ export default function HomePage() {
       console.error('Erro no cálculo:', error);
       // Não apaga o resultado anterior: o usuário corrige um campo e tenta de novo sem perder o que já viu
       setErroCalculo('Não conseguimos calcular com esses dados. Confira as datas de admissão e demissão e o salário informado e tente novamente.');
-    } finally {
-      setLoading(false);
     }
   };
+
+  const toggleModo = (
+    <div className="mt-3 text-center">
+      <button
+        type="button"
+        onClick={() => setModoRapido((v) => !v)}
+        className="text-xs text-gray-400 hover:text-primary-400 transition-colors underline underline-offset-2"
+      >
+        {modoRapido ? 'Voltar ao passo a passo' : 'Preencher tudo de uma vez (modo rápido)'}
+      </button>
+    </div>
+  );
 
   const handleRestore = (fd: CalculatorFormData, r: CalculationResult) => {
     setFormData(fd);
@@ -165,8 +184,17 @@ export default function HomePage() {
                 </div>
               )}
               <div className="form-glow">
-                <CalculatorForm onSubmit={handleCalculate} loading={loading} initialData={formData ?? undefined} />
+                {calculando ? (
+                  <LoadingCalculo onDone={finalizarCalculo} />
+                ) : (
+                  <CalculatorForm
+                    onSubmit={handleCalculate}
+                    initialData={formData ?? undefined}
+                    modo={modoRapido ? 'single' : 'wizard'}
+                  />
+                )}
               </div>
+              {!calculando && toggleModo}
               <HistoricoCalculos onRestore={handleRestore} />
             </div>
           </div>
@@ -191,7 +219,16 @@ export default function HomePage() {
                   <p className="text-sm text-red-300 leading-relaxed">{erroCalculo}</p>
                 </div>
               )}
-              <CalculatorForm onSubmit={handleCalculate} loading={loading} initialData={formData ?? undefined} />
+              {calculando ? (
+                <LoadingCalculo onDone={finalizarCalculo} />
+              ) : (
+                <CalculatorForm
+                  onSubmit={handleCalculate}
+                  initialData={formData ?? undefined}
+                  modo={modoRapido ? 'single' : 'wizard'}
+                />
+              )}
+              {!calculando && toggleModo}
               <HistoricoCalculos onRestore={handleRestore} />
               {/* Simulador de cenários */}
               {formData && <SimuladorCenarios formData={formData} />}

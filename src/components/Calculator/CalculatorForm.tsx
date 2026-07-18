@@ -9,9 +9,10 @@ import { Card } from '@/components/ui/Card';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { validateDates } from '@/utils/calculations';
 import { formatCurrencyInput } from '@/utils/formatters';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   ChevronDown,
+  ChevronLeft,
   AlertTriangle,
   Info,
   Briefcase,
@@ -25,6 +26,8 @@ interface CalculatorFormProps {
   loading?: boolean;
   /** Dados do último cálculo — preserva o formulário preenchido para ajustes rápidos */
   initialData?: CalculatorFormData;
+  /** 'wizard' = passo a passo (padrão); 'single' = tudo numa tela (modo rápido) */
+  modo?: 'wizard' | 'single';
 }
 
 const SALARIO_MINIMO = 1621.0;
@@ -46,6 +49,14 @@ const TOOLTIPS = {
 
 // Motivos em que existe aviso prévio pago pelo empregador
 const MOTIVOS_COM_AVISO = ['dispensa_sem_justa_causa', 'comum_acordo'];
+
+// Campos validados ao avançar cada passo do wizard
+const CAMPOS_POR_PASSO: (keyof CalculatorFormData)[][] = [
+  ['tipoContrato', 'motivoRescisao', 'tempoContrato', 'dataAdmissao', 'dataDemissao'],
+  ['salarioMensal'],
+  [],
+];
+const PASSOS_LABEL = ['Contrato', 'Salário', 'Direitos'];
 
 const formatPeriodo = (admissao: string, demissao: string): string | null => {
   if (!admissao || !demissao || !validateDates(admissao, demissao)) return null;
@@ -98,7 +109,22 @@ const displaysFrom = (data?: CalculatorFormData): Record<string, string> =>
     })
   );
 
-export const CalculatorForm = ({ onSubmit, loading = false, initialData }: CalculatorFormProps) => {
+export const CalculatorForm = ({ onSubmit, loading = false, initialData, modo = 'wizard' }: CalculatorFormProps) => {
+  const isWizard = modo === 'wizard';
+  const [passo, setPasso] = useState(0);
+  const stepRef = useRef<HTMLDivElement>(null);
+  const jaMontou = useRef(false);
+
+  // Ao trocar de passo: move o foco pro novo passo (teclado/leitor de tela) e traz à vista (mobile)
+  useEffect(() => {
+    if (!jaMontou.current) {
+      jaMontou.current = true;
+      return;
+    }
+    stepRef.current?.focus({ preventScroll: true });
+    stepRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [passo]);
+
   // Abre o bloco opcional automaticamente quando um cálculo restaurado usa algum desses campos
   const [showDetalhes, setShowDetalhes] = useState(
     Boolean(
@@ -120,6 +146,7 @@ export const CalculatorForm = ({ onSubmit, loading = false, initialData }: Calcu
     watch,
     setValue,
     reset,
+    trigger,
   } = useForm<CalculatorFormData>({
     defaultValues: initialData ?? {
       salarioMensal: 0,
@@ -236,355 +263,412 @@ export const CalculatorForm = ({ onSubmit, loading = false, initialData }: Calcu
     { value: 'outro', label: 'Outro tipo de estabilidade' },
   ];
 
+  const podeSubmeter = () => !(dataAdmissao && dataDemissao && !validateDates(dataAdmissao, dataDemissao));
+
   const onFormSubmit: SubmitHandler<CalculatorFormData> = (data) => {
-    if (dataAdmissao && dataDemissao && !validateDates(dataAdmissao, dataDemissao)) {
-      return;
-    }
+    if (!podeSubmeter()) return;
     onSubmit(data);
   };
 
-  return (
-    <Card title="Preencha seus dados trabalhistas" className="animate-fade-in">
-      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-5">
+  const proximoPasso = async () => {
+    const ok = await trigger(CAMPOS_POR_PASSO[passo]);
+    if (ok) setPasso((p) => Math.min(p + 1, PASSOS_LABEL.length - 1));
+  };
 
-        <SectionTitle icon={Briefcase}>Contrato</SectionTitle>
+  const passoAnterior = () => setPasso((p) => Math.max(p - 1, 0));
 
-        {/* Tipo de Contrato */}
-        <div>
-          <label className="flex items-center text-sm font-medium mb-2">
-            Tipo de Contrato
-            <Tooltip content={TOOLTIPS.tipoContrato} label="Tipo de Contrato" />
-          </label>
-          <Select
-            options={tipoContratoOptions}
-            {...register('tipoContrato')}
-            error={errors.tipoContrato?.message}
+  // ---- Blocos de campos (fonte única — usados no wizard e no modo rápido) ----
+
+  const secContrato = (
+    <div className="space-y-5">
+      <SectionTitle icon={Briefcase}>Contrato</SectionTitle>
+
+      <div>
+        <label className="flex items-center text-sm font-medium mb-2">
+          Tipo de Contrato
+          <Tooltip content={TOOLTIPS.tipoContrato} label="Tipo de Contrato" />
+        </label>
+        <Select options={tipoContratoOptions} {...register('tipoContrato')} error={errors.tipoContrato?.message} />
+      </div>
+
+      <div>
+        <label className="flex items-center text-sm font-medium mb-2">
+          Motivo da Rescisão
+          <Tooltip content={TOOLTIPS.motivoRescisao} label="Motivo da Rescisão" />
+        </label>
+        <Select
+          options={tipoContrato === 'experiencia' ? motivoRescisaoExperienciaOptions : motivoRescisaoNormalOptions}
+          {...register('motivoRescisao')}
+          error={errors.motivoRescisao?.message}
+        />
+
+        {isJustaCausa && (
+          <div className="mt-2 p-3 bg-red-900/30 border border-red-700/50 rounded-lg flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-red-300">
+              Na dispensa por justa causa, o empregado perde o direito ao 13° proporcional, aviso prévio e multa do FGTS. Apenas o saldo de salário e férias vencidas são devidos.
+            </p>
+          </div>
+        )}
+
+        {isPedidoDemissao && (
+          <div className="mt-2 p-3 bg-yellow-900/20 border border-yellow-700/40 rounded-lg flex items-start gap-2">
+            <Info className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-yellow-300">
+              No pedido de demissão, o empregado perde o direito à multa do FGTS e ao seguro desemprego. Deve também cumprir (ou indenizar ao empregador) o aviso prévio.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {tipoContrato === 'experiencia' && (
+        <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
+          <label className="block text-sm font-medium text-gray-200 mb-2">Dias Trabalhados no Contrato de Experiência</label>
+          <Input
+            type="number"
+            min={1}
+            max={90}
+            {...register('tempoContrato', {
+              required: 'Dias trabalhados é obrigatório',
+              min: { value: 1, message: 'Mínimo de 1 dia' },
+              max: { value: 90, message: 'Máximo de 90 dias' },
+              valueAsNumber: true,
+            })}
+            placeholder="Entre 1 e 90 dias"
+            error={errors.tempoContrato?.message}
           />
+          <p className="mt-1 text-xs text-gray-400">Máximo de 90 dias para contratos de experiência (CLT Art. 445)</p>
         </div>
+      )}
 
-        {/* Motivo da Rescisão */}
+      {tipoContrato === 'normal' && (
         <div>
-          <label className="flex items-center text-sm font-medium mb-2">
-            Motivo da Rescisão
-            <Tooltip content={TOOLTIPS.motivoRescisao} label="Motivo da Rescisão" />
-          </label>
-          <Select
-            options={tipoContrato === 'experiencia' ? motivoRescisaoExperienciaOptions : motivoRescisaoNormalOptions}
-            {...register('motivoRescisao')}
-            error={errors.motivoRescisao?.message}
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Data de Admissão</label>
+              <Input
+                type="date"
+                max={today}
+                {...register('dataAdmissao', {
+                  required: 'Data de admissão é obrigatória',
+                  validate: (value) => {
+                    if (new Date(value) > new Date()) return 'Data não pode ser futura';
+                    return true;
+                  },
+                })}
+                onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  if (new Date(e.target.value) > new Date()) e.target.value = today;
+                }}
+                error={errors.dataAdmissao?.message}
+              />
+            </div>
 
-          {/* Alerta justa causa */}
-          {isJustaCausa && (
-            <div className="mt-2 p-3 bg-red-900/30 border border-red-700/50 rounded-lg flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-red-300">
-                Na dispensa por justa causa, o empregado perde o direito ao 13° proporcional, aviso prévio e multa do FGTS. Apenas o saldo de salário e férias vencidas são devidos.
-              </p>
+            <div>
+              <label className="block text-sm font-medium mb-2">Data de Demissão</label>
+              <Input
+                type="date"
+                min={dataAdmissao || undefined}
+                max={today}
+                {...register('dataDemissao', {
+                  required: 'Data de demissão é obrigatória',
+                  validate: (value) => {
+                    if (new Date(value) > new Date()) return 'Data não pode ser futura';
+                    if (dataAdmissao && !validateDates(dataAdmissao, value)) return 'Deve ser posterior à admissão';
+                    return true;
+                  },
+                })}
+                onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  if (new Date(e.target.value) > new Date()) e.target.value = today;
+                }}
+                error={errors.dataDemissao?.message}
+              />
+            </div>
+          </div>
+
+          {periodoTrabalhado && (
+            <div className="mt-2 flex items-center gap-2 px-3 py-2 bg-primary-500/10 border border-primary-500/25 rounded-lg animate-fade-in">
+              <Clock className="w-3.5 h-3.5 text-primary-400 flex-shrink-0" />
+              <p className="text-xs text-primary-400 font-medium">Tempo de casa: {periodoTrabalhado}</p>
             </div>
           )}
-
-          {/* Aviso pedido demissão */}
-          {isPedidoDemissao && (
-            <div className="mt-2 p-3 bg-yellow-900/20 border border-yellow-700/40 rounded-lg flex items-start gap-2">
-              <Info className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-yellow-300">
-                No pedido de demissão, o empregado perde o direito à multa do FGTS e ao seguro desemprego. Deve também cumprir (ou indenizar ao empregador) o aviso prévio.
-              </p>
-            </div>
-          )}
         </div>
+      )}
+    </div>
+  );
 
-        {/* Contrato de Experiência: dias */}
-        {tipoContrato === 'experiencia' && (
-          <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
-            <label className="block text-sm font-medium text-gray-200 mb-2">
-              Dias Trabalhados no Contrato de Experiência
+  const secRemuneracao = (
+    <div className="space-y-5">
+      <SectionTitle icon={Wallet}>Remuneração</SectionTitle>
+      <div>
+        <label className="flex items-center text-sm font-medium mb-2">
+          Salário Mensal Bruto
+          <Tooltip content={TOOLTIPS.salario} label="Salário Mensal Bruto" />
+        </label>
+        <Input {...currencyProps('salarioMensal')} error={errors.salarioMensal?.message} />
+        {salarioAbaixoDoMinimo && (
+          <p className="mt-1.5 text-xs text-yellow-400 flex items-center gap-1.5">
+            <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+            Valor abaixo do salário mínimo de {new Date().getFullYear()} (R$ 1.621,00). Confira se está correto.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+
+  const outrosDetalhes = (
+    <div className="border border-gray-700/50 rounded-lg overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setShowDetalhes(!showDetalhes)}
+        aria-expanded={showDetalhes}
+        className="w-full flex items-center justify-between px-4 py-3 bg-gray-800/30 hover:bg-gray-800/50 transition-colors text-sm font-medium text-gray-300"
+      >
+        <span className="flex items-center gap-2">
+          <span>Outros detalhes</span>
+          <span className="text-xs text-gray-400 font-normal">(comissões, dependentes, estabilidade…)</span>
+        </span>
+        <ChevronDown className={`w-4 h-4 transition-transform ${showDetalhes ? 'rotate-180' : ''}`} />
+      </button>
+
+      {showDetalhes && (
+        <div className="p-4 space-y-4 bg-gray-800/20">
+          <div>
+            <label className="block text-xs font-medium text-gray-300 mb-1.5">
+              Nome <span className="text-gray-400 font-normal">(aparece no PDF)</span>
+            </label>
+            <Input
+              type="text"
+              placeholder="Digite seu nome"
+              {...register('nome' as keyof CalculatorFormData)}
+              error={(errors as Record<string, { message?: string }>).nome?.message}
+            />
+          </div>
+
+          <div>
+            <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
+              Média mensal de comissões
+              <Tooltip content={TOOLTIPS.comissoes} label="Comissões" />
+            </label>
+            <Input {...currencyProps('comissoes')} error={errors.comissoes?.message} />
+          </div>
+          <div>
+            <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
+              Adicionais habituais (noturno, insalubridade, etc.)
+              <Tooltip content={TOOLTIPS.adicionais} label="Adicionais Habituais" />
+            </label>
+            <Input {...currencyProps('adicionaisHabituais')} error={errors.adicionaisHabituais?.message} />
+          </div>
+          <div>
+            <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
+              Média mensal de horas extras
+              <Tooltip content={TOOLTIPS.horasExtras} label="Horas Extras" />
+            </label>
+            <Input {...currencyProps('mediaHorasExtras')} error={errors.mediaHorasExtras?.message} />
+          </div>
+
+          <div>
+            <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
+              Dependentes para IR
+              <Tooltip content={TOOLTIPS.dependentesIR} label="Dependentes para IR" />
+              <span className="ml-1.5 text-gray-400 font-normal">(afeta o IRRF)</span>
             </label>
             <Input
               type="number"
-              min={1}
-              max={90}
-              {...register('tempoContrato', {
-                required: 'Dias trabalhados é obrigatório',
-                min: { value: 1, message: 'Mínimo de 1 dia' },
-                max: { value: 90, message: 'Máximo de 90 dias' },
-                valueAsNumber: true,
+              min={0}
+              max={20}
+              {...register('numeroDependentesIR', {
+                min: { value: 0, message: 'Mínimo 0' },
+                max: { value: 20, message: 'Máximo 20' },
+                setValueAs: (v) => {
+                  const n = Number(v);
+                  return Number.isFinite(n) ? n : 0;
+                },
               })}
-              placeholder="Entre 1 e 90 dias"
-              error={errors.tempoContrato?.message}
+              placeholder="0"
+              error={errors.numeroDependentesIR?.message}
             />
-            <p className="mt-1 text-xs text-gray-400">Máximo de 90 dias para contratos de experiência (CLT Art. 445)</p>
           </div>
-        )}
 
-        {/* Datas */}
-        {tipoContrato === 'normal' && (
-          <div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Data de Admissão</label>
-                <Input
-                  type="date"
-                  max={today}
-                  {...register('dataAdmissao', {
-                    required: 'Data de admissão é obrigatória',
-                    validate: (value) => {
-                      if (new Date(value) > new Date()) return 'Data não pode ser futura';
-                      return true;
-                    },
-                  })}
-                  onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    if (new Date(e.target.value) > new Date()) e.target.value = today;
-                  }}
-                  error={errors.dataAdmissao?.message}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Data de Demissão</label>
-                <Input
-                  type="date"
-                  min={dataAdmissao || undefined}
-                  max={today}
-                  {...register('dataDemissao', {
-                    required: 'Data de demissão é obrigatória',
-                    validate: (value) => {
-                      if (new Date(value) > new Date()) return 'Data não pode ser futura';
-                      if (dataAdmissao && !validateDates(dataAdmissao, value))
-                        return 'Deve ser posterior à admissão';
-                      return true;
-                    },
-                  })}
-                  onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    if (new Date(e.target.value) > new Date()) e.target.value = today;
-                  }}
-                  error={errors.dataDemissao?.message}
-                />
-              </div>
+          <div className="border border-gray-700/50 rounded-lg overflow-hidden">
+            <div className="flex items-center p-3">
+              <input
+                type="checkbox"
+                {...register('temEstabilidade')}
+                id="estabilidade-checkbox"
+                className="h-5 w-5 rounded border-gray-600 bg-gray-700/50 accent-emerald-500 cursor-pointer"
+              />
+              <label htmlFor="estabilidade-checkbox" className="ml-3 text-sm font-medium text-gray-200 cursor-pointer flex items-center">
+                Possui estabilidade provisória
+                <Tooltip content={TOOLTIPS.estabilidade} label="Estabilidade Provisória" />
+              </label>
             </div>
 
-            {/* Tempo de casa em tempo real */}
-            {periodoTrabalhado && (
-              <div className="mt-2 flex items-center gap-2 px-3 py-2 bg-primary-500/10 border border-primary-500/25 rounded-lg animate-fade-in">
-                <Clock className="w-3.5 h-3.5 text-primary-400 flex-shrink-0" />
-                <p className="text-xs text-primary-400 font-medium">
-                  Tempo de casa: {periodoTrabalhado}
-                </p>
+            {temEstabilidade && (
+              <div className="p-3 bg-gray-800/30">
+                <label className="block text-xs font-medium text-gray-300 mb-2">Tipo de estabilidade</label>
+                <Select options={tipoEstabilidadeOptions} {...register('tipoEstabilidade')} />
+                <div className="mt-2 p-2 bg-yellow-900/20 border border-yellow-700/40 rounded flex items-start gap-2">
+                  <AlertTriangle className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-yellow-300">
+                    Você pode ter direito a indenização adicional pelo período de estabilidade. Consulte um advogado trabalhista.
+                  </p>
+                </div>
               </div>
             )}
           </div>
-        )}
+        </div>
+      )}
+    </div>
+  );
 
-        <SectionTitle icon={Wallet}>Remuneração</SectionTitle>
+  const secDireitos = (
+    <div className="space-y-5">
+      <SectionTitle icon={PiggyBank}>Direitos e FGTS</SectionTitle>
 
-        {/* Salário */}
-        <div>
-          <label className="flex items-center text-sm font-medium mb-2">
-            Salário Mensal Bruto
-            <Tooltip content={TOOLTIPS.salario} label="Salário Mensal Bruto" />
-          </label>
-          <Input
-            {...currencyProps('salarioMensal')}
-            error={errors.salarioMensal?.message}
+      {tipoContrato === 'normal' && (
+        <div className="flex items-center p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
+          <input
+            type="checkbox"
+            {...register('temFeriasVencidas')}
+            id="ferias-vencidas-checkbox"
+            className="h-5 w-5 rounded border-gray-600 bg-gray-700/50 accent-emerald-500 cursor-pointer"
           />
-          {salarioAbaixoDoMinimo && (
-            <p className="mt-1.5 text-xs text-yellow-400 flex items-center gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-              Valor abaixo do salário mínimo de {new Date().getFullYear()} (R$ 1.621,00). Confira se está correto.
+          <label htmlFor="ferias-vencidas-checkbox" className="ml-3 text-sm font-medium text-gray-200 cursor-pointer flex items-center">
+            Possui férias vencidas (não gozadas)
+            <Tooltip content={TOOLTIPS.feriasVencidas} label="Férias Vencidas" />
+          </label>
+        </div>
+      )}
+
+      <div className="border border-gray-700/50 rounded-lg overflow-hidden">
+        <div className="flex items-center p-4 bg-gray-800/50">
+          <input
+            type="checkbox"
+            {...register('temFGTS')}
+            id="fgts-checkbox"
+            className="h-5 w-5 rounded border-gray-600 bg-gray-700/50 accent-emerald-500 cursor-pointer"
+          />
+          <label htmlFor="fgts-checkbox" className="ml-3 text-sm font-medium text-gray-200 cursor-pointer flex items-center">
+            Possui FGTS depositado
+            <Tooltip content={TOOLTIPS.fgts} label="FGTS" />
+          </label>
+        </div>
+
+        {temFGTS && (
+          <div className="p-4 bg-gray-800/20">
+            <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
+              Saldo atual da conta do FGTS
+              <Tooltip content={TOOLTIPS.saldoFGTS} label="Saldo do FGTS" />
+              <span className="ml-1.5 text-gray-400 font-normal">(opcional — melhora a precisão)</span>
+            </label>
+            <Input {...currencyProps('saldoFGTSReal')} placeholder="Deixe em branco para estimar" error={errors.saldoFGTSReal?.message} />
+          </div>
+        )}
+      </div>
+
+      {mostraAvisoPrevio && (
+        <div className="animate-fade-in">
+          <label className="flex items-center text-sm font-medium mb-2">
+            Aviso Prévio
+            <Tooltip content={TOOLTIPS.avisoPrevio} label="Aviso Prévio" />
+          </label>
+          <Select options={avisoPrevioOptions} {...register('avisoPrevio')} error={errors.avisoPrevio?.message} />
+          {watch('avisoPrevio') === 'trabalhado' && isSemJustaCausa && (
+            <p className="mt-1.5 text-xs text-blue-400">
+              Durante o aviso trabalhado, você tem direito à redução de 2 horas por dia ou 7 dias corridos ao final do período.
+            </p>
+          )}
+          {watch('avisoPrevio') === 'indenizado' && periodoTrabalhado && (
+            <p className="mt-1.5 text-xs text-gray-400">
+              O aviso indenizado projeta o contrato para frente e aumenta férias e 13º (Lei 12.506/2011).
             </p>
           )}
         </div>
+      )}
 
-        <SectionTitle icon={PiggyBank}>Direitos e FGTS</SectionTitle>
+      {outrosDetalhes}
+    </div>
+  );
 
-        {/* Férias vencidas */}
-        {tipoContrato === 'normal' && (
-          <div className="flex items-center p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
-            <input
-              type="checkbox"
-              {...register('temFeriasVencidas')}
-              id="ferias-vencidas-checkbox"
-              className="h-5 w-5 rounded border-gray-600 bg-gray-700/50 accent-emerald-500 cursor-pointer"
-            />
-            <label htmlFor="ferias-vencidas-checkbox" className="ml-3 text-sm font-medium text-gray-200 cursor-pointer flex items-center">
-              Possui férias vencidas (não gozadas)
-              <Tooltip content={TOOLTIPS.feriasVencidas} label="Férias Vencidas" />
-            </label>
-          </div>
-        )}
+  const secoes = [secContrato, secRemuneracao, secDireitos];
 
-        {/* FGTS */}
-        <div className="border border-gray-700/50 rounded-lg overflow-hidden">
-          <div className="flex items-center p-4 bg-gray-800/50">
-            <input
-              type="checkbox"
-              {...register('temFGTS')}
-              id="fgts-checkbox"
-              className="h-5 w-5 rounded border-gray-600 bg-gray-700/50 accent-emerald-500 cursor-pointer"
-            />
-            <label htmlFor="fgts-checkbox" className="ml-3 text-sm font-medium text-gray-200 cursor-pointer flex items-center">
-              Possui FGTS depositado
-              <Tooltip content={TOOLTIPS.fgts} label="FGTS" />
-            </label>
-          </div>
+  // ---- Modo rápido: tudo numa tela ----
+  if (!isWizard) {
+    return (
+      <Card title="Preencha seus dados trabalhistas" className="animate-fade-in">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-5">
+          {secContrato}
+          {secRemuneracao}
+          {secDireitos}
+          <Button type="submit" className="w-full" size="lg" loading={loading}>
+            Calcular Rescisão
+          </Button>
+        </form>
+      </Card>
+    );
+  }
 
-          {temFGTS && (
-            <div className="p-4 bg-gray-800/20">
-              <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
-                Saldo atual da conta do FGTS
-                <Tooltip content={TOOLTIPS.saldoFGTS} label="Saldo do FGTS" />
-                <span className="ml-1.5 text-gray-400 font-normal">(opcional — melhora a precisão)</span>
-              </label>
-              <Input {...currencyProps('saldoFGTSReal')} placeholder="Deixe em branco para estimar" error={errors.saldoFGTSReal?.message} />
-            </div>
-          )}
+  // ---- Wizard: um passo por vez ----
+  const ultimoPasso = passo === PASSOS_LABEL.length - 1;
+
+  return (
+    <Card title="Vamos calcular sua rescisão" className="animate-fade-in">
+      {/* Progresso */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-medium text-gray-400" aria-live="polite">
+            Passo {passo + 1} de {PASSOS_LABEL.length} · {PASSOS_LABEL[passo]}
+          </span>
+          <span className="text-xs text-gray-500">{Math.round(((passo + 1) / PASSOS_LABEL.length) * 100)}%</span>
         </div>
-
-        {/* Aviso Prévio — só aparece quando o motivo dá direito */}
-        {mostraAvisoPrevio && (
-          <div className="animate-fade-in">
-            <label className="flex items-center text-sm font-medium mb-2">
-              Aviso Prévio
-              <Tooltip content={TOOLTIPS.avisoPrevio} label="Aviso Prévio" />
-            </label>
-            <Select
-              options={avisoPrevioOptions}
-              {...register('avisoPrevio')}
-              error={errors.avisoPrevio?.message}
-            />
-            {watch('avisoPrevio') === 'trabalhado' && isSemJustaCausa && (
-              <p className="mt-1.5 text-xs text-blue-400">
-                Durante o aviso trabalhado, você tem direito à redução de 2 horas por dia ou 7 dias corridos ao final do período.
-              </p>
-            )}
-            {watch('avisoPrevio') === 'indenizado' && periodoTrabalhado && (
-              <p className="mt-1.5 text-xs text-gray-400">
-                O aviso indenizado projeta o contrato para frente e aumenta férias e 13º (Lei 12.506/2011).
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Outros detalhes (opcional) — reúne o que a maioria não precisa preencher:
-            nome, comissões/adicionais/horas extras, dependentes de IR e estabilidade */}
-        <div className="border border-gray-700/50 rounded-lg overflow-hidden">
-          <button
-            type="button"
-            onClick={() => setShowDetalhes(!showDetalhes)}
-            aria-expanded={showDetalhes}
-            className="w-full flex items-center justify-between px-4 py-3 bg-gray-800/30 hover:bg-gray-800/50 transition-colors text-sm font-medium text-gray-300"
-          >
-            <span className="flex items-center gap-2">
-              <span>Outros detalhes</span>
-              <span className="text-xs text-gray-400 font-normal">(comissões, dependentes, estabilidade…)</span>
-            </span>
-            <ChevronDown className={`w-4 h-4 transition-transform ${showDetalhes ? 'rotate-180' : ''}`} />
-          </button>
-
-          {showDetalhes && (
-            <div className="p-4 space-y-4 bg-gray-800/20">
-              {/* Nome */}
-              <div>
-                <label className="block text-xs font-medium text-gray-300 mb-1.5">
-                  Nome <span className="text-gray-400 font-normal">(aparece no PDF)</span>
-                </label>
-                <Input
-                  type="text"
-                  placeholder="Digite seu nome"
-                  {...register('nome' as keyof CalculatorFormData)}
-                  error={(errors as Record<string, { message?: string }>).nome?.message}
-                />
-              </div>
-
-              {/* Comissões / Adicionais / Horas Extras */}
-              <div>
-                <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
-                  Média mensal de comissões
-                  <Tooltip content={TOOLTIPS.comissoes} label="Comissões" />
-                </label>
-                <Input {...currencyProps('comissoes')} error={errors.comissoes?.message} />
-              </div>
-              <div>
-                <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
-                  Adicionais habituais (noturno, insalubridade, etc.)
-                  <Tooltip content={TOOLTIPS.adicionais} label="Adicionais Habituais" />
-                </label>
-                <Input {...currencyProps('adicionaisHabituais')} error={errors.adicionaisHabituais?.message} />
-              </div>
-              <div>
-                <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
-                  Média mensal de horas extras
-                  <Tooltip content={TOOLTIPS.horasExtras} label="Horas Extras" />
-                </label>
-                <Input {...currencyProps('mediaHorasExtras')} error={errors.mediaHorasExtras?.message} />
-              </div>
-
-              {/* Dependentes IR */}
-              <div>
-                <label className="flex items-center text-xs font-medium text-gray-300 mb-1.5">
-                  Dependentes para IR
-                  <Tooltip content={TOOLTIPS.dependentesIR} label="Dependentes para IR" />
-                  <span className="ml-1.5 text-gray-400 font-normal">(afeta o IRRF)</span>
-                </label>
-                <Input
-                  type="number"
-                  min={0}
-                  max={20}
-                  {...register('numeroDependentesIR', {
-                    min: { value: 0, message: 'Mínimo 0' },
-                    max: { value: 20, message: 'Máximo 20' },
-                    // Campo vazio vira NaN com valueAsNumber e contaminaria INSS/IRRF
-                    setValueAs: (v) => {
-                      const n = Number(v);
-                      return Number.isFinite(n) ? n : 0;
-                    },
-                  })}
-                  placeholder="0"
-                  error={errors.numeroDependentesIR?.message}
-                />
-              </div>
-
-              {/* Estabilidade provisória */}
-              <div className="border border-gray-700/50 rounded-lg overflow-hidden">
-                <div className="flex items-center p-3">
-                  <input
-                    type="checkbox"
-                    {...register('temEstabilidade')}
-                    id="estabilidade-checkbox"
-                    className="h-5 w-5 rounded border-gray-600 bg-gray-700/50 accent-emerald-500 cursor-pointer"
-                  />
-                  <label htmlFor="estabilidade-checkbox" className="ml-3 text-sm font-medium text-gray-200 cursor-pointer flex items-center">
-                    Possui estabilidade provisória
-                    <Tooltip content={TOOLTIPS.estabilidade} label="Estabilidade Provisória" />
-                  </label>
-                </div>
-
-                {temEstabilidade && (
-                  <div className="p-3 bg-gray-800/30">
-                    <label className="block text-xs font-medium text-gray-300 mb-2">Tipo de estabilidade</label>
-                    <Select options={tipoEstabilidadeOptions} {...register('tipoEstabilidade')} />
-                    <div className="mt-2 p-2 bg-yellow-900/20 border border-yellow-700/40 rounded flex items-start gap-2">
-                      <AlertTriangle className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                      <p className="text-xs text-yellow-300">
-                        Você pode ter direito a indenização adicional pelo período de estabilidade. Consulte um advogado trabalhista.
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+        <div className="h-1.5 w-full bg-gray-700/60 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-primary-500 rounded-full transition-all duration-500 ease-out"
+            style={{ width: `${((passo + 1) / PASSOS_LABEL.length) * 100}%` }}
+          />
         </div>
+      </div>
 
-        <Button
-          type="submit"
-          className="w-full"
-          size="lg"
-          loading={loading}
+      {/* Nenhum botão é type="submit": avançar e calcular ficam desacoplados, senão o
+          clique que leva ao último passo dispararia o submit no mesmo nó do botão */}
+      <form
+        onSubmit={(e) => e.preventDefault()}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            if (ultimoPasso) handleSubmit(onFormSubmit)();
+            else proximoPasso();
+          }
+        }}
+      >
+        <div
+          key={passo}
+          ref={stepRef}
+          tabIndex={-1}
+          role="group"
+          aria-label={`Passo ${passo + 1} de ${PASSOS_LABEL.length}: ${PASSOS_LABEL[passo]}`}
+          className="animate-fade-in outline-none"
         >
-          Calcular Rescisão
-        </Button>
+          {secoes[passo]}
+        </div>
+
+        <div className="flex items-center gap-3 mt-6">
+          {passo > 0 && (
+            <Button type="button" variant="outline" onClick={passoAnterior} className="flex items-center gap-1.5">
+              <ChevronLeft className="w-4 h-4" />
+              Voltar
+            </Button>
+          )}
+          {ultimoPasso ? (
+            <Button key="calcular" type="button" className="flex-1" size="lg" loading={loading} onClick={handleSubmit(onFormSubmit)}>
+              Calcular Rescisão
+            </Button>
+          ) : (
+            <Button key="continuar" type="button" className="flex-1" size="lg" onClick={proximoPasso}>
+              Continuar
+            </Button>
+          )}
+        </div>
       </form>
     </Card>
   );

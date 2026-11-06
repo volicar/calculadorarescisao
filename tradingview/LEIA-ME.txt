@@ -1,0 +1,14 @@
+Turtle Soup / Plus One (Connors & Raschke) - TradingView Pine v6
+
+turtle_soup_plus_one.pine           -> INDICADOR (sinais, niveis, tabela, alertas)
+turtle_soup_plus_one_strategy.pine  -> STRATEGY v2 (backtest no Testador de estrategia)
+
+Como instalar:
+1. TradingView > Editor Pine > Criar novo > Indicador (ou Estrategia)
+2. Ctrl+A, apagar, colar o conteudo do arquivo .pine
+3. Salvar > Adicionar ao grafico
+4. Alertas do indicador: criar alerta com "Qualquer chamada de funcao alert()"
+
+Backtest: rode primeiro com tudo desligado (base) e ligue UMA opcao por vez.
+Ajuste corretagem/slippage em Propriedades. IBOV nao e negociavel: teste em BOVA11 ou WIN1!.
+Se der erro de compilacao, mande a mensagem com o numero da linha.

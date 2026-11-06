@@ -1,0 +1,250 @@
+//@version=6
+// Turtle Soup / Turtle Soup Plus One: versão STRATEGY (backtest no Strategy Tester)
+// Mesma lógica de sinais do indicador (turtle_soup_plus_one.pine).
+//
+// Como o backtest executa:
+//  - Turtle Soup: a entrada é no FECHAMENTO da barra do sinal (process_orders_on_close).
+//    No gráfico não dá pra saber se o novo extremo veio antes da reversão sem esperar o
+//    candle fechar, então o teste é conservador: entra pior que o nível do livro.
+//  - Plus One: uma ordem stop é colocada no fechamento do dia 1, vale só para o dia 2 e é
+//    cancelada se não executar. Gap é tratado pelo próprio simulador (executa no open).
+//    Com stop "Dia 2" ou "Mais extremo", durante o dia 2 vale o stop do dia 1, que é
+//    ajustado no fechamento do dia 2.
+//  - Configure corretagem e slippage em Propriedades (padrão: 0,03% e 1 tick).
+strategy("Turtle Soup / Plus One: Backtest", shorttitle="TS Backtest", overlay=true, initial_capital=100000, default_qty_type=strategy.percent_of_equity, default_qty_value=100, commission_type=strategy.commission.percent, commission_value=0.03, slippage=1, process_orders_on_close=true, pyramiding=0)
+
+// =====================================================
+// INPUTS
+// =====================================================
+G1 = "Estratégia"
+strat     = input.string("Turtle Soup", "Estratégia ativa", options=["Turtle Soup", "Turtle Soup Plus One"], group=G1)
+lookback  = input.int(20, "Período do máx/mín (barras)", minval=5, group=G1)
+tieOldest = input.bool(true, "Empate de extremos: contar desde o mais antigo", group=G1)
+showLong  = input.bool(true, "Operar compras", group=G1)
+showShort = input.bool(true, "Operar vendas", group=G1)
+startTime = input.time(timestamp("01 Jan 2010 00:00"), "Início do backtest", group=G1)
+
+G2 = "Turtle Soup"
+minBarsTS = input.int(4, "Mín. de barras desde o extremo anterior", minval=1, group=G2)
+offMode   = input.string("Fração do ATR", "Offset da entrada além do nível", options=["Ticks", "% do preço", "Fração do ATR"], group=G2)
+ticksTS   = input.int(5, "Ticks (WIN/WDO/futuros: 5 a 10)", minval=0, group=G2)
+offPct    = input.float(0.10, "% do preço", minval=0, step=0.05, group=G2)
+atrMult   = input.float(0.10, "× ATR", minval=0, step=0.05, group=G2)
+atrLen    = input.int(14, "Período do ATR", minval=1, group=G2)
+confMode  = input.string("Fechamento além da entrada", "Confirmação do gatilho", options=["Fechamento além da entrada", "Ordem real no TF menor", "Nenhuma (só máx./mín.)"], group=G2, tooltip="No backtest a entrada do Turtle Soup é sempre no fechamento. \"Nenhuma\" pode entrar com o fechamento já abaixo do nível; não recomendado.")
+ltfIn     = input.timeframe("5", "TF menor (modo ordem real)", group=G2)
+
+G3 = "Turtle Soup Plus One"
+minBarsP1  = input.int(3, "Mín. de barras desde o extremo anterior", minval=1, group=G3)
+stopModeP1 = input.string("Mais extremo dos dois dias", "Stop protetor", options=["Dia 1", "Dia 2", "Mais extremo dos dois dias"], group=G3)
+
+G6 = "Filtro"
+useAdx = input.bool(false, "Só operar com ADX baixo (sem tendência forte)", group=G6)
+adxLen = input.int(14, "Período do ADX", minval=1, group=G6)
+adxMax = input.float(30, "ADX máximo", minval=1, group=G6)
+
+G8 = "Saída"
+exitMode    = input.string("Livro: parcial + trailing", "Modo de saída", options=["Livro: parcial + trailing", "Alvo em R múltiplo", "Só stop + tempo"], group=G8)
+partialBars = input.int(2, "Parcial após N barras", minval=1, group=G8, tooltip="O livro sugere realizar parte entre 2 e 6 barras.")
+partialPct  = input.float(50, "% da posição na parcial", minval=1, maxval=99, group=G8)
+beAfter     = input.bool(true, "Stop no preço de entrada após a parcial (se no lucro)", group=G8)
+trailLen    = input.int(3, "Trailing: mín./máx. das últimas N barras", minval=1, group=G8)
+rMult       = input.float(2.0, "Alvo (múltiplo do risco inicial, R)", minval=0.1, step=0.5, group=G8)
+maxBars     = input.int(0, "Saída por tempo após N barras (0 = desligado)", minval=0, group=G8)
+
+G9 = "Tamanho da posição"
+riskPct  = input.float(0, "Risco por trade (% do capital, 0 = usar Propriedades)", minval=0, step=0.25, group=G9)
+capQty   = input.bool(true, "Limitar ao capital (sem alavancagem)", group=G9)
+
+isTS = strat == "Turtle Soup"
+tick = syminfo.mintick
+
+// =====================================================
+// FUNÇÕES
+// =====================================================
+f_barsSinceExt(float src, int len, bool isLow, bool oldest) =>
+    float ext = na
+    int idx = na
+    for i = 1 to len
+        float v = src[i]
+        if not na(v)
+            bool better = na(ext) or (isLow ? v < ext : v > ext) or (oldest and v == ext)
+            if better
+                ext := v
+                idx := i
+    idx
+
+f_ltfFill(array<float> lows, array<float> highs, array<float> closes, float trig, float entry, bool isLong) =>
+    int res = -1
+    int n = lows.size()
+    if n > 0 and not na(trig) and not na(entry)
+        res := 0
+        bool armed = false
+        for i = 0 to n - 1
+            float lo = lows.get(i)
+            float hi = highs.get(i)
+            float cl = closes.get(i)
+            if not armed
+                if isLong ? lo < trig : hi > trig
+                    armed := true
+                    if isLong ? cl >= entry : cl <= entry
+                        res := 1
+                        break
+            else
+                if isLong ? hi >= entry : lo <= entry
+                    res := 1
+                    break
+    res
+
+// tamanho por risco: (capital × risco%) / (distância até o stop × valor do ponto)
+f_qty(float entry, float stop) =>
+    float d = math.abs(entry - stop) * syminfo.pointvalue
+    float q = na
+    if riskPct > 0 and d > 0
+        q := math.floor(strategy.equity * riskPct / 100 / d)
+        if capQty
+            q := math.min(q, math.floor(strategy.equity / (entry * syminfo.pointvalue)))
+        q := math.max(1, q)
+    q
+
+// =====================================================
+// SINAIS (idênticos ao indicador)
+// =====================================================
+prevLow  = ta.lowest(low, lookback)[1]
+prevHigh = ta.highest(high, lookback)[1]
+barsSinceLow  = f_barsSinceExt(low, lookback, true, tieOldest)
+barsSinceHigh = f_barsSinceExt(high, lookback, false, tieOldest)
+
+atrPrev = ta.atr(atrLen)[1]
+[diP, diM, adxV] = ta.dmi(adxLen, adxLen)
+trendOk = not useAdx or adxV[1] < adxMax
+
+f_offset(float base) =>
+    switch offMode
+        "Ticks"      => ticksTS * tick
+        "% do preço" => base * offPct / 100
+        => atrMult * atrPrev
+
+useLtf = confMode == "Ordem real no TF menor"
+ltfOk  = timeframe.in_seconds(ltfIn) < timeframe.in_seconds(timeframe.period)
+reqTf  = useLtf and ltfOk ? ltfIn : timeframe.period
+[ltfL, ltfH, ltfC] = request.security_lower_tf(syminfo.tickerid, reqTf, [low, high, close])
+
+tsLongSetup  = trendOk and low < prevLow and barsSinceLow >= minBarsTS
+tsLongEntry  = math.round_to_mintick(prevLow + f_offset(prevLow))
+tsLongStop   = low - tick
+tsShortSetup = trendOk and high > prevHigh and barsSinceHigh >= minBarsTS
+tsShortEntry = math.round_to_mintick(prevHigh - f_offset(prevHigh))
+tsShortStop  = high + tick
+
+ltfResL = f_ltfFill(ltfL, ltfH, ltfC, prevLow, tsLongEntry, true)
+ltfResS = f_ltfFill(ltfL, ltfH, ltfC, prevHigh, tsShortEntry, false)
+
+bool tsLongTrig = switch confMode
+    "Fechamento além da entrada" => close > tsLongEntry
+    "Ordem real no TF menor"     => ltfResL == 1 or (ltfResL == -1 and close > tsLongEntry)
+    => high >= tsLongEntry
+bool tsShortTrig = switch confMode
+    "Fechamento além da entrada" => close < tsShortEntry
+    "Ordem real no TF menor"     => ltfResS == 1 or (ltfResS == -1 and close < tsShortEntry)
+    => low <= tsShortEntry
+
+tsLongFill  = tsLongSetup and tsLongTrig and showLong
+tsShortFill = tsShortSetup and tsShortTrig and showShort
+
+p1LongSetup  = trendOk and low < prevLow and close <= prevLow and barsSinceLow >= minBarsP1 and showLong
+p1ShortSetup = trendOk and high > prevHigh and close >= prevHigh and barsSinceHigh >= minBarsP1 and showShort
+
+p1LongStop  = stopModeP1 == "Dia 1" ? low[1] - tick : stopModeP1 == "Dia 2" ? low - tick : math.min(low[1], low) - tick
+p1ShortStop = stopModeP1 == "Dia 1" ? high[1] + tick : stopModeP1 == "Dia 2" ? high + tick : math.max(high[1], high) + tick
+
+// =====================================================
+// GESTÃO DA POSIÇÃO
+// =====================================================
+useBook   = exitMode == "Livro: parcial + trailing"
+useTarget = exitMode == "Alvo em R múltiplo"
+
+var float sl = na            // stop atual
+var float risk = na          // risco inicial por unidade (para o alvo em R)
+var bool partialDone = false
+
+trailLow  = ta.lowest(low, trailLen)
+trailHigh = ta.highest(high, trailLen)
+
+barsIn = strategy.opentrades > 0 ? bar_index - strategy.opentrades.entry_bar_index(0) : na
+canTrade = time >= startTime
+
+// ---------- comprado ----------
+if strategy.position_size > 0
+    if barsIn == 0 and not isTS
+        // Plus One executado hoje (dia 2): aplica a regra de stop escolhida
+        sl := p1LongStop
+        risk := strategy.position_avg_price - sl
+    if useBook
+        if not partialDone and barsIn >= partialBars
+            strategy.close("Compra", comment="Parcial", qty_percent=partialPct)
+            partialDone := true
+            if beAfter and close > strategy.position_avg_price
+                sl := math.max(sl, strategy.position_avg_price)
+        if partialDone
+            sl := math.max(sl, trailLow - tick)
+    if maxBars > 0 and barsIn >= maxBars
+        strategy.close("Compra", comment="Tempo")
+    strategy.exit("Saída C", "Compra", stop=sl, limit=useTarget ? strategy.position_avg_price + rMult * risk : na, comment_loss="Stop", comment_profit="Alvo")
+
+// ---------- vendido ----------
+if strategy.position_size < 0
+    if barsIn == 0 and not isTS
+        sl := p1ShortStop
+        risk := sl - strategy.position_avg_price
+    if useBook
+        if not partialDone and barsIn >= partialBars
+            strategy.close("Venda", comment="Parcial", qty_percent=partialPct)
+            partialDone := true
+            if beAfter and close < strategy.position_avg_price
+                sl := math.min(sl, strategy.position_avg_price)
+        if partialDone
+            sl := math.min(sl, trailHigh + tick)
+    if maxBars > 0 and barsIn >= maxBars
+        strategy.close("Venda", comment="Tempo")
+    strategy.exit("Saída V", "Venda", stop=sl, limit=useTarget ? strategy.position_avg_price - rMult * risk : na, comment_loss="Stop", comment_profit="Alvo")
+
+// ---------- zerado: novas entradas ----------
+if strategy.position_size == 0
+    partialDone := false
+    if isTS
+        if canTrade and tsLongFill
+            sl := tsLongStop
+            risk := close - sl
+            strategy.entry("Compra", strategy.long, qty=f_qty(close, sl), comment="TS C")
+            strategy.exit("Saída C", "Compra", stop=sl, limit=useTarget ? close + rMult * risk : na, comment_loss="Stop", comment_profit="Alvo")
+        else if canTrade and tsShortFill
+            sl := tsShortStop
+            risk := sl - close
+            strategy.entry("Venda", strategy.short, qty=f_qty(close, sl), comment="TS V")
+            strategy.exit("Saída V", "Venda", stop=sl, limit=useTarget ? close - rMult * risk : na, comment_loss="Stop", comment_profit="Alvo")
+    else
+        // Plus One: ordem stop válida só para a próxima barra (dia 2)
+        if canTrade and p1LongSetup
+            strategy.cancel("Venda")
+            sl := low - tick
+            risk := prevLow - sl
+            strategy.entry("Compra", strategy.long, qty=f_qty(prevLow, sl), stop=prevLow, comment="TS+1 C")
+            strategy.exit("Saída C", "Compra", stop=sl, limit=useTarget ? prevLow + rMult * risk : na, comment_loss="Stop", comment_profit="Alvo")
+        else if canTrade and p1ShortSetup
+            strategy.cancel("Compra")
+            sl := high + tick
+            risk := sl - prevHigh
+            strategy.entry("Venda", strategy.short, qty=f_qty(prevHigh, sl), stop=prevHigh, comment="TS+1 V")
+            strategy.exit("Saída V", "Venda", stop=sl, limit=useTarget ? prevHigh - rMult * risk : na, comment_loss="Stop", comment_profit="Alvo")
+        else
+            // não executou no dia 2: cancela
+            strategy.cancel("Compra")
+            strategy.cancel("Venda")
+
+// =====================================================
+// PLOTS
+// =====================================================
+plot(strategy.position_size != 0 ? sl : na, "Stop", color.red, 2, plot.style_linebr)
+plotshape(isTS ? tsLongSetup and not tsLongFill and showLong : p1LongSetup, "Setup compra", shape.circle, location.belowbar, color.orange, size=size.tiny)
+plotshape(isTS ? tsShortSetup and not tsShortFill and showShort : p1ShortSetup, "Setup venda", shape.circle, location.abovebar, color.orange, size=size.tiny)

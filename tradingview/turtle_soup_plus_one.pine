@@ -1,0 +1,427 @@
+//@version=6
+// Turtle Soup / Turtle Soup Plus One (Connors & Raschke, "Street Smarts", cap. 4 e 5)
+// Versão INDICADOR (sinais, níveis, tabela, alertas).
+// Para backtest use turtle_soup_plus_one_strategy.pine.
+indicator("Turtle Soup / Plus One (Connors & Raschke)", shorttitle="Turtle Soup", overlay=true, max_lines_count=500, max_labels_count=500)
+
+// =====================================================
+// INPUTS
+// =====================================================
+G1 = "Estratégia"
+strat     = input.string("Turtle Soup", "Estratégia ativa", options=["Turtle Soup", "Turtle Soup Plus One"], group=G1)
+lookback  = input.int(20, "Período do máx/mín (barras)", minval=5, group=G1)
+tieOldest = input.bool(true, "Empate de extremos: contar desde o mais antigo", group=G1, tooltip="Se o mínimo (ou máximo) de N barras se repetiu, conta as barras desde a ocorrência MAIS ANTIGA (mais fiel à regra). Desligado = mais recente, como o ta.lowestbars.")
+showLong  = input.bool(true, "Mostrar compras", group=G1)
+showShort = input.bool(true, "Mostrar vendas", group=G1)
+
+G2 = "Turtle Soup"
+minBarsTS = input.int(4, "Mín. de barras desde o extremo anterior", minval=1, group=G2)
+offMode   = input.string("Fração do ATR", "Offset da entrada além do nível", options=["Ticks", "% do preço", "Fração do ATR"], group=G2, tooltip="Ticks: o original do livro (5 a 10 ticks), bom para WIN/WDO e futuros. Em ações/índices com tick 0,01 vira quase zero; prefira % do preço ou fração do ATR.")
+ticksTS   = input.int(5, "Ticks (WIN/WDO/futuros: 5 a 10)", minval=0, group=G2)
+offPct    = input.float(0.10, "% do preço", minval=0, step=0.05, group=G2)
+atrMult   = input.float(0.10, "× ATR", minval=0, step=0.05, group=G2)
+atrLen    = input.int(14, "Período do ATR", minval=1, group=G2)
+confMode  = input.string("Fechamento além da entrada", "Confirmação do gatilho", options=["Fechamento além da entrada", "Ordem real no TF menor", "Nenhuma (só máx./mín.)"], group=G2, tooltip="Fechamento: só vale se o candle fechar além da entrada, o que garante que o preço voltou ao nível DEPOIS de fazer o novo extremo.\nTF menor: usa request.security_lower_tf pra checar a ordem real (novo extremo primeiro, depois a entrada). Onde não houver dados intrabar, cai no critério de fechamento.\nNenhuma: comportamento antigo, que pode marcar entradas que não aconteceram.")
+ltfIn     = input.timeframe("5", "TF menor (modo ordem real)", group=G2)
+
+G3 = "Turtle Soup Plus One"
+minBarsP1  = input.int(3, "Mín. de barras desde o extremo anterior", minval=1, group=G3)
+stopModeP1 = input.string("Mais extremo dos dois dias", "Stop protetor", options=["Dia 1", "Dia 2", "Mais extremo dos dois dias"], group=G3)
+
+G6 = "Filtro"
+useAdx = input.bool(false, "Só operar com ADX baixo (sem tendência forte)", group=G6)
+adxLen = input.int(14, "Período do ADX", minval=1, group=G6)
+adxMax = input.float(30, "ADX máximo", minval=1, group=G6)
+
+G5 = "Visual"
+showSetup  = input.bool(true, "Mostrar setups (aviso)", group=G5)
+setupBars  = input.int(300, "Setups: só nas últimas N barras (0 = todas)", minval=0, group=G5)
+showLevels = input.bool(true, "Desenhar níveis de entrada e stop", group=G5)
+showLabels = input.bool(true, "Mostrar rótulo com preços", group=G5)
+lblShort   = input.bool(true, "Rótulo curto (E … / S …)", group=G5)
+maxSignals = input.int(10, "Manter só os últimos N sinais (0 = todos)", minval=0, group=G5)
+lblSizeIn  = input.string("Normal", "Tamanho do texto dos níveis", options=["Pequeno", "Normal", "Grande", "Enorme"], group=G5)
+
+G4 = "Tabela"
+showTable = input.bool(true, "Mostrar tabela", group=G4)
+tblPosIn  = input.string("Superior direita", "Posição da tabela", options=["Superior esquerda", "Superior centro", "Superior direita", "Meio esquerda", "Meio direita", "Inferior esquerda", "Inferior centro", "Inferior direita"], group=G4)
+tblSizeIn = input.string("Normal", "Tamanho do texto da tabela", options=["Pequeno", "Normal", "Grande"], group=G4)
+
+G7 = "Alertas"
+alertSetups = input.bool(true, "Alertar setups (além das entradas)", group=G7, tooltip="Crie o alerta com a condição \"Qualquer chamada de função alert()\".\nTurtle Soup: o setup avisa intrabar assim que o novo extremo acontece (não some, porque o rompimento da mínima/máxima não volta atrás) e já traz o preço da ordem stop.\nPlus One e entradas: só no fechamento da barra, porque dependem do fechamento.")
+
+lblSize = switch lblSizeIn
+    "Pequeno" => size.small
+    "Normal"  => size.normal
+    "Grande"  => size.large
+    => size.huge
+
+tblPos = switch tblPosIn
+    "Superior esquerda" => position.top_left
+    "Superior centro"   => position.top_center
+    "Superior direita"  => position.top_right
+    "Meio esquerda"     => position.middle_left
+    "Meio direita"      => position.middle_right
+    "Inferior esquerda" => position.bottom_left
+    "Inferior centro"   => position.bottom_center
+    => position.bottom_right
+
+tblSize = switch tblSizeIn
+    "Pequeno" => size.small
+    "Grande"  => size.large
+    => size.normal
+
+isTS = strat == "Turtle Soup"
+
+// =====================================================
+// FUNÇÕES AUXILIARES
+// =====================================================
+f_px(float x) =>
+    na(x) ? "—" : str.tostring(x, format.mintick)
+
+// barras desde o extremo das N barras anteriores (sem incluir a atual)
+// oldest = true: em empate, usa a ocorrência mais antiga
+f_barsSinceExt(float src, int len, bool isLow, bool oldest) =>
+    float ext = na
+    int idx = na
+    for i = 1 to len
+        float v = src[i]
+        if not na(v)
+            bool better = na(ext) or (isLow ? v < ext : v > ext) or (oldest and v == ext)
+            if better
+                ext := v
+                idx := i
+    idx
+
+// ordem real no TF menor: 1 = executou, 0 = não executou, -1 = sem dados
+// arma quando a sub-barra rompe o nível; executa numa sub-barra seguinte que toca a entrada
+// (na mesma sub-barra do rompimento, só conta se ela fechar além da entrada)
+f_ltfFill(array<float> lows, array<float> highs, array<float> closes, float trig, float entry, bool isLong) =>
+    int res = -1
+    int n = lows.size()
+    if n > 0 and not na(trig) and not na(entry)
+        res := 0
+        bool armed = false
+        for i = 0 to n - 1
+            float lo = lows.get(i)
+            float hi = highs.get(i)
+            float cl = closes.get(i)
+            if not armed
+                if isLong ? lo < trig : hi > trig
+                    armed := true
+                    if isLong ? cl >= entry : cl <= entry
+                        res := 1
+                        break
+            else
+                if isLong ? hi >= entry : lo <= entry
+                    res := 1
+                    break
+    res
+
+// =====================================================
+// BASE
+// =====================================================
+tick     = syminfo.mintick
+prevLow  = ta.lowest(low, lookback)[1]
+prevHigh = ta.highest(high, lookback)[1]
+
+barsSinceLow  = f_barsSinceExt(low, lookback, true, tieOldest)
+barsSinceHigh = f_barsSinceExt(high, lookback, false, tieOldest)
+
+// ATR e ADX da barra anterior: não mudam durante a barra (sem repintura)
+atrPrev = ta.atr(atrLen)[1]
+[diP, diM, adxV] = ta.dmi(adxLen, adxLen)
+trendOk = not useAdx or adxV[1] < adxMax
+
+f_offset(float base) =>
+    switch offMode
+        "Ticks"      => ticksTS * tick
+        "% do preço" => base * offPct / 100
+        => atrMult * atrPrev
+
+// dados intrabar (só usados no modo "Ordem real no TF menor")
+useLtf = confMode == "Ordem real no TF menor"
+ltfOk  = timeframe.in_seconds(ltfIn) < timeframe.in_seconds(timeframe.period)
+reqTf  = useLtf and ltfOk ? ltfIn : timeframe.period
+[ltfL, ltfH, ltfC] = request.security_lower_tf(syminfo.tickerid, reqTf, [low, high, close])
+
+// =====================================================
+// TURTLE SOUP (cap. 4)
+// Novo extremo hoje + extremo anterior com >= 4 barras + entrada no mesmo dia
+// =====================================================
+tsLongSetup  = trendOk and low < prevLow and barsSinceLow >= minBarsTS
+tsLongEntry  = math.round_to_mintick(prevLow + f_offset(prevLow))
+tsLongStop   = low - tick
+
+tsShortSetup = trendOk and high > prevHigh and barsSinceHigh >= minBarsTS
+tsShortEntry = math.round_to_mintick(prevHigh - f_offset(prevHigh))
+tsShortStop  = high + tick
+
+ltfResL = f_ltfFill(ltfL, ltfH, ltfC, prevLow, tsLongEntry, true)
+ltfResS = f_ltfFill(ltfL, ltfH, ltfC, prevHigh, tsShortEntry, false)
+
+bool tsLongTrig = switch confMode
+    "Fechamento além da entrada" => close > tsLongEntry
+    "Ordem real no TF menor"     => ltfResL == 1 or (ltfResL == -1 and close > tsLongEntry)
+    => high >= tsLongEntry
+bool tsShortTrig = switch confMode
+    "Fechamento além da entrada" => close < tsShortEntry
+    "Ordem real no TF menor"     => ltfResS == 1 or (ltfResS == -1 and close < tsShortEntry)
+    => low <= tsShortEntry
+
+tsLongFill  = tsLongSetup and tsLongTrig
+tsShortFill = tsShortSetup and tsShortTrig
+
+// =====================================================
+// TURTLE SOUP PLUS ONE (cap. 5)
+// Dia 1: novo extremo, fechando além do nível anterior (>= 3 barras)
+// Dia 2: ordem stop no extremo anterior; se não executar no dia 2, cancela.
+// Gap: se o dia 2 abrir além da entrada, a execução é no open, não no nível.
+// =====================================================
+p1LongSetup  = trendOk and low < prevLow and close <= prevLow and barsSinceLow >= minBarsP1
+p1ShortSetup = trendOk and high > prevHigh and close >= prevHigh and barsSinceHigh >= minBarsP1
+
+p1LongEntry  = prevLow[1]
+p1ShortEntry = prevHigh[1]
+
+p1LongFill  = p1LongSetup[1] and high >= p1LongEntry
+p1ShortFill = p1ShortSetup[1] and low <= p1ShortEntry
+
+p1LongFillPx  = math.max(open, p1LongEntry)
+p1ShortFillPx = math.min(open, p1ShortEntry)
+
+p1LongStop  = stopModeP1 == "Dia 1" ? low[1] - tick : stopModeP1 == "Dia 2" ? low - tick : math.min(low[1], low) - tick
+p1ShortStop = stopModeP1 == "Dia 1" ? high[1] + tick : stopModeP1 == "Dia 2" ? high + tick : math.max(high[1], high) + tick
+
+// =====================================================
+// SELEÇÃO DA ESTRATÉGIA
+// =====================================================
+longSetup   = isTS ? tsLongSetup : p1LongSetup
+shortSetup  = isTS ? tsShortSetup : p1ShortSetup
+longFill    = (isTS ? tsLongFill : p1LongFill) and showLong
+shortFill   = (isTS ? tsShortFill : p1ShortFill) and showShort
+longEntry   = isTS ? tsLongEntry : p1LongEntry      // nível
+shortEntry  = isTS ? tsShortEntry : p1ShortEntry
+longFillPx  = isTS ? tsLongEntry : p1LongFillPx     // preço real de execução (gap)
+shortFillPx = isTS ? tsShortEntry : p1ShortFillPx
+longStop    = isTS ? tsLongStop : p1LongStop
+shortStop   = isTS ? tsShortStop : p1ShortStop
+
+// stop de um setup ainda não executado, com a MESMA regra do stop real
+f_pendStopTxt(bool isLongSide) =>
+    float s = isLongSide ? low - tick : high + tick
+    string ext = isLongSide ? "mín." : "máx."
+    if isTS or stopModeP1 == "Dia 1"
+        f_px(s)
+    else if stopModeP1 == "Dia 2"
+        ext + " do dia 2 " + (isLongSide ? "− 1 tick" : "+ 1 tick")
+    else
+        (isLongSide ? "≤ " : "≥ ") + f_px(s) + " (ajusta no dia 2)"
+
+// =====================================================
+// PLOTS
+// =====================================================
+recent = setupBars == 0 or bar_index > last_bar_index - setupBars
+longSetupShow  = recent and showSetup and showLong and longSetup and not longFill
+shortSetupShow = recent and showSetup and showShort and shortSetup and not shortFill
+
+plotshape(longSetupShow, title="Setup compra", style=shape.circle, location=location.belowbar, color=color.new(color.orange, 0), size=size.small)
+plotshape(shortSetupShow, title="Setup venda", style=shape.circle, location=location.abovebar, color=color.new(color.orange, 0), size=size.small)
+
+// =====================================================
+// DESENHOS (só os últimos N sinais)
+// =====================================================
+type Sig
+    array<line>  lns
+    array<label> lbs
+
+var array<Sig> sigs = array.new<Sig>()
+
+f_newSig() =>
+    Sig.new(array.new<line>(), array.new<label>())
+
+f_store(Sig s) =>
+    sigs.push(s)
+    if maxSignals > 0
+        while sigs.size() > maxSignals
+            Sig old = sigs.shift()
+            for ln in old.lns
+                ln.delete()
+            for lb in old.lbs
+                lb.delete()
+    s
+
+f_levels(Sig s, float entry, float stop, float level) =>
+    s.lns.push(line.new(bar_index, entry, bar_index + 5, entry, color=color.blue, style=line.style_dashed))
+    s.lns.push(line.new(bar_index, stop, bar_index + 5, stop, color=color.red, style=line.style_dotted))
+    if showLabels
+        bool gap = entry != level
+        string txt = lblShort ? "E " + f_px(entry) + (gap ? "*" : "") + " / S " + f_px(stop) : "Entrada " + f_px(entry) + (gap ? " (gap; nível " + f_px(level) + ")" : "") + "\nStop " + f_px(stop)
+        s.lbs.push(label.new(bar_index + 5, entry, txt, style=label.style_label_left, color=color.new(color.gray, 60), textcolor=color.white, size=lblSize))
+    s
+
+f_preview(Sig s, float level, string txt) =>
+    s.lns.push(line.new(bar_index, level, bar_index + 2, level, color=color.orange, style=line.style_dashed))
+    if showLabels
+        s.lbs.push(label.new(bar_index + 2, level, txt + f_px(level), style=label.style_label_left, color=color.new(color.gray, 60), textcolor=color.orange, size=lblSize))
+    s
+
+if barstate.isconfirmed
+    if longFill
+        Sig s = f_newSig()
+        s.lbs.push(label.new(bar_index, low, "C", style=label.style_label_up, color=color.green, textcolor=color.white, size=lblSize))
+        if showLevels
+            f_levels(s, longFillPx, longStop, longEntry)
+        f_store(s)
+    if shortFill
+        Sig s = f_newSig()
+        s.lbs.push(label.new(bar_index, high, "V", style=label.style_label_down, color=color.red, textcolor=color.white, size=lblSize))
+        if showLevels
+            f_levels(s, shortFillPx, shortStop, shortEntry)
+        f_store(s)
+    // Plus One: no fechamento do dia 1, mostra o nível de entrada do dia seguinte
+    if not isTS and showSetup and showLevels
+        if p1LongSetup and showLong
+            f_store(f_preview(f_newSig(), prevLow, lblShort ? "Amanhã C " : "Amanhã: compra em "))
+        if p1ShortSetup and showShort
+            f_store(f_preview(f_newSig(), prevHigh, lblShort ? "Amanhã V " : "Amanhã: venda em "))
+
+// =====================================================
+// TABELA
+// =====================================================
+minBarsAtiva = isTS ? minBarsTS : minBarsP1
+
+longPend  = longSetup and showLong and not longFill
+shortPend = shortSetup and showShort and not shortFill
+
+tLongEntry  = longFill ? longFillPx : longPend ? (isTS ? tsLongEntry : prevLow) : na
+tShortEntry = shortFill ? shortFillPx : shortPend ? (isTS ? tsShortEntry : prevHigh) : na
+tLongStop   = longFill ? f_px(longStop) : longPend ? f_pendStopTxt(true) : "—"
+tShortStop  = shortFill ? f_px(shortStop) : shortPend ? f_pendStopTxt(false) : "—"
+
+longStatus  = longFill ? (longFillPx != longEntry ? "ACIONADA (gap, no open)" : "ENTRADA ACIONADA") : longPend ? (isTS ? "SETUP: aguarda reversão" : "SETUP: entra na próx. barra") : "Sem setup"
+shortStatus = shortFill ? (shortFillPx != shortEntry ? "ACIONADA (gap, no open)" : "ENTRADA ACIONADA") : shortPend ? (isTS ? "SETUP: aguarda reversão" : "SETUP: entra na próx. barra") : "Sem setup"
+longStatusClr  = longFill ? color.lime : longPend ? color.orange : color.gray
+shortStatusClr = shortFill ? color.lime : shortPend ? color.orange : color.gray
+
+var int lastLongBar  = na
+var int lastShortBar = na
+if longFill and barstate.isconfirmed
+    lastLongBar := bar_index
+if shortFill and barstate.isconfirmed
+    lastShortBar := bar_index
+
+f_since(int n) =>
+    na(n) ? "—" : str.tostring(n) + " barras " + (n >= minBarsAtiva ? "✔" : "✘")
+
+f_ago(int b) =>
+    na(b) ? "—" : (bar_index - b == 0 ? "nesta barra" : str.tostring(bar_index - b) + " barras atrás")
+
+offTxt = switch offMode
+    "Ticks"      => str.tostring(ticksTS) + " ticks"
+    "% do preço" => str.tostring(offPct) + "% do preço"
+    => str.tostring(atrMult) + "×ATR(" + str.tostring(atrLen) + ")"
+confTxt = switch confMode
+    "Fechamento além da entrada" => "fechamento"
+    "Ordem real no TF menor"     => not ltfOk ? "TF " + ltfIn + " inválido → fechamento" : ltfL.size() == 0 ? "TF " + ltfIn + " sem dados → fechamento" : "ordem real TF " + ltfIn
+    => "nenhuma"
+cfgTxt = (isTS ? "Offset: " + offTxt + " | Conf.: " + confTxt : "Stop: " + stopModeP1) + (useAdx ? " | ADX < " + str.tostring(adxMax) : "")
+
+cBg   = color.rgb(19, 23, 34)
+cHead = color.rgb(32, 38, 60)
+cLbl  = color.rgb(190, 196, 214)
+cVal  = color.rgb(255, 176, 32)
+
+var table tbl = showTable ? table.new(tblPos, 4, 11, bgcolor=cBg, frame_color=color.rgb(70, 80, 110), frame_width=1, border_color=color.rgb(60, 68, 95), border_width=1) : na
+var bool tblMerged = false
+
+f_cell(int c, int r, string txt, color clr, color bg, string hal) =>
+    table.cell(tbl, c, r, txt, text_color=clr, bgcolor=bg, text_size=tblSize, text_halign=hal)
+
+if showTable and barstate.islast
+    distLow  = (close - prevLow) / close * 100
+    distHigh = (prevHigh - close) / close * 100
+
+    f_cell(0, 0, "🐢 Turtle Soup", color.white, cHead, text.align_left)
+    f_cell(1, 0, "", color.white, cHead, text.align_left)
+    f_cell(2, 0, strat, cVal, cHead, text.align_center)
+    f_cell(3, 0, "", color.white, cHead, text.align_center)
+    f_cell(0, 1, "COMPRA", color.lime, cBg, text.align_center)
+    f_cell(1, 1, "", color.lime, cBg, text.align_center)
+    f_cell(2, 1, "VENDA", color.red, cBg, text.align_center)
+    f_cell(3, 1, "", color.red, cBg, text.align_center)
+    f_cell(0, 2, "Mín. " + str.tostring(lookback) + " barras", cLbl, cBg, text.align_center)
+    f_cell(1, 2, f_px(prevLow), cVal, cBg, text.align_center)
+    f_cell(2, 2, "Máx. " + str.tostring(lookback) + " barras", cLbl, cBg, text.align_center)
+    f_cell(3, 2, f_px(prevHigh), cVal, cBg, text.align_center)
+    f_cell(0, 3, "Desde a mín.", cLbl, cBg, text.align_center)
+    f_cell(1, 3, f_since(barsSinceLow), barsSinceLow >= minBarsAtiva ? color.lime : color.red, cBg, text.align_center)
+    f_cell(2, 3, "Desde a máx.", cLbl, cBg, text.align_center)
+    f_cell(3, 3, f_since(barsSinceHigh), barsSinceHigh >= minBarsAtiva ? color.lime : color.red, cBg, text.align_center)
+    f_cell(0, 4, "Dist. até mín.", cLbl, cBg, text.align_center)
+    f_cell(1, 4, na(distLow) ? "—" : str.tostring(distLow, "#.##") + "%", cVal, cBg, text.align_center)
+    f_cell(2, 4, "Dist. até máx.", cLbl, cBg, text.align_center)
+    f_cell(3, 4, na(distHigh) ? "—" : str.tostring(distHigh, "#.##") + "%", cVal, cBg, text.align_center)
+    f_cell(0, 5, "Status", cLbl, cBg, text.align_center)
+    f_cell(1, 5, longStatus, longStatusClr, cBg, text.align_center)
+    f_cell(2, 5, "Status", cLbl, cBg, text.align_center)
+    f_cell(3, 5, shortStatus, shortStatusClr, cBg, text.align_center)
+    f_cell(0, 6, "Entrada", cLbl, cBg, text.align_center)
+    f_cell(1, 6, f_px(tLongEntry), cVal, cBg, text.align_center)
+    f_cell(2, 6, "Entrada", cLbl, cBg, text.align_center)
+    f_cell(3, 6, f_px(tShortEntry), cVal, cBg, text.align_center)
+    f_cell(0, 7, "Stop", cLbl, cBg, text.align_center)
+    f_cell(1, 7, tLongStop, color.red, cBg, text.align_center)
+    f_cell(2, 7, "Stop", cLbl, cBg, text.align_center)
+    f_cell(3, 7, tShortStop, color.red, cBg, text.align_center)
+    f_cell(0, 8, "Último sinal", cLbl, cBg, text.align_center)
+    f_cell(1, 8, f_ago(lastLongBar), cVal, cBg, text.align_center)
+    f_cell(2, 8, "Último sinal", cLbl, cBg, text.align_center)
+    f_cell(3, 8, f_ago(lastShortBar), cVal, cBg, text.align_center)
+    f_cell(0, 9, "Preço atual", cLbl, cBg, text.align_center)
+    f_cell(1, 9, str.tostring(close, format.mintick), color.white, cBg, text.align_center)
+    f_cell(2, 9, "Timeframe", cLbl, cBg, text.align_center)
+    f_cell(3, 9, timeframe.period, cVal, cBg, text.align_center)
+    f_cell(0, 10, cfgTxt, cLbl, cBg, text.align_center)
+    f_cell(1, 10, "", cLbl, cBg, text.align_center)
+    f_cell(2, 10, "", cLbl, cBg, text.align_center)
+    f_cell(3, 10, "", cLbl, cBg, text.align_center)
+
+    if not tblMerged
+        table.merge_cells(tbl, 0, 0, 1, 0)
+        table.merge_cells(tbl, 2, 0, 3, 0)
+        table.merge_cells(tbl, 0, 1, 1, 1)
+        table.merge_cells(tbl, 2, 1, 3, 1)
+        table.merge_cells(tbl, 0, 10, 3, 10)
+        tblMerged := true
+
+// =====================================================
+// ALERTAS (sem repintura)
+// Crie UM alerta com "Qualquer chamada de função alert()".
+// =====================================================
+pfx = syminfo.ticker + " (" + timeframe.period + ") " + strat + ": "
+
+// Turtle Soup: setup intrabar. Quando a mínima/máxima anterior é rompida, isso não volta atrás.
+if alertSetups and isTS
+    if tsLongSetup and showLong
+        alert(pfx + "setup de COMPRA, novo mínimo. Ordem stop de compra em " + f_px(tsLongEntry) + " | stop " + f_px(tsLongStop) + " (ajusta se fizer nova mínima)", alert.freq_once_per_bar)
+    if tsShortSetup and showShort
+        alert(pfx + "setup de VENDA, novo máximo. Ordem stop de venda em " + f_px(tsShortEntry) + " | stop " + f_px(tsShortStop) + " (ajusta se fizer nova máxima)", alert.freq_once_per_bar)
+
+if barstate.isconfirmed
+    if longFill
+        alert(pfx + "COMPRA acionada | entrada " + f_px(longFillPx) + " | stop " + f_px(longStop), alert.freq_once_per_bar_close)
+    if shortFill
+        alert(pfx + "VENDA acionada | entrada " + f_px(shortFillPx) + " | stop " + f_px(shortStop), alert.freq_once_per_bar_close)
+    // Plus One: o setup depende do fechamento do dia 1
+    if alertSetups and not isTS
+        if p1LongSetup and showLong
+            alert(pfx + "setup de COMPRA (dia 1). Amanhã, ordem stop de compra em " + f_px(prevLow) + " | stop " + f_pendStopTxt(true), alert.freq_once_per_bar_close)
+        if p1ShortSetup and showShort
+            alert(pfx + "setup de VENDA (dia 1). Amanhã, ordem stop de venda em " + f_px(prevHigh) + " | stop " + f_pendStopTxt(false), alert.freq_once_per_bar_close)
+
+// alertcondition mantidos por compatibilidade. Crie com "Uma vez por fechamento de barra".
+alertcondition(longFill and barstate.isconfirmed, "Entrada de COMPRA", "{{ticker}} ({{interval}}): gatilho de COMPRA")
+alertcondition(shortFill and barstate.isconfirmed, "Entrada de VENDA", "{{ticker}} ({{interval}}): gatilho de VENDA")
+alertcondition(longSetup and (isTS or barstate.isconfirmed), "Setup de compra", "{{ticker}} ({{interval}}): setup de compra identificado")
+alertcondition(shortSetup and (isTS or barstate.isconfirmed), "Setup de venda", "{{ticker}} ({{interval}}): setup de venda identificado")
